@@ -1,9 +1,10 @@
-﻿import { Search } from 'lucide-react-native';
+import { Search } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 import { useWindowDimensions } from 'react-native';
 
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { Text } from '@/src/components/ui';
-import { matchTheme } from '../shared/theme';
+import { useMatchTheme } from '../shared/theme';
 
 type EmptyStateCardProps = {
   title: string;
@@ -14,17 +15,25 @@ type EmptyStateCardProps = {
 
 export function EmptyStateCard({ title, description, actionLabel, onAction }: EmptyStateCardProps) {
   const { width } = useWindowDimensions();
+  const matchTheme = useMatchTheme();
+  const theme = useAppColorScheme();
   const isSmall = width < 380;
   const buttonWidth = Math.min(Math.max(width * 0.62, 220), 320);
 
   return (
-    <View className="mx-[18px] px-5 pt-7 pb-8 rounded-[20px] border border-dashed items-center" style={{ backgroundColor: 'rgba(4,10,20,0.56)', borderColor: 'rgba(255,255,255,0.12)' }}>
+    <View
+      className="mx-[18px] px-5 pt-7 pb-8 rounded-[20px] border border-dashed items-center"
+      style={{
+        backgroundColor: theme === 'light' ? '#FFFFFF' : 'rgba(4,10,20,0.56)',
+        borderColor: theme === 'light' ? '#D7E1EF' : 'rgba(255,255,255,0.12)',
+      }}
+    >
       <View className="w-[64px] h-[64px] rounded-[20px] border items-center justify-center mb-4" style={{ backgroundColor: 'rgba(0,154,84,0.14)', borderColor: 'rgba(34,183,108,0.30)' }}>
         <Search size={26} stroke={matchTheme.colors.okSoft} />
       </View>
 
       <Text variant="heading" className="font-semibold text-center text-[20px] leading-[26px]" style={{ color: matchTheme.colors.fgPrimary }}>{title}</Text>
-      <Text variant="caption" className="text-center mt-2 text-[14px] leading-[21px]" style={{ color: 'rgba(255,255,255,0.44)' }}>{description}</Text>
+      <Text variant="caption" className="text-center mt-2 text-[14px] leading-[21px]" style={{ color: matchTheme.colors.fgMuted }}>{description}</Text>
 
       {actionLabel ? (
         <Pressable

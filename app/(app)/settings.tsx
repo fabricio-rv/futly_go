@@ -203,16 +203,14 @@ export default function SettingsScreen() {
 		.map((part) => part[0]?.toUpperCase())
 		.join('');
 
-	const bgColor = theme === 'light' ? '#FFFFFF' : '#05070B';
-	const textColor = theme === 'light' ? '#1A1A2E' : '#FFFFFF';
-
+	const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
 	return (
 		<SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
 			<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
 				<HubTopNav title="Configuracoes" subtitle="v 1.4.2" />
 
 				<LinearGradient
-					colors={theme === 'dark' ? ['#0F3A24', '#072314'] : ['#E8F9F3', '#D9F1E9']}
+					colors={theme === 'dark' ? ['#0F3A24', '#072314'] : ['#E3F5EC', '#D6EEE3']}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 1 }}
 					className="mx-[18px] mb-2 rounded-[18px] border border-[#22B76C4D] px-[14px] py-[14px] flex-row items-center gap-3"
@@ -227,13 +225,13 @@ export default function SettingsScreen() {
 						<Text variant="label" className="font-bold text-gray-900 dark:text-white">
 							{profile?.full_name ?? 'Atleta Futly'}
 						</Text>
-						<Text variant="micro" className="mt-0.5 text-[#86E5B4] tracking-[0.5px]">
+						<Text variant="micro" className="mt-0.5 tracking-[0.5px]" style={{ color: theme === 'light' ? '#2F6C54' : '#86E5B4' }}>
 							{profile?.email ?? 'email@example.com'} - Plano Gold
 						</Text>
 					</View>
 
-					<Pressable className="h-9 w-9 rounded-[12px] border border-white/10 bg-white/10 items-center justify-center">
-						<Text variant="body" className="text-gray-900 dark:text-white">&gt;</Text>
+					<Pressable className="h-9 w-9 rounded-[12px] border items-center justify-center" style={{ borderColor: theme === 'light' ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.10)', backgroundColor: theme === 'light' ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.10)' }}>
+						<Text variant="body" className="text-gray-700 dark:text-white">&gt;</Text>
 					</Pressable>
 				</LinearGradient>
 
@@ -268,7 +266,7 @@ export default function SettingsScreen() {
 				visible={showDeleteModal}
 				tone="error"
 				title="Excluir conta permanentemente?"
-				message="Tem certeza? Todos os seus dados, mensagens e histórico serão apagados para sempre. Esta ação não pode ser desfeita."
+				message="Tem certeza? Todos os seus dados, mensagens e historico serao apagados para sempre. Esta acao nao pode ser desfeita."
 				primaryLabel={deleting ? 'Deletando...' : 'Sim, excluir tudo'}
 				onPrimaryPress={handleConfirmDeleteAccount}
 				secondaryLabel="Cancelar"
@@ -278,3 +276,4 @@ export default function SettingsScreen() {
 		</SafeAreaView>
 	);
 }
+

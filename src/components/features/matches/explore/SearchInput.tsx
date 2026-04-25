@@ -1,7 +1,7 @@
-﻿import { Search, SlidersHorizontal } from 'lucide-react-native';
+import { Search, SlidersHorizontal } from 'lucide-react-native';
 import { TextInput, View } from 'react-native';
 
-import { matchTheme } from '../shared/theme';
+import { useMatchTheme } from '../shared/theme';
 
 type SearchInputProps = {
   value: string;
@@ -10,18 +10,20 @@ type SearchInputProps = {
 };
 
 export function SearchInput({ value, onChangeText, placeholder }: SearchInputProps) {
+  const matchTheme = useMatchTheme();
+
   return (
     <View className="px-[18px] mb-[10px]">
       <View
         className="h-[46px] rounded-[14px] border px-3 flex-row items-center"
-        style={{ backgroundColor: '#0B1120', borderColor: 'rgba(255,255,255,0.08)' }}
+        style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
       >
-        <Search size={16} stroke={'rgba(255,255,255,0.34)'} />
+        <Search size={16} stroke={matchTheme.colors.fgMuted} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder ?? 'Buscar local, time, organizador...'}
-          placeholderTextColor={'rgba(255,255,255,0.42)'}
+          placeholderTextColor={matchTheme.colors.fgMuted}
           className="flex-1 text-[14px] ml-2"
           style={{ color: matchTheme.colors.fgPrimary }}
         />

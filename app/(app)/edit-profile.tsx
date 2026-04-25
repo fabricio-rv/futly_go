@@ -54,8 +54,11 @@ export default function EditProfileScreen() {
     }
   }
 
+  const theme = useAppColorScheme();
+  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubTopNav
           title="Editar perfil"

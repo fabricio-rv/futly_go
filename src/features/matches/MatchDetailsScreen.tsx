@@ -11,7 +11,7 @@ import {
   SectionTitle,
   StatBadge,
   StatusStamp,
-  matchTheme,
+  useMatchTheme,
 } from '@/src/components/features/matches';
 import { TacticalPitch } from '@/src/components/fifa/TacticalPitch';
 import { Button, Card, Screen, Text } from '@/src/components/ui';
@@ -20,6 +20,7 @@ import type { MatchDetails } from '@/src/features/matches/services/matchesServic
 import { supabase } from '@/src/lib/supabase';
 
 export function MatchDetailsScreen({ matchId }: { matchId: string }) {
+  const matchTheme = useMatchTheme();
   const router = useRouter();
   const { getMatchDetails, joinMatch, leaveMatch, processParticipationRequest, loadingDetails, submitting } = useMatches();
   const [details, setDetails] = useState<MatchDetails | null>(null);
@@ -167,7 +168,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           rightSlot={
             <View
               className="w-10 h-10 rounded-[14px] border items-center justify-center"
-              style={{ backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.10)' }}
+              style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
             >
               <Share2 color={matchTheme.colors.fgPrimary} size={16} />
             </View>
@@ -222,7 +223,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                     className="rounded-[12px] border px-3 py-2"
                     style={{
                       borderColor: isSelected ? matchTheme.colors.ok : matchTheme.colors.line,
-                      backgroundColor: isSelected ? 'rgba(34,183,108,0.12)' : 'rgba(255,255,255,0.02)',
+                      backgroundColor: isSelected ? matchTheme.colors.bgSurfaceB : (matchTheme.colors.bgBase === matchTheme.colors.bgSurfaceA ? 'rgba(34,183,108,0.06)' : 'rgba(255,255,255,0.02)'),
                       opacity: !isAvailable ? 0.6 : 1,
                     }}
                   >

@@ -2,18 +2,20 @@ import { MessageCircle, Star } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
-import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HubHeader, MatchBottomNav, MatchCard, PillTabs, SectionTitle, matchTheme } from '@/src/components/features/matches';
+import { HubHeader, MatchBottomNav, MatchCard, PillTabs, SectionTitle, useMatchTheme } from '@/src/components/features/matches';
 import { Button, Text } from '@/src/components/ui';
 import type { Partida } from '@/src/features/matches/types';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import type { RatingTask } from '@/src/features/matches/services/matchesService';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 type AgendaTab = 'criadas' | 'marcadas' | 'pendentes';
 
 export default function AgendaScreen() {
+  const matchTheme = useMatchTheme();
+  const theme = useAppColorScheme();
   const [tab, setTab] = useState<AgendaTab>('criadas');
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<RatingTask | null>(null);
@@ -50,8 +52,10 @@ export default function AgendaScreen() {
     await getUserAgenda();
   }
 
+  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <HubHeader />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
@@ -97,7 +101,7 @@ export default function AgendaScreen() {
             <SectionTitle title="Avaliacoes pendentes" badge={String(agenda.ratingTasks.length)} />
             {agenda.ratingTasks.length === 0 ? (
               <View className="rounded-[16px] border px-4 py-4" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
-                <Text variant="caption" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
                   Sem avaliacoes pendentes agora.
                 </Text>
               </View>
@@ -117,7 +121,7 @@ export default function AgendaScreen() {
           </View>
 
           {loadingAgenda ? (
-            <Text variant="caption" style={{ color: 'rgba(255,255,255,0.65)' }}>
+            <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
               Carregando agenda...
             </Text>
           ) : null}
@@ -138,7 +142,13 @@ export default function AgendaScreen() {
 
       <Modal visible={ratingModalVisible} transparent animationType="fade" onRequestClose={() => setRatingModalVisible(false)}>
         <Pressable className="flex-1 bg-black/60 justify-center px-6" onPress={() => setRatingModalVisible(false)}>
-          <Pressable className="rounded-[18px] border border-line bg-[#0E1322] p-4">
+          <Pressable
+            className="rounded-[18px] border p-4"
+            style={{
+              borderColor: matchTheme.colors.lineStrong,
+              backgroundColor: matchTheme.colors.bgSurfaceA,
+            }}
+          >
             <Text variant="label" className="font-bold text-gray-900 dark:text-white">Avaliar {selectedTask?.targetUserName}</Text>
             <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{selectedTask?.matchTitle}</Text>
 
@@ -147,7 +157,7 @@ export default function AgendaScreen() {
                 <Pressable key={star} onPress={() => setRatingScore(star)}>
                   <Star
                     size={22}
-                    color={star <= ratingScore ? '#D4A13A' : 'rgba(255,255,255,0.35)'}
+                    color={star <= ratingScore ? '#D4A13A' : theme === 'light' ? '#CBD5E1' : 'rgba(255,255,255,0.35)'}
                     fill={star <= ratingScore ? '#D4A13A' : 'transparent'}
                   />
                 </Pressable>
@@ -158,8 +168,9 @@ export default function AgendaScreen() {
               value={ratingComment}
               onChangeText={setRatingComment}
               placeholder="Comentario opcional"
-              placeholderTextColor="rgba(255,255,255,0.45)"
-              className="mt-4 min-h-[84px] rounded-[12px] border border-line bg-[#0A0F1C] px-3 py-2 text-gray-900 dark:text-white"
+              placeholderTextColor={matchTheme.colors.fgMuted}
+              className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2 text-gray-900 dark:text-white"
+              style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
               multiline
               maxLength={280}
             />

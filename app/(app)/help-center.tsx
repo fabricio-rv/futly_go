@@ -113,10 +113,12 @@ const tutorials: TutorialItem[] = [
 ];
 
 export default function HelpCenterScreen() {
+  const theme = useAppColorScheme();
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
+  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubTopNav title="Central de Ajuda" subtitle="FAQ E TUTORIAIS" />
 

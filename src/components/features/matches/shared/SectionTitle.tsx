@@ -1,7 +1,7 @@
-﻿import { View } from 'react-native';
+import { View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
-import { matchTheme } from './theme';
+import { useMatchTheme } from './theme';
 
 type SectionTitleProps = {
   title: string;
@@ -10,6 +10,8 @@ type SectionTitleProps = {
 };
 
 export function SectionTitle({ title, badge, actionText }: SectionTitleProps) {
+  const matchTheme = useMatchTheme();
+
   return (
     <View className="flex-row items-center justify-between mb-2">
       <View className="flex-row items-center gap-2">
@@ -17,7 +19,7 @@ export function SectionTitle({ title, badge, actionText }: SectionTitleProps) {
           {title}
         </Text>
         {badge ? (
-          <View className="px-2 py-[2px] rounded-[6px] border" style={{ backgroundColor: 'rgba(212,161,58,0.1)', borderColor: 'rgba(212,161,58,0.25)' }}>
+          <View className="px-2 py-[2px] rounded-[6px] border" style={{ backgroundColor: 'rgba(212,161,58,0.12)', borderColor: 'rgba(212,161,58,0.28)' }}>
             <Text variant="micro" style={{ color: matchTheme.colors.goldA }}>{badge}</Text>
           </View>
         ) : null}

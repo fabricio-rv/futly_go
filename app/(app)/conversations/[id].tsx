@@ -11,6 +11,7 @@ import {
 } from '@/src/components/features/store';
 import { IconButton, Text } from '@/src/components/ui';
 import { useConversationThread } from '@/src/features/chat/hooks/useConversationThread';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 const QUICK_ATTACH_MESSAGES = [
   'Compartilhando localizacao agora.',
@@ -18,7 +19,7 @@ const QUICK_ATTACH_MESSAGES = [
   'Confirmei presenca aqui no chat.',
 ];
 
-const QUICK_EMOJIS = ['⚽', '🔥', '👏', '🙌', '✅', '💬', '😄', '🚗'];
+const QUICK_EMOJIS = [':)', ':D', '<3', 'OK', 'GG', 'TMJ', 'GO', 'VAMO'];
 
 function roleLabel(role: 'host' | 'player' | 'system') {
   if (role === 'host') return 'Host';
@@ -28,6 +29,7 @@ function roleLabel(role: 'host' | 'player' | 'system') {
 
 export default function ConversationDetailScreen() {
   const insets = useSafeAreaInsets();
+  const theme = useAppColorScheme();
   const params = useLocalSearchParams<{ id?: string }>();
   const conversationId = params.id ?? '';
   const [draft, setDraft] = useState('');
@@ -109,12 +111,17 @@ export default function ConversationDetailScreen() {
     setEmojiVisible(false);
   }, []);
 
+  const panelBg = theme === 'light' ? '#FFFFFF' : '#0E1322';
+  const panelBorder = theme === 'light' ? '#D6DFEB' : 'rgba(255,255,255,0.06)';
+  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+  const topBg = theme === 'light' ? 'rgba(243,246,251,0.95)' : 'rgba(5,7,11,0.95)';
+
   return (
-    <SafeAreaView className="flex-1 bg-ink-0">
-      <View className="border-b border-line bg-ink-0/95">
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
+      <View className="border-b" style={{ backgroundColor: topBg, borderBottomColor: theme === 'light' ? '#DCE6F2' : 'rgba(255,255,255,0.06)' }}>
         <View className="px-3 pb-2 pt-1 flex-row items-center gap-2">
           <IconButton
-            icon={<ChevronLeft size={18} color="#FFFFFF" />}
+            icon={<ChevronLeft size={18} color={theme === 'light' ? '#1F2937' : '#FFFFFF'} />}
             onPress={() => {
               if (typeof router.canGoBack === 'function' && router.canGoBack()) {
                 router.back();
@@ -137,18 +144,18 @@ export default function ConversationDetailScreen() {
 
             <View className="flex-1">
               <View className="flex-row items-center gap-1">
-                <Text variant="label" className="font-semibold text-white" numberOfLines={1}>
+                <Text variant="label" className="font-semibold text-gray-900 dark:text-white" numberOfLines={1}>
                   {header?.title ?? 'Conversa'}
                 </Text>
                 <Star size={11} color="#D4A13A" fill="#D4A13A" strokeWidth={1.6} />
               </View>
-              <Text variant="micro" className="text-[#86E5B4] mt-[1px]" numberOfLines={1}>
+              <Text variant="micro" className="text-[#1A8F57] dark:text-[#86E5B4] mt-[1px]" numberOfLines={1}>
                 {header?.subtitle ?? 'Carregando...'}
               </Text>
             </View>
           </View>
 
-          <IconButton icon={<MoreVertical size={16} color="#FFFFFF" />} onPress={() => setMenuVisible(true)} />
+          <IconButton icon={<MoreVertical size={16} color={theme === 'light' ? '#1F2937' : '#FFFFFF'} />} onPress={() => setMenuVisible(true)} />
         </View>
       </View>
 
@@ -162,23 +169,29 @@ export default function ConversationDetailScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 112 + insets.bottom }}
       >
-        <View className="self-center rounded-full bg-white/5 px-3 py-1 mb-3 mt-1">
-          <Text variant="micro" className="uppercase tracking-[1.6px] text-fg3 font-bold">
+        <View
+          className="self-center rounded-full px-3 py-1 mb-3 mt-1"
+          style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}
+        >
+          <Text variant="micro" className="uppercase tracking-[1.6px] text-gray-500 dark:text-fg3 font-bold">
             Hoje
           </Text>
         </View>
 
         {error ? (
           <View className="self-center rounded-full border border-[#FF9A9A66] bg-[#FF9A9A22] px-3 py-1.5 mb-2">
-            <Text variant="micro" className="text-[#FFB5B5] font-semibold">
+            <Text variant="micro" className="text-[#D66658] dark:text-[#FFB5B5] font-semibold">
               {error}
             </Text>
           </View>
         ) : null}
 
         {loading && messages.length === 0 ? (
-          <View className="self-center rounded-full bg-white/5 px-3 py-1.5 mb-2">
-            <Text variant="micro" className="text-fg3 font-semibold">
+          <View
+            className="self-center rounded-full px-3 py-1.5 mb-2"
+            style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}
+          >
+            <Text variant="micro" className="text-gray-500 dark:text-fg3 font-semibold">
               Carregando mensagens...
             </Text>
           </View>
@@ -192,53 +205,76 @@ export default function ConversationDetailScreen() {
       </ScrollView>
 
       <View
-        className="absolute left-0 right-0 bottom-0 border-t border-line bg-surf1/95 px-[14px] pt-3 flex-row items-end gap-2"
-        style={{ paddingBottom: Math.max(insets.bottom, 14) }}
+        className="absolute left-0 right-0 bottom-0 border-t px-[14px] pt-3 flex-row items-end gap-2"
+        style={{
+          paddingBottom: Math.max(insets.bottom, 14),
+          borderTopColor: theme === 'light' ? '#DCE6F2' : 'rgba(255,255,255,0.06)',
+          backgroundColor: theme === 'light' ? 'rgba(245,248,252,0.96)' : 'rgba(10,14,24,0.95)',
+        }}
       >
         <IconButton
-          icon={<Plus size={18} color="#86E5B4" strokeWidth={2.3} />}
+          icon={<Plus size={18} color={theme === 'light' ? '#1A8F57' : '#86E5B4'} strokeWidth={2.3} />}
           size={36}
-          className="rounded-full border-[#22B76C4D] bg-[#22B76C24]"
+          className="rounded-full"
+          style={{
+            borderColor: theme === 'light' ? '#86DDB3' : undefined,
+            backgroundColor: theme === 'light' ? 'rgba(34,183,108,0.16)' : undefined,
+          }}
           onPress={() => setPlusVisible(true)}
         />
 
-        <View className="flex-1 min-h-11 rounded-full border border-line2 bg-[#0C111E] px-[14px] py-[8px] flex-row items-center gap-2">
+        <View
+          className="flex-1 min-h-11 rounded-full border px-[14px] py-[8px] flex-row items-center gap-2"
+          style={{
+            borderColor: theme === 'light' ? '#D1DCEB' : 'rgba(255,255,255,0.10)',
+            backgroundColor: theme === 'light' ? '#EAF0F8' : '#0C111E',
+          }}
+        >
           <TextInput
             value={draft}
             onChangeText={setDraft}
             placeholder="Mensagem..."
-            placeholderTextColor="rgba(255,255,255,0.45)"
-            className="flex-1 text-white"
+            placeholderTextColor={theme === 'light' ? '#7A8597' : 'rgba(255,255,255,0.45)'}
+            className="flex-1"
+            style={{ color: theme === 'light' ? '#1F2937' : '#FFFFFF' }}
             multiline
             maxLength={1000}
           />
           <Pressable onPress={() => setEmojiVisible(true)} hitSlop={8}>
-            <Smile size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />
+            <Smile size={16} color={theme === 'light' ? '#7A8597' : 'rgba(255,255,255,0.45)'} strokeWidth={2} />
           </Pressable>
         </View>
 
         <IconButton
           icon={<Send size={18} color="#05070B" strokeWidth={2.4} />}
           size={44}
-          className={`rounded-full border-ok ${canSubmit ? 'bg-ok' : 'bg-[#4B5B55]'}`}
+          className="rounded-full"
+          style={
+            canSubmit
+              ? { backgroundColor: '#22B76C', borderColor: '#22B76C' }
+              : {
+                  backgroundColor: theme === 'light' ? '#B7C7BF' : '#4B5B55',
+                  borderColor: theme === 'light' ? '#A6B6AE' : '#4B5B55',
+                }
+          }
           onPress={handleSend}
         />
       </View>
 
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setMenuVisible(false)}>
-          <Pressable className="bg-[#0E1322] border-t border-line rounded-t-2xl px-4 py-4 gap-2">
-            <Pressable className="rounded-xl border border-line px-3 py-3" onPress={handleMarkUnread}>
-              <Text variant="caption" className="text-white font-semibold">Marcar como nao lida</Text>
+          <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
+            <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={handleMarkUnread}>
+              <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">Marcar como nao lida</Text>
             </Pressable>
-            <Pressable className="rounded-xl border border-line px-3 py-3" onPress={() => { setParticipantsVisible(true); setMenuVisible(false); }}>
-              <Text variant="caption" className="text-white font-semibold">Ver participantes</Text>
+            <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => { setParticipantsVisible(true); setMenuVisible(false); }}>
+              <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">Ver participantes</Text>
             </Pressable>
-            <Pressable className="rounded-xl border border-line px-3 py-3" onPress={handleArchiveToggle}>
-              <Text variant="caption" className="text-white font-semibold">{header?.isArchived ? 'Desarquivar conversa' : 'Arquivar conversa'}</Text>
+            <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={handleArchiveToggle}>
+              <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">{header?.isArchived ? 'Desarquivar conversa' : 'Arquivar conversa'}</Text>
             </Pressable>
-            <Pressable className="rounded-xl border border-line px-3 py-3" onPress={() => { setMenuVisible(false); handleBannerPress(); }}>
-              <Text variant="caption" className="text-white font-semibold">Abrir detalhes da partida</Text>
+            <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => { setMenuVisible(false); handleBannerPress(); }}>
+              <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">Abrir detalhes da partida</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -246,11 +282,11 @@ export default function ConversationDetailScreen() {
 
       <Modal visible={plusVisible} transparent animationType="fade" onRequestClose={() => setPlusVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setPlusVisible(false)}>
-          <Pressable className="bg-[#0E1322] border-t border-line rounded-t-2xl px-4 py-4 gap-2">
-            <Text variant="caption" className="text-fg2 mb-1">Acoes rapidas</Text>
+          <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
+            <Text variant="caption" className="text-gray-600 dark:text-fg2 mb-1">Acoes rapidas</Text>
             {QUICK_ATTACH_MESSAGES.map((item) => (
-              <Pressable key={item} className="rounded-xl border border-line px-3 py-3" onPress={() => void handleQuickAttach(item)}>
-                <Text variant="caption" className="text-white font-semibold">{item}</Text>
+              <Pressable key={item} className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => void handleQuickAttach(item)}>
+                <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">{item}</Text>
               </Pressable>
             ))}
           </Pressable>
@@ -259,11 +295,11 @@ export default function ConversationDetailScreen() {
 
       <Modal visible={emojiVisible} transparent animationType="fade" onRequestClose={() => setEmojiVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setEmojiVisible(false)}>
-          <Pressable className="bg-[#0E1322] border-t border-line rounded-t-2xl px-4 py-4">
-            <Text variant="caption" className="text-fg2 mb-2">Escolha um emoji</Text>
+          <Pressable className="border-t rounded-t-2xl px-4 py-4" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
+            <Text variant="caption" className="text-gray-600 dark:text-fg2 mb-2">Escolha um emoji</Text>
             <View className="flex-row flex-wrap gap-2">
               {QUICK_EMOJIS.map((emoji) => (
-                <Pressable key={emoji} className="h-11 w-11 rounded-xl border border-line items-center justify-center" onPress={() => handleEmojiPick(emoji)}>
+                <Pressable key={emoji} className="h-11 w-11 rounded-xl border items-center justify-center" style={{ borderColor: panelBorder }} onPress={() => handleEmojiPick(emoji)}>
                   <Text variant="bodyLg">{emoji}</Text>
                 </Pressable>
               ))}
@@ -274,13 +310,13 @@ export default function ConversationDetailScreen() {
 
       <Modal visible={participantsVisible} transparent animationType="fade" onRequestClose={() => setParticipantsVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setParticipantsVisible(false)}>
-          <Pressable className="bg-[#0E1322] border-t border-line rounded-t-2xl px-4 py-4">
-            <Text variant="caption" className="text-fg2 mb-2">Participantes</Text>
+          <Pressable className="border-t rounded-t-2xl px-4 py-4" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
+            <Text variant="caption" className="text-gray-600 dark:text-fg2 mb-2">Participantes</Text>
             <View className="gap-2">
               {participants.map((participant) => (
-                <View key={participant.user_id} className="rounded-xl border border-line px-3 py-2">
-                  <Text variant="caption" className="text-white font-semibold">{participant.full_name}</Text>
-                  <Text variant="micro" className="text-fg3">{roleLabel(participant.role)}</Text>
+                <View key={participant.user_id} className="rounded-xl border px-3 py-2" style={{ borderColor: panelBorder }}>
+                  <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">{participant.full_name}</Text>
+                  <Text variant="micro" className="text-gray-500 dark:text-fg3">{roleLabel(participant.role)}</Text>
                 </View>
               ))}
             </View>

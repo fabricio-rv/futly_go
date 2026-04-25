@@ -1,4 +1,4 @@
-﻿import { LinearGradient } from 'expo-linear-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Clock3, MapPin } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
@@ -9,7 +9,7 @@ import { AvatarStack } from '../shared/AvatarStack';
 import { MatchPricePill } from './MatchPricePill';
 import { StatBadge } from '../shared/StatBadge';
 import { StatusStamp } from '../shared/StatusStamp';
-import { matchTheme, matchShadows } from '../shared/theme';
+import { matchShadows, useMatchTheme } from '../shared/theme';
 
 type MatchCardProps = {
   partida: Partida;
@@ -27,6 +27,7 @@ function levelToneToBadge(levelTone: Partida['levelTone']) {
 const defaultBanner: [string, string, string] = ['#0F3A24', '#072314', '#021109'];
 
 export function MatchCard({ partida, onPress, rightAction, bannerPalette = defaultBanner }: MatchCardProps) {
+  const matchTheme = useMatchTheme();
   const fillPercent = partida.totalSlots > 0 ? Math.round((partida.occupiedSlots / partida.totalSlots) * 100) : 0;
 
   return (
@@ -41,26 +42,22 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
       }}
     >
       <LinearGradient colors={bannerPalette} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="h-24 px-[14px] py-3">
-        <View
-          className="absolute inset-0"
-          style={{
-            backgroundColor: 'transparent',
-            borderRadius: 0,
-          }}
-        />
-        <View
-          className="absolute inset-0"
-          style={{
-            opacity: 0.12,
-            backgroundColor: 'transparent',
-          }}
-        />
+        <View className="absolute right-[14px] top-[14px]">
+          <StatusStamp status={partida.status} label={partida.statusLabel} />
+        </View>
+
+        <View className="absolute right-[14px] top-1/2 -mt-7">
+          <Text variant="number" className="text-[60px] opacity-10" style={{ color: '#FFFFFF' }}>
+            {partida.modality.toUpperCase()}
+          </Text>
+        </View>
+
         <View className="flex-row items-end gap-3">
           <Text
             variant="number"
             className="text-[34px] leading-[31px]"
             style={{
-              color: matchTheme.colors.fgPrimary,
+              color: '#FFFFFF',
               fontFamily: 'BebasNeue_400Regular',
               fontWeight: '400',
               letterSpacing: 0,
@@ -71,7 +68,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
               variant="micro"
               className="font-semibold tracking-[2px] uppercase"
               style={{
-                color: matchTheme.colors.fgSecondary,
+                color: 'rgba(255,255,255,0.78)',
                 fontFamily: 'Geist_600SemiBold',
               }}
             >
@@ -82,17 +79,6 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
 
           <MatchPricePill price={partida.pricePerPlayer} />
         </View>
-
-        <View className="absolute right-[14px] top-[14px]">
-          <StatusStamp status={partida.status} label={partida.statusLabel} />
-        </View>
-
-        <View className="absolute right-[14px] top-1/2 -mt-7">
-          <Text variant="number" className="text-[60px] opacity-10" style={{ color: matchTheme.colors.fgPrimary }}>
-            {partida.modality.toUpperCase()}
-          </Text>
-        </View>
-
       </LinearGradient>
 
       <View className="p-[14px]">
@@ -116,7 +102,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-2 flex-1 mr-2">
             <AvatarStack players={partida.players ?? []} />
-            <View className="w-[60px] h-1 rounded-full bg-white/10 overflow-hidden">
+            <View className="w-[60px] h-1 rounded-full overflow-hidden" style={{ backgroundColor: matchTheme.colors.lineStrong }}>
               <View className="h-1 rounded-full" style={{ width: `${fillPercent}%`, backgroundColor: partida.status === 'done' ? matchTheme.colors.warn : matchTheme.colors.ok }} />
             </View>
             <Text

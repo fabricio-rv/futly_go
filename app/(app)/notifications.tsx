@@ -25,9 +25,11 @@ function toRelative(isoDate: string) {
 }
 
 export default function NotificationsScreen() {
+  const theme = useAppColorScheme();
   const { notifications, recentActions, unreadCount, loading, error, setAllRead } = useNotifications();
 
   const title = useMemo(() => `Notificacoes ${unreadCount > 0 ? `(${unreadCount})` : ''}`.trim(), [unreadCount]);
+  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
 
   useFocusEffect(
     useCallback(() => {
@@ -36,7 +38,7 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <HubTopNav
         title={title}
         subtitle="ATIVIDADE"

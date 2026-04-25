@@ -13,13 +13,14 @@ import {
   StatBadge,
   StepIndicator,
   ToggleRow,
-  matchTheme,
+  useMatchTheme,
 } from '@/src/components/features/matches';
 import { TacticalPitch, type PitchMode } from '@/src/components/fifa';
 import { Button, Card, Input, Screen, SelectField, Text } from '@/src/components/ui';
 import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
 import { fetchAddressByCep, formatCep } from '@/src/features/location/cep';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 type MinLevelValue =
   | 'pereba'
@@ -84,28 +85,30 @@ function MinLevelCheckbox({
   label,
   selected,
   onPress,
+  theme,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
+  theme: ReturnType<typeof useMatchTheme>;
 }) {
   return (
     <Pressable
       onPress={onPress}
       className="w-[48.5%] rounded-[14px] border px-[12px] py-[10px] flex-row items-center gap-2"
       style={{
-        backgroundColor: '#0C111E',
-        borderColor: selected ? matchTheme.colors.ok : matchTheme.colors.lineStrong,
+        backgroundColor: theme.colors.bgSurfaceB,
+        borderColor: selected ? theme.colors.ok : theme.colors.lineStrong,
       }}
     >
       <View
         className="w-4 h-4 rounded-[4px] border"
         style={{
-          backgroundColor: selected ? matchTheme.colors.ok : 'transparent',
-          borderColor: selected ? matchTheme.colors.ok : matchTheme.colors.lineStrong,
+          backgroundColor: selected ? theme.colors.ok : 'transparent',
+          borderColor: selected ? theme.colors.ok : theme.colors.lineStrong,
         }}
       />
-      <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+      <Text variant="label" style={{ color: theme.colors.fgPrimary }}>
         {label}
       </Text>
     </Pressable>
@@ -113,6 +116,7 @@ function MinLevelCheckbox({
 }
 
 export default function CreateMatchScreen() {
+  const matchTheme = useMatchTheme();
   const { createMatch, submitting } = useMatches();
   const creatingRef = useRef(false);
 
@@ -478,6 +482,7 @@ export default function CreateMatchScreen() {
                   label={level.label}
                   selected={acceptedLevels.includes(level.value)}
                   onPress={() => toggleLevel(level.value)}
+                  theme={matchTheme}
                 />
               ))}
             </View>
@@ -569,7 +574,7 @@ export default function CreateMatchScreen() {
 
       <Modal transparent visible={showWebDateModal} onRequestClose={() => setShowWebDateModal(false)}>
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
-          <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: '#0C111E', borderColor: matchTheme.colors.lineStrong }}>
+          <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <View className="flex-row items-center justify-between mb-3">
               <Button
                 label="<"
@@ -638,7 +643,7 @@ export default function CreateMatchScreen() {
 
       <Modal transparent visible={showWebTimeModal} onRequestClose={() => setShowWebTimeModal(false)}>
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
-          <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: '#0C111E', borderColor: matchTheme.colors.lineStrong }}>
+          <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
               Selecione o horario
             </Text>

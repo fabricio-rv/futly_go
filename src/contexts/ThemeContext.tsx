@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import { useColorScheme } from 'react-native';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
@@ -15,6 +16,7 @@ const THEME_STORAGE_KEY = 'futly_theme';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const systemColorScheme = useColorScheme();
+  const { setColorScheme } = useNativeWindColorScheme();
   const [theme, setThemeState] = useState<Theme>('dark');
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -22,6 +24,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadTheme();
   }, []);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    setColorScheme(theme);
+  }, [isLoaded, setColorScheme, theme]);
 
   async function loadTheme() {
     try {
@@ -44,6 +51,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   async function setTheme(newTheme: Theme) {
     try {
       setThemeState(newTheme);
+      setColorScheme(newTheme);
       await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
     } catch (error) {
       console.log('Error saving theme:', error);

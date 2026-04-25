@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 
 import { Text } from './Text';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 type InputProps = TextInputProps & {
   label?: string;
@@ -35,6 +36,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   },
   ref,
 ) {
+  const theme = useAppColorScheme();
   const [focused, setFocused] = useState(false);
   const isMultiline = !!rest.multiline;
   const borderClass = error
@@ -46,6 +48,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   const inputClass = isMultiline
     ? 'font-sans text-[15px] text-gray-900 dark:text-text-primary p-0 h-full'
     : 'font-sans text-[15px] text-gray-900 dark:text-text-primary p-0';
+  const placeholderColor = theme === 'light' ? '#9CA3AF' : '#7A8699';
 
   return (
     <View className="w-full">
@@ -62,7 +65,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           {leftAdornment ? <View className={isMultiline ? 'pt-1' : ''}>{leftAdornment}</View> : null}
           <TextInput
             ref={ref}
-            placeholderTextColor="#7A8699"
+            placeholderTextColor={placeholderColor}
             className={`${inputClass} flex-1 ${inputClassName ?? ''}`.trim()}
             textAlignVertical={isMultiline ? 'top' : 'center'}
             underlineColorAndroid="transparent"

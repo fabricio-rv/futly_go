@@ -1,8 +1,6 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView, View } from 'react-native';
-import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -16,8 +14,10 @@ import {
 import { Text } from '@/src/components/ui';
 import { findFilters } from '@/src/features/matches/mockData';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 export default function ExploreMatchesScreen() {
+  const theme = useAppColorScheme();
   const router = useRouter();
   const { availableMatches, fetchAvailableMatches, loadingAvailable } = useMatches();
   const [query, setQuery] = useState('');
@@ -40,9 +40,11 @@ export default function ExploreMatchesScreen() {
     return availableMatches.filter((item) => `${item.title} ${item.location}`.toLowerCase().includes(q));
   }, [availableMatches, query]);
 
+  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
-      <View className="absolute inset-0 bg-white dark:bg-ink-0" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
+      <View className="absolute inset-0" style={{ backgroundColor: bgColor }} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={2} />
@@ -63,7 +65,7 @@ export default function ExploreMatchesScreen() {
 
         {loadingAvailable ? (
           <View className="px-[18px] mt-2">
-            <Text variant="caption" style={{ color: 'rgba(255,255,255,0.65)' }}>
+            <Text variant="caption" className="text-gray-600 dark:text-fg3">
               Carregando partidas...
             </Text>
           </View>
@@ -72,7 +74,7 @@ export default function ExploreMatchesScreen() {
         {filteredMatches.length === 0 ? (
           <EmptyStateCard
             title="Nenhuma partida encontrada"
-            description="Ninguém marcou jogo com os filtros atuais. Que tal ser o primeiro?"
+            description="Ninguem marcou jogo com os filtros atuais. Que tal ser o primeiro?"
             actionLabel="+ Criar Partida"
             onAction={() => router.push('/(app)/create')}
           />
@@ -83,5 +85,3 @@ export default function ExploreMatchesScreen() {
     </SafeAreaView>
   );
 }
-
-

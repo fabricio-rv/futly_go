@@ -1,7 +1,6 @@
-﻿import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
-import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -12,9 +11,10 @@ import {
   SectionTitle,
   StatBadge,
   StepIndicator,
-  matchTheme,
+  useMatchTheme,
 } from '@/src/components/features/matches';
 import { Text } from '@/src/components/ui';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { ratePlayers, rateTags } from '@/src/features/matches/mockData';
 
 function gradeLabel(stars: number) {
@@ -26,13 +26,16 @@ function gradeLabel(stars: number) {
 }
 
 export default function RateScreen() {
+  const matchTheme = useMatchTheme();
+  const theme = useAppColorScheme();
   const [hostStars, setHostStars] = useState(4);
   const [anonymous, setAnonymous] = useState(false);
 
   const selectedTags = useMemo(() => rateTags.filter((tag) => tag.active), []);
+  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>
       <HubHeader />
       <StepIndicator total={2} current={2} />
 
@@ -66,14 +69,14 @@ export default function RateScreen() {
             className="min-h-[110px] rounded-[14px] border px-3 py-3 text-sm"
             style={{
               color: matchTheme.colors.fgPrimary,
-              backgroundColor: '#0C111E',
-              borderColor: 'rgba(34,183,108,0.35)',
+              backgroundColor: matchTheme.colors.bgSurfaceB,
+              borderColor: matchTheme.colors.lineStrong,
             }}
             defaultValue="Pontual, organizacao perfeita. Quadra um pouco apertada para o nivel, mas no geral foi top."
             placeholderTextColor={matchTheme.colors.fgMuted}
           />
 
-          <View className="mt-3 rounded-[14px] border px-3 py-3 flex-row items-center justify-between" style={{ backgroundColor: '#0C111E', borderColor: matchTheme.colors.lineStrong }}>
+          <View className="mt-3 rounded-[14px] border px-3 py-3 flex-row items-center justify-between" style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}>
             <View className="pr-3 flex-1">
               <Text variant="label" className="font-semibold">Avaliacao anonima</Text>
               <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>Seu nome nao aparece</Text>
@@ -101,7 +104,7 @@ export default function RateScreen() {
 
       {selectedTags.length > 0 ? (
         <View className="absolute bottom-24 left-4 right-4 rounded-[14px] border p-3 flex-row items-center" style={{ borderColor: 'rgba(34,183,108,0.35)', backgroundColor: matchTheme.colors.bgSurfaceA }}>
-          <View className="h-9 w-9 rounded-[10px] items-center justify-center" style={{ backgroundColor: 'rgba(34,183,108,0.14)' }}>
+          <View className="h-9 w-9 rounded-[10px] items-center justify-center" style={{ backgroundColor: theme === 'light' ? 'rgba(34,183,108,0.18)' : 'rgba(34,183,108,0.14)' }}>
             <Text variant="caption" style={{ color: matchTheme.colors.okSoft }}>OK</Text>
           </View>
           <View className="ml-3">

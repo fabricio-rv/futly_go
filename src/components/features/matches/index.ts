@@ -27,4 +27,4 @@ export { SectionTitle } from './shared/SectionTitle';
 export { StatBadge } from './shared/StatBadge';
 export { StatusStamp } from './shared/StatusStamp';
 export { StepIndicator } from './shared/StepIndicator';
-export { matchShadows, matchTheme } from './shared/theme';
+export { matchShadows, matchTheme, useMatchTheme } from './shared/theme';

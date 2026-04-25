@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { Text } from './Text';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 export type SelectOption<T extends string> = {
   value: T;
@@ -41,6 +42,7 @@ export function SelectField<T extends string>({
   searchable = false,
   disabled = false,
 }: SelectFieldProps<T>) {
+  const theme = useAppColorScheme();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const selectedOption = options.find((option) => option.value === value) ?? null;
@@ -97,7 +99,7 @@ export function SelectField<T extends string>({
             </Text>
           )}
         </View>
-        <ChevronDown size={16} color="rgba(255,255,255,0.6)" />
+        <ChevronDown size={16} color={theme === 'light' ? 'rgba(31,41,55,0.6)' : 'rgba(255,255,255,0.6)'} />
       </Pressable>
 
       {error ? (
@@ -129,7 +131,7 @@ export function SelectField<T extends string>({
                     value={search}
                     onChangeText={setSearch}
                     placeholder="Buscar..."
-                    placeholderTextColor="#7A8699"
+                    placeholderTextColor={theme === 'light' ? '#9CA3AF' : '#7A8699'}
                     className="flex-1 ml-2 text-text-primary"
                     autoCapitalize="none"
                     autoCorrect={false}

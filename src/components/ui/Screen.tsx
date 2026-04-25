@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import type { PropsWithChildren } from 'react';
 import { View, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 type ScreenProps = PropsWithChildren<{
   padded?: boolean;
@@ -10,15 +11,18 @@ type ScreenProps = PropsWithChildren<{
 }>;
 
 export function Screen({ children, padded = true, showBackground = true, style }: ScreenProps) {
+  const theme = useAppColorScheme();
+  const backgroundColor = theme === 'light' ? '#F3F6FB' : '#0A0E18';
+
   return (
-    <SafeAreaView className="flex-1 bg-ink-1" style={style}>
-      <StatusBar style="light" />
+    <SafeAreaView className="flex-1" style={[{ backgroundColor }, style]}>
+      <StatusBar style={theme === 'light' ? 'dark' : 'light'} />
       <View className="flex-1">
         {showBackground ? (
           <View
             className="absolute inset-0"
             style={{
-              backgroundColor: '#0A0E18',
+              backgroundColor,
             }}
           />
         ) : null}

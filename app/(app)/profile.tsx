@@ -1,4 +1,4 @@
-﻿import { router } from 'expo-router';
+import { router } from 'expo-router';
 import { CalendarClock, ChevronRight, MapPin, Settings, ShieldCheck, Trophy } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
@@ -50,7 +50,7 @@ export default function ProfileScreen() {
     .map((part) => part[0]?.toUpperCase())
     .join('');
 
-  const bgColor = theme === 'light' ? '#FFFFFF' : '#05070B';
+  const bgColor = theme === 'light' ? '#F3F6FB' : '#0A0E18';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
@@ -58,11 +58,11 @@ export default function ProfileScreen() {
         <HubTopNav
           title="Perfil"
           subtitle="ATLETA"
-          rightNode={<IconButton icon={<Settings size={16} color="#FFFFFF" />} onPress={() => router.push('/(app)/settings')} />}
+          rightNode={<IconButton icon={<Settings size={16} color={theme === 'light' ? '#1F2937' : '#FFFFFF'} />} onPress={() => router.push('/(app)/settings')} />}
         />
 
         <LinearGradient
-          colors={['#0F3A24', '#072314']}
+          colors={theme === 'light' ? ['#E3F5EC', '#D6EEE3'] : ['#0F3A24', '#072314']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           className="mx-[18px] rounded-[18px] border border-[#22B76C4D] p-[14px]"
@@ -74,10 +74,10 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <View className="flex-1">
-              <Text variant="bodyLg" className="font-bold text-white">
+              <Text variant="bodyLg" className="font-bold text-gray-900 dark:text-white">
                 {profile?.full_name ?? 'Atleta Futly'}
               </Text>
-              <Text variant="micro" className="mt-0.5 text-[#86E5B4] tracking-[0.4px]">
+              <Text variant="micro" className="mt-0.5 tracking-[0.4px]" style={{ color: theme === 'light' ? '#2F6C54' : '#86E5B4' }}>
                 {profile?.email ?? 'sem-email'}
               </Text>
             </View>
@@ -119,7 +119,7 @@ export default function ProfileScreen() {
 
         <View className="mx-[18px] mt-4 rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[14px]">
           <View className="flex-row items-center gap-2">
-            <CalendarClock size={16} color="#86E5B4" strokeWidth={2} />
+            <CalendarClock size={16} color={theme === 'light' ? '#1A8F57' : '#86E5B4'} strokeWidth={2} />
             <Text variant="label" className="font-bold text-gray-900 dark:text-white">
               Proximas partidas
             </Text>
@@ -138,7 +138,7 @@ export default function ProfileScreen() {
                     </Text>
                   </View>
                   <View className="mt-1 flex-row items-center gap-2">
-                    <MapPin size={13} color="rgba(0,0,0,0.45) dark:rgba(255,255,255,0.45)" />
+                    <MapPin size={13} color={theme === 'light' ? 'rgba(15,23,42,0.45)' : 'rgba(255,255,255,0.45)'} />
                     <Text variant="micro" className="text-gray-600 dark:text-fg3">
                       {match.location} - {match.dateLabel}
                     </Text>
@@ -185,7 +185,7 @@ export default function ProfileScreen() {
 
         <View className="mx-[18px] mt-4 rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[14px]">
           <View className="flex-row items-center gap-2 mb-3">
-            <ShieldCheck size={16} color="#9DB0D1" strokeWidth={2} />
+            <ShieldCheck size={16} color={theme === 'light' ? '#5B6B80' : '#9DB0D1'} strokeWidth={2} />
             <Text variant="label" className="font-bold text-gray-900 dark:text-white">
               Acessos rapidos
             </Text>
@@ -199,7 +199,7 @@ export default function ProfileScreen() {
               <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
                 Editar meu perfil
               </Text>
-              <ChevronRight size={16} color="rgba(0,0,0,0.5) dark:rgba(255,255,255,0.5)" />
+              <ChevronRight size={16} color={theme === 'light' ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)'} />
             </Pressable>
             <Pressable
               className="rounded-[12px] border border-gray-200 dark:border-line bg-white dark:bg-[#0A0F1C] px-3 py-3 flex-row items-center justify-between"
@@ -208,7 +208,7 @@ export default function ProfileScreen() {
               <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
                 Configuracoes
               </Text>
-              <ChevronRight size={16} color="rgba(0,0,0,0.5) dark:rgba(255,255,255,0.5)" />
+              <ChevronRight size={16} color={theme === 'light' ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)'} />
             </Pressable>
           </View>
         </View>
