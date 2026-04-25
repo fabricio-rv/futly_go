@@ -6,11 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   EmptyStateCard,
   FilterBar,
+  HubHeader,
   MatchCard,
+  MatchBottomNav,
   SearchInput,
 } from '@/src/components/features/matches';
-import { HubHeader } from '@/src/components/features/matches/HubHeader';
-import { MatchBottomNav } from '@/src/components/features/matches/MatchBottomNav';
 import { Text } from '@/src/components/ui';
 import { findFilters, findMatches } from '@/src/features/matches/mockData';
 

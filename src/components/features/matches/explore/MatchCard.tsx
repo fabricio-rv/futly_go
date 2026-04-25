@@ -5,11 +5,11 @@ import { Pressable, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
 import type { Partida } from '@/src/features/matches/types';
-import { AvatarStack } from './AvatarStack';
+import { AvatarStack } from '../shared/AvatarStack';
 import { MatchPricePill } from './MatchPricePill';
-import { StatBadge } from './StatBadge';
-import { StatusStamp } from './StatusStamp';
-import { matchTheme, matchShadows } from './theme';
+import { StatBadge } from '../shared/StatBadge';
+import { StatusStamp } from '../shared/StatusStamp';
+import { matchTheme, matchShadows } from '../shared/theme';
 
 type MatchCardProps = {
   partida: Partida;

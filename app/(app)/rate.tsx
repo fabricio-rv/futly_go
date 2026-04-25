@@ -4,15 +4,15 @@ import { Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+  HubHeader,
+  MatchBottomNav,
   PlayerRow,
   RatingCard,
   SectionTitle,
   StatBadge,
   StepIndicator,
+  matchTheme,
 } from '@/src/components/features/matches';
-import { HubHeader } from '@/src/components/features/matches/HubHeader';
-import { MatchBottomNav } from '@/src/components/features/matches/MatchBottomNav';
-import { matchTheme } from '@/src/components/features/matches/theme';
 import { Text } from '@/src/components/ui';
 import { ratePlayers, rateTags } from '@/src/features/matches/mockData';
 

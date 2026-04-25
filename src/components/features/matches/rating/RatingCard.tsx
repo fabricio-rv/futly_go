@@ -2,8 +2,8 @@
 import { View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
-import { RatingStars } from './RatingStars';
-import { matchTheme } from './theme';
+import { RatingStars } from '../shared/RatingStars';
+import { matchTheme } from '../shared/theme';
 
 type RatingCardProps = {
   initials: string;

@@ -3,10 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HubHeader } from '@/src/components/features/matches/HubHeader';
-import { MatchBottomNav } from '@/src/components/features/matches/MatchBottomNav';
-import { MatchCard, PillTabs, PlayerRow, SectionTitle, StatBadge } from '@/src/components/features/matches';
-import { matchTheme } from '@/src/components/features/matches/theme';
+import { HubHeader, MatchBottomNav, MatchCard, PillTabs, PlayerRow, SectionTitle, StatBadge, matchTheme } from '@/src/components/features/matches';
 import { Text } from '@/src/components/ui';
 import { hostMatch, playerMatch } from '@/src/features/matches/mockData';
 import type { Partida } from '@/src/features/matches/types';

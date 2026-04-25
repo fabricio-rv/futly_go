@@ -2,7 +2,7 @@
 
 import { Text } from '@/src/components/ui';
 import type { FiltroPartidas } from '@/src/features/matches/types';
-import { matchTheme } from './theme';
+import { matchTheme } from '../shared/theme';
 
 type FilterBarProps = {
   filters: FiltroPartidas[];

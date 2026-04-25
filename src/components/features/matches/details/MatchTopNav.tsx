@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
-import { matchTheme } from './theme';
+import { matchTheme } from '../shared/theme';
 
 type MatchTopNavProps = {
   title: string;

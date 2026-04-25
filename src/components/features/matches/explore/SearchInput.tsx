@@ -1,7 +1,7 @@
 ﻿import { Search, SlidersHorizontal } from 'lucide-react-native';
 import { TextInput, View } from 'react-native';
 
-import { matchTheme } from './theme';
+import { matchTheme } from '../shared/theme';
 
 type SearchInputProps = {
   value: string;

@@ -2,7 +2,7 @@ import { MapPin } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
-import { matchTheme } from './theme';
+import { matchTheme } from '../shared/theme';
 
 type MapPreviewCardProps = {
   addressLine: string;
