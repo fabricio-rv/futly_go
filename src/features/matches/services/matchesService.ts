@@ -526,6 +526,69 @@ export async function processParticipationRequest(requestId: string, action: 'ac
   }
 }
 
+export type HostPendingRequest = {
+  id: string;
+  matchId: string;
+  matchTitle: string;
+  userName: string;
+  requestedPositionLabel: string;
+  note: string | null;
+  createdAt: string;
+};
+
+export async function fetchHostPendingRequests(): Promise<HostPendingRequest[]> {
+  const userId = await getCurrentUserId();
+
+  const { data: createdMatches, error: createdError } = await supabase
+    .from('matches')
+    .select('id,title')
+    .eq('created_by', userId);
+
+  if (createdError) throw new Error('Nao foi possivel carregar as partidas criadas.');
+
+  const createdMatchIds = (createdMatches ?? []).map((m) => m.id);
+  if (createdMatchIds.length === 0) {
+    return [];
+  }
+
+  const { data: requestRows, error: requestError } = await supabase
+    .from('match_participation_requests')
+    .select('id,match_id,user_id,requested_position_label,note,created_at,status')
+    .in('match_id', createdMatchIds)
+    .eq('status', 'pending');
+
+  if (requestError) throw new Error('Nao foi possivel carregar as solicitacoes.');
+
+  if (!requestRows || requestRows.length === 0) {
+    return [];
+  }
+
+  const userIds = Array.from(new Set((requestRows ?? []).map((r: any) => r.user_id)));
+  let profiles: ProfileRow[] = [];
+  if (userIds.length > 0) {
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('id,full_name')
+      .in('id', userIds);
+
+    if (profileError) throw new Error('Nao foi possivel carregar perfis dos solicitantes.');
+    profiles = (profileData ?? []) as ProfileRow[];
+  }
+
+  const profileById = new Map(profiles.map((p) => [p.id, p]));
+  const matchById = new Map((createdMatches ?? []).map((m: any) => [m.id, m]));
+
+  return (requestRows ?? []).map((row: any) => ({
+    id: row.id,
+    matchId: row.match_id,
+    matchTitle: matchById.get(row.match_id)?.title ?? 'Partida',
+    userName: profileById.get(row.user_id)?.full_name ?? 'Atleta',
+    requestedPositionLabel: row.requested_position_label,
+    note: row.note,
+    createdAt: row.created_at,
+  }));
+}
+
 export async function leaveMatch(matchId: string) {
   const userId = await getCurrentUserId();
   const match = await getMatchById(matchId);

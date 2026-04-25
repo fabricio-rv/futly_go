@@ -15,6 +15,8 @@ export function useNotifications() {
     body: string;
     isRead: boolean;
     createdAt: string;
+    type: string;
+    metadata: Record<string, any> | null;
   }>>([]);
   const [recentActions, setRecentActions] = useState<Array<{
     id: string;
@@ -39,6 +41,8 @@ export function useNotifications() {
           body: row.body,
           isRead: row.is_read,
           createdAt: row.created_at,
+          type: row.type,
+          metadata: row.metadata as Record<string, any> | null,
         })),
       );
       setRecentActions(actionRows);

@@ -4,6 +4,7 @@ import type { Partida } from '@/src/features/matches/types';
 import {
   createMatch as createMatchService,
   fetchAvailableMatches as fetchAvailableMatchesService,
+  fetchHostPendingRequests as fetchHostPendingRequestsService,
   getMatchDetails as getMatchDetailsService,
   getUserAgenda as getUserAgendaService,
   joinMatch as joinMatchService,
@@ -13,12 +14,14 @@ import {
   type AgendaResult,
   type AvailableMatchesFilters,
   type CreateMatchInput,
+  type HostPendingRequest,
   type MatchDetails,
 } from '@/src/features/matches/services/matchesService';
 
 export function useMatches() {
   const [availableMatches, setAvailableMatches] = useState<Partida[]>([]);
   const [agenda, setAgenda] = useState<AgendaResult>({ criadas: [], marcadas: [], pendentes: [], ratingTasks: [] });
+  const [hostPendingRequests, setHostPendingRequests] = useState<HostPendingRequest[]>([]);
   const [loadingAvailable, setLoadingAvailable] = useState(false);
   const [loadingAgenda, setLoadingAgenda] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -155,6 +158,18 @@ export function useMatches() {
     }
   }, []);
 
+  const getHostPendingRequests = useCallback(async () => {
+    try {
+      const data = await fetchHostPendingRequestsService();
+      setHostPendingRequests(data);
+      return data;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao carregar solicitacoes.';
+      setError(message);
+      throw err;
+    }
+  }, []);
+
   const hasData = useMemo(
     () => availableMatches.length > 0 || agenda.criadas.length > 0 || agenda.marcadas.length > 0 || agenda.pendentes.length > 0,
     [agenda.criadas.length, agenda.marcadas.length, agenda.pendentes.length, availableMatches.length],
@@ -163,6 +178,7 @@ export function useMatches() {
   return {
     availableMatches,
     agenda,
+    hostPendingRequests,
     loadingAvailable,
     loadingAgenda,
     loadingDetails,
@@ -176,6 +192,7 @@ export function useMatches() {
     processParticipationRequest,
     submitMatchRating,
     getMatchDetails,
+    getHostPendingRequests,
     getUserAgenda,
   };
 }

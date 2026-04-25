@@ -9,6 +9,7 @@ import { Button, Text } from '@/src/components/ui';
 import type { Partida } from '@/src/features/matches/types';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import type { RatingTask } from '@/src/features/matches/services/matchesService';
+import { getOrCreateMatchConversation } from '@/src/features/chat/services/chatService';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 type AgendaTab = 'criadas' | 'marcadas' | 'pendentes';
@@ -21,11 +22,11 @@ export default function AgendaScreen() {
   const [selectedTask, setSelectedTask] = useState<RatingTask | null>(null);
   const [ratingScore, setRatingScore] = useState(5);
   const [ratingComment, setRatingComment] = useState('');
-  const { agenda, getUserAgenda, submitMatchRating, loadingAgenda, submitting } = useMatches();
+  const { agenda, hostPendingRequests, getUserAgenda, getHostPendingRequests, submitMatchRating, processParticipationRequest, loadingAgenda, submitting } = useMatches();
 
   useEffect(() => {
-    getUserAgenda().catch(() => undefined);
-  }, [getUserAgenda]);
+    void Promise.all([getUserAgenda(), getHostPendingRequests()]).catch(() => undefined);
+  }, [getUserAgenda, getHostPendingRequests]);
 
   const list: Partida[] = tab === 'criadas' ? agenda.criadas : tab === 'marcadas' ? agenda.marcadas : agenda.pendentes;
 
@@ -50,6 +51,16 @@ export default function AgendaScreen() {
     setRatingModalVisible(false);
     setSelectedTask(null);
     await getUserAgenda();
+  }
+
+  async function handleChatPress(matchId: string) {
+    try {
+      const conversationId = await getOrCreateMatchConversation(matchId);
+      router.push(`/(app)/conversations/${conversationId}`);
+    } catch {
+      // Fallback to conversations list if error
+      router.push('/(app)/conversations');
+    }
   }
 
   const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
@@ -82,12 +93,13 @@ export default function AgendaScreen() {
             <MatchCard
               key={partida.id}
               partida={partida}
+              onPress={() => router.push(`/(app)/${partida.id}`)}
               rightAction={
                 tab === 'criadas' ? (
                   <Pressable
                     className="h-10 rounded-[10px] px-3 flex-row items-center"
                     style={{ backgroundColor: matchTheme.colors.ok }}
-                    onPress={() => router.push('/(app)/conversations')}
+                    onPress={() => void handleChatPress(partida.id)}
                   >
                     <MessageCircle size={13} stroke="#05070B" />
                     <Text variant="caption" className="ml-1 font-semibold" style={{ color: '#05070B' }}>Chat</Text>
@@ -126,12 +138,55 @@ export default function AgendaScreen() {
             </Text>
           ) : null}
 
-          {!loadingAgenda && list.length === 0 ? (
+          {tab === 'pendentes' && (
+            <View className="mt-[14px]">
+              <SectionTitle title="Solicitacoes Pendentes" badge={String(hostPendingRequests.length)} />
+              {hostPendingRequests.length === 0 ? (
+                <View className="rounded-[16px] border px-4 py-4" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Sem solicitacoes pendentes como host.
+                  </Text>
+                </View>
+              ) : (
+                <View className="gap-2">
+                  {hostPendingRequests.map((request) => (
+                    <View key={request.id} className="rounded-[16px] border px-4 py-3" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
+                      <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                        {request.userName}
+                      </Text>
+                      <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">
+                        {request.matchTitle} - {request.requestedPositionLabel}
+                      </Text>
+                      {request.note ? (
+                        <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">
+                          Nota: {request.note}
+                        </Text>
+                      ) : null}
+                      <View className="flex-row gap-2 mt-3">
+                        <Pressable
+                          className="rounded-[10px] border border-[#22B76C66] bg-[#22B76C22] px-3 py-2 flex-1"
+                          onPress={() => void processParticipationRequest(request.id, 'accept').then(() => getHostPendingRequests())}
+                        >
+                          <Text variant="micro" className="text-[#86E5B4] font-semibold text-center">Aceitar</Text>
+                        </Pressable>
+                        <Pressable
+                          className="rounded-[10px] border border-[#EF444466] bg-[#EF444422] px-3 py-2 flex-1"
+                          onPress={() => void processParticipationRequest(request.id, 'reject').then(() => getHostPendingRequests())}
+                        >
+                          <Text variant="micro" className="text-[#FCA5A5] font-semibold text-center">Recusar</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {!loadingAgenda && list.length === 0 && tab !== 'pendentes' ? (
             <View className="rounded-[16px] border px-4 py-5" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
               <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                {tab === 'pendentes'
-                  ? 'Sem solicitacoes pendentes no momento.'
-                  : `Nenhuma partida ${tab === 'criadas' ? 'criada' : 'marcada'} ainda.`}
+                {`Nenhuma partida ${tab === 'criadas' ? 'criada' : 'marcada'} ainda.`}
               </Text>
             </View>
           ) : null}
