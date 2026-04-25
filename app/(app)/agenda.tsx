@@ -111,28 +111,30 @@ export default function AgendaScreen() {
             />
           ))}
 
-          <View className="mt-4">
-            <SectionTitle title="Avaliacoes pendentes" badge={String(agenda.ratingTasks.length)} />
-            {agenda.ratingTasks.length === 0 ? (
-              <View className="rounded-[16px] border px-4 py-4" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
-                <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                  Sem avaliacoes pendentes agora.
-                </Text>
-              </View>
-            ) : (
-              <View className="gap-2">
-                {agenda.ratingTasks.map((task) => (
-                  <View key={task.taskId} className="rounded-[16px] border px-4 py-3" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
-                    <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
-                      {task.actionLabel}: {task.targetUserName}
-                    </Text>
-                    <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{task.matchTitle} - {task.matchDate}</Text>
-                    <Button label="Avaliar agora" className="mt-3" onPress={() => openRating(task)} />
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
+          {tab === 'pendentes' && (
+            <View className="mt-4">
+              <SectionTitle title="Avaliacoes pendentes" badge={String(agenda.ratingTasks.length)} />
+              {agenda.ratingTasks.length === 0 ? (
+                <View className="rounded-[16px] border px-4 py-4" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Sem avaliacoes pendentes agora.
+                  </Text>
+                </View>
+              ) : (
+                <View className="gap-2">
+                  {agenda.ratingTasks.map((task) => (
+                    <View key={task.taskId} className="rounded-[16px] border px-4 py-3" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
+                      <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                        {task.actionLabel}: {task.targetUserName}
+                      </Text>
+                      <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{task.matchTitle} - {task.matchDate}</Text>
+                      <Button label="Avaliar agora" className="mt-3" onPress={() => openRating(task)} />
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
 
           {loadingAgenda ? (
             <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
