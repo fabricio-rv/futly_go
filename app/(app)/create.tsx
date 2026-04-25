@@ -527,7 +527,7 @@ export default function CreateMatchScreen() {
               </View>
             </View>
 
-            <View className="items-center">
+            <View className="items-center -mt-2">
               <TacticalPitch
                 mode={mode}
                 selectedIndexes={selectedPositionIndexes}
