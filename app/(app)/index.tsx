@@ -1,6 +1,8 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { ScrollView, View } from 'react-native';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -39,8 +41,8 @@ export default function ExploreMatchesScreen() {
   }, [availableMatches, query]);
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-0">
-      <View className="absolute inset-0 bg-ink-0" />
+    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
+      <View className="absolute inset-0 bg-white dark:bg-ink-0" />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={2} />
@@ -81,3 +83,5 @@ export default function ExploreMatchesScreen() {
     </SafeAreaView>
   );
 }
+
+

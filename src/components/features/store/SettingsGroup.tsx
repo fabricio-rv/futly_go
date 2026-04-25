@@ -3,6 +3,7 @@ import { Pressable, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 
 import { Text } from '@/src/components/ui';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 type IconTone = 'default' | 'ok' | 'gold' | 'bad' | 'sky';
 
@@ -33,45 +34,103 @@ type SettingsGroupProps = {
 };
 
 export function SettingsGroup({ title, rows }: SettingsGroupProps) {
+	const theme = useAppColorScheme();
+	const cardBg = theme === 'light' ? '#F8FAFB' : '#0C111E';
+	const cardBorder = theme === 'light' ? '#E5E7EB' : 'rgba(255,255,255,0.10)';
+	const borderDivider = theme === 'light' ? '#F3F4F6' : 'rgba(255,255,255,0.06)';
+
 	return (
 		<View>
-			<Text variant="micro" className="px-[22px] pt-[18px] pb-[6px] uppercase tracking-[2.2px] font-extrabold text-fg4">
+			<Text
+				variant="micro"
+				className="px-[22px] pt-[18px] pb-[6px] uppercase tracking-[2.2px] font-extrabold"
+				style={{ color: theme === 'light' ? '#9CA3AF' : 'rgba(255,255,255,0.28)' }}
+			>
 				{title}
 			</Text>
 
-			<View className="mx-[18px] rounded-[18px] border border-line2 bg-[#0C111E] overflow-hidden">
+			<View
+				style={{
+					marginHorizontal: 18,
+					borderRadius: 18,
+					borderWidth: 1,
+					borderColor: cardBorder,
+					backgroundColor: cardBg,
+					overflow: 'hidden',
+				}}
+			>
 				{rows.map((row, index) => (
 					<Pressable
 						key={row.id}
 						onPress={row.onPress}
-						className={`px-[14px] py-[14px] flex-row items-center gap-[14px] ${
-							index < rows.length - 1 ? 'border-b border-line' : ''
-						}`}
+						style={{
+							paddingHorizontal: 14,
+							paddingVertical: 14,
+							flexDirection: 'row',
+							alignItems: 'center',
+							gap: 14,
+							borderBottomWidth: index < rows.length - 1 ? 1 : 0,
+							borderBottomColor: borderDivider,
+						}}
 					>
 						<View className={`h-[34px] w-[34px] rounded-[10px] items-center justify-center ${iconToneClass[row.iconTone ?? 'default']}`}>
 							{row.icon}
 						</View>
 
 						<View className="flex-1">
-							<Text variant="label" className={`font-medium ${row.danger ? 'text-[#FF8B7A]' : 'text-white'}`}>
+							<Text
+								variant="label"
+								className="font-medium"
+								style={{
+									color: row.danger
+										? '#FF8B7A'
+										: theme === 'light'
+											? '#1F2937'
+											: '#FFFFFF',
+								}}
+							>
 								{row.title}
 							</Text>
 							{row.subtitle ? (
-								<Text variant="micro" className="text-fg3 mt-[1px]">
+								<Text
+									variant="micro"
+									style={{
+										color: theme === 'light' ? '#6B7280' : 'rgba(255,255,255,0.45)',
+										marginTop: 1,
+									}}
+								>
 									{row.subtitle}
 								</Text>
 							) : null}
 						</View>
 
 						{row.rightLabel ? (
-							<Text variant="caption" className="text-fg3 mr-1">
+							<Text
+								variant="caption"
+								style={{
+									color:
+										theme === 'light'
+											? 'rgba(0,0,0,0.5)'
+											: 'rgba(255,255,255,0.45)',
+									marginRight: 4,
+								}}
+							>
 								{row.rightLabel}
 							</Text>
 						) : null}
 
 						{row.rightNode ? row.rightNode : null}
 
-						{row.showArrow ? <ChevronRight size={14} color="rgba(255,255,255,0.28)" /> : null}
+						{row.showArrow ? (
+							<ChevronRight
+								size={14}
+								color={
+									theme === 'light'
+										? 'rgba(0,0,0,0.3)'
+										: 'rgba(255,255,255,0.28)'
+								}
+							/>
+						) : null}
 					</Pressable>
 				))}
 			</View>

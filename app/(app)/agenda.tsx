@@ -1,37 +1,78 @@
-﻿import { MessageCircle } from 'lucide-react-native';
+import { MessageCircle, Star } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HubHeader, MatchBottomNav, MatchCard, PillTabs, SectionTitle, matchTheme } from '@/src/components/features/matches';
-import { Text } from '@/src/components/ui';
+import { Button, Text } from '@/src/components/ui';
 import type { Partida } from '@/src/features/matches/types';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
+import type { RatingTask } from '@/src/features/matches/services/matchesService';
+
+type AgendaTab = 'criadas' | 'marcadas' | 'pendentes';
 
 export default function AgendaScreen() {
-  const [tab, setTab] = useState<'criadas' | 'marcadas'>('criadas');
-  const { agenda, getUserAgenda, loadingAgenda } = useMatches();
+  const [tab, setTab] = useState<AgendaTab>('criadas');
+  const [ratingModalVisible, setRatingModalVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<RatingTask | null>(null);
+  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingComment, setRatingComment] = useState('');
+  const { agenda, getUserAgenda, submitMatchRating, loadingAgenda, submitting } = useMatches();
 
   useEffect(() => {
     getUserAgenda().catch(() => undefined);
   }, [getUserAgenda]);
 
-  const list: Partida[] = tab === 'criadas' ? agenda.criadas : agenda.marcadas;
+  const list: Partida[] = tab === 'criadas' ? agenda.criadas : tab === 'marcadas' ? agenda.marcadas : agenda.pendentes;
+
+  function openRating(task: RatingTask) {
+    setSelectedTask(task);
+    setRatingScore(5);
+    setRatingComment('');
+    setRatingModalVisible(true);
+  }
+
+  async function handleSubmitRating() {
+    if (!selectedTask) return;
+
+    await submitMatchRating({
+      matchId: selectedTask.matchId,
+      reviewedId: selectedTask.targetUserId,
+      targetRole: selectedTask.targetRole,
+      score: ratingScore,
+      comment: ratingComment.trim() || null,
+    });
+
+    setRatingModalVisible(false);
+    setSelectedTask(null);
+    await getUserAgenda();
+  }
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-0">
+    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
       <HubHeader />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <PillTabs
-          tabs={[{ id: 'criadas', label: 'Criadas' }, { id: 'marcadas', label: 'Marcadas' }]}
+          tabs={[{ id: 'criadas', label: 'Criadas' }, { id: 'marcadas', label: 'Marcadas' }, { id: 'pendentes', label: 'Pendentes' }]}
           activeId={tab}
-          onChange={(id) => setTab(id as 'criadas' | 'marcadas')}
+          onChange={(id) => setTab(id as AgendaTab)}
         />
 
         <View className="px-[18px]">
-          <SectionTitle title={tab === 'criadas' ? 'Como Anfitriao' : 'Como Jogador'} badge={String(list.length)} actionText="Ver todas" />
+          <SectionTitle
+            title={
+              tab === 'criadas'
+                ? 'Como Anfitriao'
+                : tab === 'marcadas'
+                  ? 'Como Jogador'
+                  : 'Solicitacoes Pendentes'
+            }
+            badge={String(list.length)}
+            actionText="Ver todas"
+          />
 
           {list.map((partida) => (
             <MatchCard
@@ -52,6 +93,29 @@ export default function AgendaScreen() {
             />
           ))}
 
+          <View className="mt-4">
+            <SectionTitle title="Avaliacoes pendentes" badge={String(agenda.ratingTasks.length)} />
+            {agenda.ratingTasks.length === 0 ? (
+              <View className="rounded-[16px] border px-4 py-4" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
+                <Text variant="caption" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                  Sem avaliacoes pendentes agora.
+                </Text>
+              </View>
+            ) : (
+              <View className="gap-2">
+                {agenda.ratingTasks.map((task) => (
+                  <View key={task.taskId} className="rounded-[16px] border px-4 py-3" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
+                    <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                      {task.actionLabel}: {task.targetUserName}
+                    </Text>
+                    <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{task.matchTitle} - {task.matchDate}</Text>
+                    <Button label="Avaliar agora" className="mt-3" onPress={() => openRating(task)} />
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+
           {loadingAgenda ? (
             <Text variant="caption" style={{ color: 'rgba(255,255,255,0.65)' }}>
               Carregando agenda...
@@ -61,7 +125,9 @@ export default function AgendaScreen() {
           {!loadingAgenda && list.length === 0 ? (
             <View className="rounded-[16px] border px-4 py-5" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
               <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                Nenhuma partida {tab === 'criadas' ? 'criada' : 'marcada'} ainda.
+                {tab === 'pendentes'
+                  ? 'Sem solicitacoes pendentes no momento.'
+                  : `Nenhuma partida ${tab === 'criadas' ? 'criada' : 'marcada'} ainda.`}
               </Text>
             </View>
           ) : null}
@@ -69,6 +135,42 @@ export default function AgendaScreen() {
       </ScrollView>
 
       <MatchBottomNav active="agenda" />
+
+      <Modal visible={ratingModalVisible} transparent animationType="fade" onRequestClose={() => setRatingModalVisible(false)}>
+        <Pressable className="flex-1 bg-black/60 justify-center px-6" onPress={() => setRatingModalVisible(false)}>
+          <Pressable className="rounded-[18px] border border-line bg-[#0E1322] p-4">
+            <Text variant="label" className="font-bold text-gray-900 dark:text-white">Avaliar {selectedTask?.targetUserName}</Text>
+            <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{selectedTask?.matchTitle}</Text>
+
+            <View className="flex-row gap-2 mt-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Pressable key={star} onPress={() => setRatingScore(star)}>
+                  <Star
+                    size={22}
+                    color={star <= ratingScore ? '#D4A13A' : 'rgba(255,255,255,0.35)'}
+                    fill={star <= ratingScore ? '#D4A13A' : 'transparent'}
+                  />
+                </Pressable>
+              ))}
+            </View>
+
+            <TextInput
+              value={ratingComment}
+              onChangeText={setRatingComment}
+              placeholder="Comentario opcional"
+              placeholderTextColor="rgba(255,255,255,0.45)"
+              className="mt-4 min-h-[84px] rounded-[12px] border border-line bg-[#0A0F1C] px-3 py-2 text-gray-900 dark:text-white"
+              multiline
+              maxLength={280}
+            />
+
+            <View className="flex-row gap-2 mt-4">
+              <Button label="Cancelar" variant="ghost" className="flex-1" onPress={() => setRatingModalVisible(false)} />
+              <Button label="Enviar" className="flex-1" loading={submitting} disabled={submitting} onPress={() => void handleSubmitRating()} />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

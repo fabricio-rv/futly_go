@@ -22,7 +22,7 @@ export interface Jogador {
   id: string;
   name: string;
   initials: string;
-  rating: number;
+  rating: number | null;
   position: string;
   gradient: [string, string];
   isHost?: boolean;

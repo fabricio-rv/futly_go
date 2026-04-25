@@ -4,6 +4,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import { IconButton, Text } from '@/src/components/ui';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 type HubTopNavProps = {
 	title: string;
@@ -20,13 +21,16 @@ export function HubTopNav({
 	hideBack = false,
 	onBackPress,
 }: HubTopNavProps) {
+	const theme = useAppColorScheme();
+	const iconColor = theme === 'dark' ? '#FFFFFF' : '#1A1A2E';
+
 	return (
 		<View className="px-4 pb-3 pt-1 flex-row items-center">
 			{hideBack ? (
 				<View className="w-10" />
 			) : (
 				<IconButton
-					icon={<ChevronLeft size={18} color="#FFFFFF" />}
+					icon={<ChevronLeft size={18} color={iconColor} />}
 					onPress={() => {
 						if (onBackPress) {
 							onBackPress();
@@ -42,11 +46,11 @@ export function HubTopNav({
 			)}
 
 			<View className="flex-1 items-center">
-				<Text variant="body" className="font-semibold text-white">
+				<Text variant="body" className="font-semibold text-gray-900 dark:text-white">
 					{title}
 				</Text>
 				{subtitle ? (
-					<Text variant="micro" className="mt-[1px] uppercase tracking-[1.8px] font-bold text-fg3">
+					<Text variant="micro" className="mt-[1px] uppercase tracking-[1.8px] font-bold text-gray-600 dark:text-fg3">
 						{subtitle}
 					</Text>
 				) : null}

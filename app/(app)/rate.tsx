@@ -1,6 +1,7 @@
 ﻿import { ChevronRight } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -31,7 +32,7 @@ export default function RateScreen() {
   const selectedTags = useMemo(() => rateTags.filter((tag) => tag.active), []);
 
   return (
-    <SafeAreaView className="flex-1 bg-ink-0">
+    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
       <HubHeader />
       <StepIndicator total={2} current={2} />
 

@@ -1,22 +1,19 @@
-﻿import {
+import {
 	Bell,
 	CircleHelp,
-	Eye,
 	FileText,
-	Globe,
 	Lock,
 	LogOut,
 	MapPin,
 	MessageCircle,
 	Moon,
-	Shield,
 	Star,
 	Store,
+	Sun,
 	Trash2,
 	UserRound,
-	UserX,
 } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,13 +23,25 @@ import { AuthFeedbackModal } from '@/src/components/features/auth';
 import { MatchBottomNav } from '@/src/components/features/matches';
 import { HubTopNav, SettingsGroup, type SettingsRow } from '@/src/components/features/store';
 import { ToggleSwitch, Text } from '@/src/components/ui';
-import { signOut } from '@/src/features/auth/service';
+import { signOut, deleteAccount } from '@/src/features/auth/service';
+import { useProfile } from '@/src/features/profile/hooks/useProfile';
+import { useSettings } from '@/src/features/settings/hooks/useSettings';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 export default function SettingsScreen() {
-	const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-	const [locationEnabled, setLocationEnabled] = useState(true);
+	const theme = useAppColorScheme();
+	const { profile, loadProfile } = useProfile();
+	const { settings, loadSettings, updateNotifications, updateLocation, setTheme } = useSettings();
+
 	const [showLogoutModal, setShowLogoutModal] = useState(false);
+	const [showDeleteModal, setShowDeleteModal] = useState(false);
 	const [signingOut, setSigningOut] = useState(false);
+	const [deleting, setDeleting] = useState(false);
+
+	useEffect(() => {
+		loadProfile().catch(() => undefined);
+		loadSettings().catch(() => undefined);
+	}, [loadProfile, loadSettings]);
 
 	async function handleConfirmSignOut() {
 		if (signingOut) return;
@@ -47,23 +56,37 @@ export default function SettingsScreen() {
 		}
 	}
 
+	async function handleConfirmDeleteAccount() {
+		if (deleting) return;
+
+		try {
+			setDeleting(true);
+			await deleteAccount();
+			setShowDeleteModal(false);
+			router.replace('/(auth)');
+		} finally {
+			setDeleting(false);
+		}
+	}
+
 	const accountRows: SettingsRow[] = [
 		{
 			id: 'edit-profile',
 			icon: <UserRound size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'ok',
 			title: 'Editar perfil',
-			subtitle: 'Nome, foto, posicao, cidade',
+			subtitle: 'Nome, bio, telefone, cidade',
 			showArrow: true,
-			onPress: () => router.push('/(app)/profile'),
+			onPress: () => router.push('/(app)/edit-profile'),
 		},
 		{
 			id: 'security',
 			icon: <Lock size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
 			title: 'Senha e seguranca',
-			subtitle: 'Trocar senha - 2 fatores',
+			subtitle: 'Trocar senha com OTP',
 			showArrow: true,
+			onPress: () => router.push('/(app)/security'),
 		},
 		{
 			id: 'plan',
@@ -73,13 +96,14 @@ export default function SettingsScreen() {
 			subtitle: 'Gold - Renova 10/05',
 			rightLabel: 'Gerenciar',
 			showArrow: true,
+			onPress: () => router.push('/(app)/plan'),
 		},
 		{
 			id: 'store',
 			icon: <Store size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: 'Loja e planos',
-			subtitle: 'Ver pacotes e beneficios',
+			title: 'Planos',
+			subtitle: 'Ver pacotes e beneficios dos planos',
 			showArrow: true,
 			onPress: () => router.push('/(app)/store'),
 		},
@@ -94,8 +118,8 @@ export default function SettingsScreen() {
 			subtitle: 'Push - Chat - Convites',
 			rightNode: (
 				<ToggleSwitch
-					value={notificationsEnabled}
-					onValueChange={setNotificationsEnabled}
+					value={settings?.notificationsEnabled ?? true}
+					onValueChange={updateNotifications}
 				/>
 			),
 		},
@@ -106,53 +130,18 @@ export default function SettingsScreen() {
 			title: 'Localizacao',
 			subtitle: 'Encontrar partidas perto',
 			rightNode: (
-				<ToggleSwitch value={locationEnabled} onValueChange={setLocationEnabled} />
+				<ToggleSwitch value={settings?.locationEnabled ?? true} onValueChange={updateLocation} />
 			),
 		},
 		{
-			id: 'language',
-			icon: <Globe size={16} color="currentColor" strokeWidth={2} />,
-			iconTone: 'default',
-			title: 'Idioma',
-			subtitle: 'Portugues (Brasil)',
-			rightLabel: 'pt-BR',
-			showArrow: true,
-		},
-		{
 			id: 'theme',
-			icon: <Moon size={16} color="currentColor" strokeWidth={2} />,
+			icon: settings?.theme === 'dark' ? <Moon size={16} color="currentColor" strokeWidth={2} /> : <Sun size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
 			title: 'Tema',
-			subtitle: 'Escuro - Sempre ligado',
-			rightLabel: 'Escuro',
-		},
-	];
-
-	const privacyRows: SettingsRow[] = [
-		{
-			id: 'invites',
-			icon: <Shield size={16} color="currentColor" strokeWidth={2} />,
-			iconTone: 'default',
-			title: 'Quem pode me convidar',
-			subtitle: 'Apenas amigos e plano Gold+',
+			subtitle: settings?.theme === 'dark' ? 'Escuro' : 'Claro',
+			rightLabel: settings?.theme === 'dark' ? 'Escuro' : 'Claro',
 			showArrow: true,
-		},
-		{
-			id: 'visibility',
-			icon: <Eye size={16} color="currentColor" strokeWidth={2} />,
-			iconTone: 'default',
-			title: 'Visibilidade do perfil',
-			subtitle: 'Publico',
-			rightLabel: 'Publico',
-			showArrow: true,
-		},
-		{
-			id: 'blocked',
-			icon: <UserX size={16} color="currentColor" strokeWidth={2} />,
-			iconTone: 'default',
-			title: 'Bloqueados',
-			subtitle: '3 contas bloqueadas',
-			showArrow: true,
+			onPress: () => setTheme(settings?.theme === 'dark' ? 'light' : 'dark').catch(() => undefined),
 		},
 	];
 
@@ -164,6 +153,7 @@ export default function SettingsScreen() {
 			title: 'Central de ajuda',
 			subtitle: 'FAQ - Tutoriais',
 			showArrow: true,
+			onPress: () => router.push('/(app)/help-center'),
 		},
 		{
 			id: 'support-chat',
@@ -172,6 +162,7 @@ export default function SettingsScreen() {
 			title: 'Falar com suporte',
 			subtitle: 'Resposta em ate 4h',
 			showArrow: true,
+			onPress: () => router.push('/(app)/support-chat'),
 		},
 		{
 			id: 'terms',
@@ -180,6 +171,7 @@ export default function SettingsScreen() {
 			title: 'Termos - Privacidade',
 			subtitle: 'Atualizado em 15/04/26',
 			showArrow: true,
+			onPress: () => router.push('/(app)/terms'),
 		},
 	];
 
@@ -198,57 +190,67 @@ export default function SettingsScreen() {
 			icon: <Trash2 size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'bad',
 			title: 'Excluir conta',
-			subtitle: 'Permanente - Remove todo o historico',
+			subtitle: 'Permanente - Todos dados apagados',
 			danger: true,
+			onPress: () => setShowDeleteModal(true),
 		},
 	];
 
+	const initials = (profile?.full_name ?? 'Atleta')
+		.split(' ')
+		.filter(Boolean)
+		.slice(0, 2)
+		.map((part) => part[0]?.toUpperCase())
+		.join('');
+
+	const bgColor = theme === 'light' ? '#FFFFFF' : '#05070B';
+	const textColor = theme === 'light' ? '#1A1A2E' : '#FFFFFF';
+
 	return (
-		<SafeAreaView className="flex-1 bg-ink-0">
+		<SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
 			<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
 				<HubTopNav title="Configuracoes" subtitle="v 1.4.2" />
 
 				<LinearGradient
-					colors={['#0F3A24', '#072314']}
+					colors={theme === 'dark' ? ['#0F3A24', '#072314'] : ['#E8F9F3', '#D9F1E9']}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 1 }}
 					className="mx-[18px] mb-2 rounded-[18px] border border-[#22B76C4D] px-[14px] py-[14px] flex-row items-center gap-3"
 				>
 					<View className="h-[46px] w-[46px] rounded-full border-2 border-goldB bg-[#1B3A5F] items-center justify-center">
 						<Text variant="label" className="font-bold text-white">
-							FR
+							{initials || 'AA'}
 						</Text>
 					</View>
 
 					<View className="flex-1">
-						<Text variant="label" className="font-bold text-white">
-							Fabricio Rodrigues
+						<Text variant="label" className="font-bold text-gray-900 dark:text-white">
+							{profile?.full_name ?? 'Atleta Futly'}
 						</Text>
 						<Text variant="micro" className="mt-0.5 text-[#86E5B4] tracking-[0.5px]">
-							fab@email.com - Plano Gold
+							{profile?.email ?? 'email@example.com'} - Plano Gold
 						</Text>
 					</View>
 
 					<Pressable className="h-9 w-9 rounded-[12px] border border-white/10 bg-white/10 items-center justify-center">
-						<Text variant="body" className="text-white">&gt;</Text>
+						<Text variant="body" className="text-gray-900 dark:text-white">&gt;</Text>
 					</Pressable>
 				</LinearGradient>
 
 				<SettingsGroup title="Conta" rows={accountRows} />
 				<SettingsGroup title="Preferencias" rows={preferenceRows} />
-				<SettingsGroup title="Privacidade" rows={privacyRows} />
 				<SettingsGroup title="Suporte" rows={supportRows} />
 				<SettingsGroup title="Zona perigosa" rows={dangerRows} />
 
 				<View className="items-center px-4 pt-7 pb-5">
-					<Text variant="micro" className="text-fg4 text-center uppercase tracking-[1.8px] leading-[16px]">
+					<Text variant="micro" className="text-gray-600 dark:text-fg4 text-center uppercase tracking-[1.8px] leading-[16px]">
 						HUB DE PARTIDAS
 						{'\n'}v 1.4.2 - Build 240425
 					</Text>
 				</View>
 			</ScrollView>
 
-			<MatchBottomNav active="settings" />
+			<MatchBottomNav active="none" />
 
 			<AuthFeedbackModal
 				visible={showLogoutModal}
@@ -260,6 +262,18 @@ export default function SettingsScreen() {
 				secondaryLabel="Cancelar"
 				onSecondaryPress={() => setShowLogoutModal(false)}
 				onClose={() => setShowLogoutModal(false)}
+			/>
+
+			<AuthFeedbackModal
+				visible={showDeleteModal}
+				tone="error"
+				title="Excluir conta permanentemente?"
+				message="Tem certeza? Todos os seus dados, mensagens e histórico serão apagados para sempre. Esta ação não pode ser desfeita."
+				primaryLabel={deleting ? 'Deletando...' : 'Sim, excluir tudo'}
+				onPrimaryPress={handleConfirmDeleteAccount}
+				secondaryLabel="Cancelar"
+				onSecondaryPress={() => setShowDeleteModal(false)}
+				onClose={() => setShowDeleteModal(false)}
 			/>
 		</SafeAreaView>
 	);

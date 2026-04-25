@@ -30,18 +30,9 @@ type StorePlanCardProps = {
 export function StorePlanCard({ plan }: StorePlanCardProps) {
 	const isGoldTone = plan.tone === 'gold';
 	const isEliteTone = plan.tone === 'elite';
-	const hasHighlightTone = isGoldTone || isEliteTone;
 
 	return (
 		<View className={`mx-[18px] mb-3 overflow-hidden rounded-[20px] border px-[18px] py-[18px] ${planToneClass[plan.tone]}`}>
-			{hasHighlightTone ? (
-				<View
-					className={`absolute -right-12 -top-16 h-52 w-52 rounded-full ${
-						isGoldTone ? 'bg-[#D4A13A2E]' : 'bg-[#009A5430]'
-					}`}
-				/>
-			) : null}
-
 			{plan.tag ? (
 				<View className={`absolute right-3 top-3 rounded-[6px] px-2 py-1 ${tagToneClass[plan.tag.tone]}`}>
 					<Text variant="micro" className="font-extrabold uppercase tracking-[1.4px]">

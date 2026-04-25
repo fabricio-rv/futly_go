@@ -14,6 +14,10 @@ type PlayerRowProps = {
 };
 
 export function PlayerRow({ player, showStars, pendingLabel }: PlayerRowProps) {
+  const ratingLabel = player.rating !== null
+    ? `${player.rating.toFixed(1)} estrelas`
+    : 'Sem avaliacoes ainda';
+
   return (
     <View className="flex-row items-center gap-3 px-[14px] py-3 border-b" style={{ borderColor: matchTheme.colors.line }}>
       <LinearGradient colors={player.gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="w-10 h-10 rounded-full border-2 border-white/10 items-center justify-center">
@@ -22,7 +26,7 @@ export function PlayerRow({ player, showStars, pendingLabel }: PlayerRowProps) {
 
       <View className="flex-1">
         <Text variant="label" className="font-semibold" style={{ color: matchTheme.colors.fgPrimary }}>{player.name}</Text>
-        <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{player.rating.toFixed(1)} estrelas - {player.position}</Text>
+        <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{ratingLabel} - {player.position}</Text>
       </View>
 
       {typeof showStars === 'number' ? <RatingStars value={showStars} /> : null}

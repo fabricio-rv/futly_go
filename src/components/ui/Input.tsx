@@ -41,11 +41,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     ? 'border-danger'
     : focused
       ? 'border-emerald-400'
-      : 'border-ink-hairline';
+      : 'border-gray-200 dark:border-ink-hairline';
   const containerHeightClass = isMultiline ? 'min-h-[112px] py-3' : 'h-[52px]';
   const inputClass = isMultiline
-    ? 'font-sans text-[15px] text-text-primary p-0 h-full'
-    : 'font-sans text-[15px] text-text-primary p-0';
+    ? 'font-sans text-[15px] text-gray-900 dark:text-text-primary p-0 h-full'
+    : 'font-sans text-[15px] text-gray-900 dark:text-text-primary p-0';
 
   return (
     <View className="w-full">
@@ -55,7 +55,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         </Text>
       ) : null}
       <View
-        className={`rounded-md border ${borderClass} bg-ink-2 px-4 ${containerHeightClass} justify-center ${containerClassName ?? ''}`.trim()}
+        className={`rounded-md border ${borderClass} bg-white dark:bg-ink-2 px-4 ${containerHeightClass} justify-center ${containerClassName ?? ''}`.trim()}
         style={{ minWidth: 0, width: '100%', overflow: 'hidden' }}
       >
         <View className={`flex-row gap-2 ${isMultiline ? 'items-start' : 'items-center'}`}>

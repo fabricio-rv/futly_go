@@ -5,7 +5,6 @@ import { Text } from '@/src/components/ui';
 export function StoreHero() {
 	return (
 		<View className="mx-[18px] mb-[14px] rounded-[20px] border border-[#D4A13A47] overflow-hidden bg-[#0A0703] px-[18px] py-[18px]">
-			<View className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-[#D4A13A33]" />
 			<Text variant="micro" className="uppercase tracking-[2.5px] font-extrabold text-goldA mb-1">
 				Hub de Partidas - Pro
 			</Text>

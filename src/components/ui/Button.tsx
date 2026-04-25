@@ -15,8 +15,8 @@ const base = 'flex-row items-center justify-center rounded-md';
 
 const variantClass: Record<Variant, string> = {
   primary: 'bg-emerald-500 active:opacity-90 shadow-neon',
-  secondary: 'bg-ink-2 border border-ink-hairline active:bg-ink-3',
-  ghost: 'bg-transparent active:bg-ink-2 border border-ink-hairline/60',
+  secondary: 'bg-gray-100 dark:bg-ink-2 border border-gray-200 dark:border-ink-hairline active:bg-gray-200 dark:active:bg-ink-3',
+  ghost: 'bg-transparent active:bg-gray-100 dark:active:bg-ink-2 border border-gray-200 dark:border-ink-hairline/60',
   destructive: 'bg-danger active:opacity-80',
   gold: 'bg-gold-500 active:opacity-90 shadow-gold',
 };

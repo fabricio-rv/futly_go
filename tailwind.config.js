@@ -6,7 +6,13 @@ module.exports = {
     './components/**/*.{js,jsx,ts,tsx}',
   ],
   presets: [require('nativewind/preset')],
+  darkMode: 'media',
   theme: {
+    colors: {
+      white: '#FFFFFF',
+      black: '#000000',
+      transparent: 'transparent',
+    },
     extend: {
       colors: {
         ink: {
@@ -17,6 +23,12 @@ module.exports = {
           4: '#222C4D',
           hairline: '#1F2A44',
           hairlineSoft: 'rgba(255,255,255,0.06)',
+          // Light mode variants
+          'light-0': '#FFFFFF',
+          'light-1': '#F8FAFB',
+          'light-2': '#F0F4F8',
+          'light-3': '#E8EEF5',
+          'light-4': '#E0E6F0',
         },
         emerald: {
           50: '#E6FBF1',

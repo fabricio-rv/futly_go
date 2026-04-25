@@ -146,7 +146,7 @@ function toPlayer(j: Jogador): Player {
     name: j.name,
     initials: j.initials,
     role: j.position,
-    rating: j.rating,
+    rating: j.rating ?? 0,
     position: j.position,
     gradient: [j.gradient[0], j.gradient[1]],
     isHost: j.isHost,

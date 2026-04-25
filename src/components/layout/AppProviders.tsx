@@ -1,5 +1,10 @@
 ﻿import type { PropsWithChildren } from 'react';
+import { ThemeProvider } from '@/src/contexts/ThemeContext';
 
 export function AppProviders({ children }: PropsWithChildren) {
-  return <>{children}</>;
+  return (
+    <ThemeProvider>
+      {children}
+    </ThemeProvider>
+  );
 }

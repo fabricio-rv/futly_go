@@ -1,5 +1,5 @@
-import { MatchDetailsScreen } from './MatchDetailsScreen';
+﻿import { MatchDetailsScreen } from './MatchDetailsScreen';
 
-export function MatchDetailScreen() {
-  return <MatchDetailsScreen />;
+export function MatchDetailScreen({ matchId }: { matchId: string }) {
+  return <MatchDetailsScreen matchId={matchId} />;
 }

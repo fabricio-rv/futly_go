@@ -1,11 +1,17 @@
-﻿import type { ReactNode } from 'react';
-import { CalendarDays, Plus, Search, Settings, UserRound } from 'lucide-react-native';
+import type { ReactNode } from 'react';
+import { Bell, CalendarDays, Plus, Search, UserRound } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { Pressable, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import {
+  fetchUnreadNotificationsCount,
+  subscribeNotifications,
+} from '@/src/features/notifications/services/notificationsService';
+
 type BottomNavProps = {
-  active: 'buscar' | 'agenda' | 'new' | 'settings' | 'profile' | 'none';
+  active: 'buscar' | 'agenda' | 'new' | 'notifications' | 'profile' | 'none';
 };
 
 function NavItem({
@@ -36,6 +42,34 @@ function NavItem({
 
 export function MatchBottomNav({ active }: BottomNavProps) {
   const insets = useSafeAreaInsets();
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUnread = async () => {
+      try {
+        const count = await fetchUnreadNotificationsCount();
+        if (isMounted) {
+          setUnreadNotifications(count);
+        }
+      } catch {
+        if (isMounted) {
+          setUnreadNotifications(0);
+        }
+      }
+    };
+
+    void loadUnread();
+    const unsubscribe = subscribeNotifications(() => {
+      void loadUnread();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   return (
     <View
@@ -74,9 +108,20 @@ export function MatchBottomNav({ active }: BottomNavProps) {
           </View>
         </Pressable>
         <NavItem
-          active={active === 'settings'}
-          icon={<Settings color={active === 'settings' ? '#22B76C' : 'rgba(255,255,255,0.45)'} size={20} />}
-          onPress={() => router.replace('/(app)/settings')}
+          active={active === 'notifications'}
+          icon={(
+            <View className="relative">
+              <Bell color={active === 'notifications' ? '#22B76C' : 'rgba(255,255,255,0.45)'} size={20} />
+              {unreadNotifications > 0 ? (
+                <View className="absolute -right-2 -top-2 min-w-[17px] h-[17px] rounded-full bg-[#22B76C] items-center justify-center px-1">
+                  <Text className="text-[10px] font-bold text-[#05070B]">
+                    {unreadNotifications > 99 ? '99+' : String(unreadNotifications)}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          )}
+          onPress={() => router.replace('/(app)/notifications')}
         />
         <NavItem
           active={active === 'profile'}

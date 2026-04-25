@@ -4,6 +4,15 @@ import type { Tables } from '@/src/types/database';
 
 type MatchRow = Tables<'matches'>;
 
+type MapOptions = {
+  currentUserId?: string | null;
+};
+
+export type MatchSlotMetrics = {
+  totalSlots: number;
+  openSlots: number;
+};
+
 function formatDateLabel(matchDate: string, turno: string) {
   const date = new Date(`${matchDate}T12:00:00`);
   const weekday = date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').toUpperCase();
@@ -36,20 +45,27 @@ function getLevelTone(price: number): Partida['levelTone'] {
   return 'neutral';
 }
 
-function inferTotalSlots(formationJson: unknown) {
-  if (!formationJson || typeof formationJson !== 'object') return 0;
+export function getMatchSlotMetrics(formationJson: unknown): MatchSlotMetrics {
+  if (!formationJson || typeof formationJson !== 'object') {
+    return { totalSlots: 0, openSlots: 0 };
+  }
 
   const slots = (formationJson as { slots?: unknown[] }).slots;
-  if (!Array.isArray(slots)) return 0;
+  if (!Array.isArray(slots)) {
+    return { totalSlots: 0, openSlots: 0 };
+  }
 
-  return slots.length;
+  const openSlots = slots.reduce<number>((acc, slot) => {
+    if (!slot || typeof slot !== 'object') return acc;
+    return (slot as { open?: unknown }).open === false ? acc : acc + 1;
+  }, 0);
+
+  return { totalSlots: slots.length, openSlots };
 }
 
-export function mapMatchRowToPartida(
-  match: MatchRow,
-  occupiedSlots: number,
-): Partida {
-  const totalSlots = inferTotalSlots(match.formation_json);
+export function mapMatchRowToPartida(match: MatchRow, occupiedSlots: number, options: MapOptions = {}): Partida {
+  const { totalSlots } = getMatchSlotMetrics(match.formation_json);
+  const isHost = options.currentUserId ? match.created_by === options.currentUserId : false;
 
   return {
     id: match.id,
@@ -64,8 +80,8 @@ export function mapMatchRowToPartida(
     pricePerPlayer: Number(match.price_per_person),
     occupiedSlots,
     totalSlots,
-    status: match.status === 'finalizada' ? 'done' : 'open',
-    statusLabel: match.status === 'finalizada' ? 'Finalizada' : 'Vagas abertas',
+    status: isHost ? 'host' : match.status === 'finalizada' ? 'done' : 'open',
+    statusLabel: isHost ? 'Criada por você' : match.status === 'finalizada' ? 'Finalizada' : 'Vagas abertas',
     startsIn: getStartsInLabel(match.match_date, match.match_time),
   };
 }

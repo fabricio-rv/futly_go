@@ -12,7 +12,7 @@ export type SignupPayload = {
 	cep: string | null;
 };
 
-function normalizeAuthError(error: AuthError | Error | null) {
+export function normalizeAuthError(error: AuthError | Error | null) {
 	if (!error) return 'Ocorreu um erro inesperado. Tente novamente.';
 	const message = error.message.toLowerCase();
 
@@ -140,4 +140,12 @@ export async function updatePassword(newPassword: string) {
 
 export async function signOut() {
 	await supabase.auth.signOut();
+}
+
+export async function deleteAccount() {
+	const { error } = await supabase.rpc('delete_my_account');
+
+	if (error) {
+		throw new Error('Não foi possível deletar a conta. Tente novamente.');
+	}
 }

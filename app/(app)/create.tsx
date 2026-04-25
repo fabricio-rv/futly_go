@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useRef, useState } from 'react';
 import { router } from 'expo-router';
 import { ScrollView, Pressable, View, Modal, Alert } from 'react-native';
 
@@ -114,6 +114,7 @@ function MinLevelCheckbox({
 
 export default function CreateMatchScreen() {
   const { createMatch, submitting } = useMatches();
+  const creatingRef = useRef(false);
 
   const [mode, setMode] = useState<PitchMode>('futsal');
   const [restBreak, setRestBreak] = useState(true);
@@ -176,7 +177,10 @@ export default function CreateMatchScreen() {
     );
   };
 
-  async function handleCreateMatch() {
+  async function handleCreateMatch(status: 'publicada' | 'rascunho') {
+    if (creatingRef.current) return;
+    creatingRef.current = true;
+
     try {
       await createMatch({
         title: venueName.trim() || 'Partida sem título',
@@ -201,6 +205,7 @@ export default function CreateMatchScreen() {
         state: stateCode.trim() || null,
         address: address.trim() || null,
         selectedPositionIndexes,
+        status,
         facilities: [
           { label: 'Vestiario', selected: true },
           { label: 'Chuveiro', selected: true },
@@ -209,7 +214,12 @@ export default function CreateMatchScreen() {
         ],
       });
 
-      Alert.alert('Partida criada', 'Sua partida já está disponível em Encontrar Jogo e na Agenda.', [
+      const successMessage =
+        status === 'rascunho'
+          ? 'Seu rascunho foi salvo e aparece na sua Agenda.'
+          : 'Sua partida já está disponível em Encontrar Jogo e na Agenda.';
+
+      Alert.alert('Partida criada', successMessage, [
         {
           text: 'OK',
           onPress: () => router.replace('/(app)'),
@@ -218,6 +228,8 @@ export default function CreateMatchScreen() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Não foi possível criar a partida.';
       Alert.alert('Falha ao criar partida', message);
+    } finally {
+      creatingRef.current = false;
     }
   }
 
@@ -538,8 +550,18 @@ export default function CreateMatchScreen() {
             </View>
           </Card>
 
-          <Button label="Continuar para Revisao" loading={submitting} disabled={submitting} onPress={handleCreateMatch} />
-          <Button label="Salvar Rascunho" variant="ghost" disabled={submitting} onPress={handleCreateMatch} />
+          <Button
+            label="Continuar para Revisao"
+            loading={submitting}
+            disabled={submitting}
+            onPress={() => handleCreateMatch('publicada')}
+          />
+          <Button
+            label="Salvar Rascunho"
+            variant="ghost"
+            disabled={submitting}
+            onPress={() => handleCreateMatch('rascunho')}
+          />
           <View className="h-2" />
         </View>
       </ScrollView>
@@ -654,6 +676,7 @@ export default function CreateMatchScreen() {
     </Screen>
   );
 }
+
 
 
 
