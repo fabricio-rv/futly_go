@@ -498,6 +498,20 @@ export default function CreateMatchScreen() {
                 <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
                   Toque para abrir / bloquear vagas
                 </Text>
+                <View className="gap-1 mt-2">
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
+                    Voce (Host) - Goleiro
+                  </Text>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
+                    2 confirmados
+                  </Text>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
+                    2 vagas abertas
+                  </Text>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
+                    1 bloqueada (Pivo)
+                  </Text>
+                </View>
               </View>
               <View className="w-[194px]">
                 <SegmentedControl
@@ -513,27 +527,13 @@ export default function CreateMatchScreen() {
               </View>
             </View>
 
-            <View className="items-center gap-3">
+            <View className="items-center">
               <TacticalPitch
                 mode={mode}
                 selectedIndexes={selectedPositionIndexes}
                 onToggleIndex={togglePosition}
                 width={300}
               />
-              <View className="gap-1 items-center">
-                <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                  Voce (Host) - Goleiro
-                </Text>
-                <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                  2 confirmados
-                </Text>
-                <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                  2 vagas abertas
-                </Text>
-                <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                  1 bloqueada (Pivo)
-                </Text>
-              </View>
             </View>
           </Card>
 
