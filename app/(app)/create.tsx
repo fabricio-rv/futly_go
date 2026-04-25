@@ -490,7 +490,7 @@ export default function CreateMatchScreen() {
 
           <Card
             className="p-4"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line, overflow: 'visible' }}
+            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
           >
             <View className="flex-row items-start justify-between mb-3">
               <View>
@@ -527,7 +527,7 @@ export default function CreateMatchScreen() {
               </View>
             </View>
 
-            <View className="items-center" style={{ marginTop: -130 }}>
+            <View className="items-center" style={{ marginTop: 16 }}>
               <TacticalPitch
                 mode={mode}
                 selectedIndexes={selectedPositionIndexes}
