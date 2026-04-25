@@ -1,0 +1,1393 @@
+<!doctype html>
+<html lang="pt-br"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hub de Partidas — App Completo</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  :root{
+    --gold-a:#F6D27A; --gold-b:#D4A13A; --gold-c:#8F6A1C;
+    --ok:#22B76C; --warn:#F5A524; --bad:#E84C37;
+    --line:rgba(255,255,255,.06); --line2:rgba(255,255,255,.10);
+    --fg1:#F5F7FA; --fg2:rgba(255,255,255,.7); --fg3:rgba(255,255,255,.45); --fg4:rgba(255,255,255,.28);
+    --surf1:#0A0E18; --surf2:#0F1625; --surf3:#141C2E;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#05070B;font-family:Geist,Inter,system-ui;-webkit-font-smoothing:antialiased}
+  body{padding:48px 24px;
+    background:radial-gradient(900px 700px at 20% 0%, rgba(0,154,84,.08), transparent 60%),
+               radial-gradient(900px 700px at 80% 100%, rgba(212,161,58,.06), transparent 60%), #05070B}
+
+  .doc-head{max-width:1280px;margin:0 auto 36px;padding:0 8px}
+  .doc-head h1{color:#fff;font-size:36px;font-weight:900;letter-spacing:-.025em;margin:0 0 6px}
+  .doc-head h1 b{color:var(--gold-a)}
+  .doc-head p{color:var(--fg2);font-size:14px;max-width:760px;margin:0;line-height:1.5}
+  .doc-head .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .doc-head .meta span{font-size:11px;color:var(--fg3);background:rgba(255,255,255,.05);border:1px solid var(--line);padding:5px 10px;border-radius:999px;letter-spacing:.04em}
+
+  .group-title{max-width:1280px;margin:48px auto 18px;padding:0 8px;color:var(--gold-a);font-size:11px;letter-spacing:.28em;font-weight:800;text-transform:uppercase;display:flex;align-items:center;gap:14px}
+  .group-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(212,161,58,.35),transparent)}
+
+  .grid{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:48px 36px;justify-content:flex-start}
+
+  .stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .stage-label{color:var(--gold-a);font-size:11px;letter-spacing:.24em;font-weight:800;text-transform:uppercase;text-align:center;max-width:390px}
+  .stage-label small{color:var(--fg3);font-weight:500;letter-spacing:.04em;text-transform:none;display:block;margin-top:4px;font-size:10px}
+
+  .device{position:relative;width:390px;height:844px;border-radius:54px;overflow:hidden;background:#000;
+    box-shadow:0 60px 160px -40px rgba(0,0,0,.85),0 0 0 10px #141517,0 0 0 11px #2a2b2f}
+  .island{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:126px;height:37px;border-radius:24px;background:#000;z-index:50}
+  .home-bar{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:139px;height:5px;border-radius:999px;background:rgba(255,255,255,.55);z-index:60}
+  .status{position:absolute;top:0;left:0;right:0;height:54px;padding:18px 32px 0;display:flex;justify-content:space-between;font-family:-apple-system,system-ui;font-weight:600;font-size:15px;color:#fff;z-index:20;letter-spacing:-.02em}
+  .status.dark{color:#fff}
+  .page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:54px;padding-bottom:90px;
+    background:radial-gradient(120% 60% at 50% 0%, rgba(0,154,84,.07), transparent 55%), #05070B}
+  .page.no-tab{padding-bottom:24px}
+  .page::-webkit-scrollbar{display:none}
+
+  /* NAV */
+  .nav{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:6px 16px 12px;
+    backdrop-filter:blur(20px) saturate(180%);background:linear-gradient(180deg,rgba(5,7,11,.78),rgba(5,7,11,0))}
+  .nav-btn{width:40px;height:40px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.06);border:1px solid var(--line2);color:#fff;cursor:pointer}
+  .nav-btn.flat{background:transparent;border-color:transparent;color:var(--fg2);font-size:12px;font-weight:600;width:auto;padding:0 10px}
+  .nav-title{display:flex;flex-direction:column;align-items:center;gap:1px}
+  .nav-title b{color:#fff;font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .nav-title small{color:var(--fg3);font-size:10px;letter-spacing:.18em;font-weight:700;text-transform:uppercase}
+
+  /* TABBAR */
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:90px;background:rgba(10,14,24,.85);backdrop-filter:blur(24px) saturate(170%);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:8px 6px 30px;z-index:40}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:none;cursor:pointer;color:var(--fg3);font-size:10px;font-weight:600;padding-top:4px}
+  .tab.a{color:var(--ok)}
+  .tab .g{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+  .fab{width:46px;height:46px;border-radius:999px;background:var(--ok);color:#05070B;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:24px;margin-top:-14px;box-shadow:0 0 0 1px rgba(0,154,84,.5),0 14px 30px -6px rgba(0,154,84,.55)}
+
+  svg.ico{stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+
+  /* SHARED */
+  .h1{padding:6px 18px 14px;color:#fff;font-size:28px;font-weight:800;letter-spacing:-.02em}
+  .h2{color:#fff;font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+  .h2 .num{font-family:'Bebas Neue',sans-serif;font-size:11px;color:var(--gold-a);background:rgba(212,161,58,.1);border:1px solid rgba(212,161,58,.25);padding:1px 7px;border-radius:6px;letter-spacing:.06em}
+  .sec{padding:6px 18px 4px}
+  .sec-head{display:flex;justify-content:space-between;align-items:center;margin:14px 0 10px}
+  .more{color:var(--fg2);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+
+  .panel{background:linear-gradient(180deg,var(--surf2),#0A0F1C);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:0 12px 28px -16px rgba(0,0,0,.6)}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .lab{font-size:10px;color:var(--fg3);letter-spacing:.16em;font-weight:700;text-transform:uppercase}
+  .input{height:48px;border-radius:14px;background:#0C111E;border:1px solid var(--line2);color:#fff;padding:0 14px;font-family:Geist;font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+  .input.focus{border-color:var(--ok);box-shadow:0 0 0 3px rgba(34,183,108,.18)}
+  .input .placeholder{color:var(--fg3)}
+  .input .right{margin-left:auto;color:var(--fg3)}
+  textarea.input{height:auto;min-height:88px;padding:14px;line-height:1.5}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:#0C111E;border:1px solid var(--line2);color:var(--fg2);font-size:12px;font-weight:600;cursor:pointer}
+  .pill.a{background:var(--ok);border-color:var(--ok);color:#05070B}
+  .pill.gold{background:linear-gradient(160deg,#F6D27A,#D4A13A);border-color:#D4A13A;color:#2A1A05}
+  .pill.warn{background:rgba(245,165,36,.14);border-color:rgba(245,165,36,.35);color:var(--warn)}
+  .pill.coral{background:rgba(232,76,55,.14);border-color:rgba(232,76,55,.35);color:#FF8B7A}
+  .pill.sky{background:rgba(90,177,255,.14);border-color:rgba(90,177,255,.35);color:#7AC0FF}
+
+  .toggle{display:flex;align-items:center;justify-content:space-between;padding:14px;border-radius:14px;background:#0C111E;border:1px solid var(--line2)}
+  .toggle-l b{color:#fff;font-size:14px;font-weight:600;display:block}
+  .toggle-l small{color:var(--fg3);font-size:11px}
+  .switch{width:46px;height:28px;border-radius:999px;background:#1B2236;position:relative;cursor:pointer;flex-shrink:0}
+  .switch.on{background:var(--ok)}
+  .switch::after{content:'';position:absolute;top:2px;left:2px;width:24px;height:24px;border-radius:999px;background:#fff;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .switch.on::after{left:20px}
+
+  .av{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0;border:2px solid var(--line2)}
+
+  .btn{height:54px;border-radius:14px;border:none;font-family:Geist;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 18px;transition:.2s}
+  .btn-primary{background:var(--ok);color:#05070B;box-shadow:0 0 0 1px rgba(0,154,84,.5),0 12px 30px -8px rgba(0,154,84,.45)}
+  .btn-ghost{background:rgba(255,255,255,.06);border:1px solid var(--line2);color:#fff}
+  .btn-danger{background:rgba(232,76,55,.14);border:1px solid rgba(232,76,55,.35);color:#FF8B7A}
+  .btn-gold{background:linear-gradient(160deg,#F6D27A,#D4A13A);color:#2A1A05;box-shadow:0 12px 30px -8px rgba(212,161,58,.45)}
+  .btn-sm{height:40px;font-size:13px;padding:0 14px}
+
+  /* ───────── AUTH (Login / Cadastro / Esqueci) ───────── */
+  .auth-bg{position:absolute;inset:0;background:
+      radial-gradient(700px 500px at 50% 0%, rgba(0,154,84,.22), transparent 65%),
+      radial-gradient(500px 400px at 50% 100%, rgba(212,161,58,.12), transparent 60%),
+      #05070B}
+  .auth-bg::before{content:'';position:absolute;inset:0;background:
+      repeating-linear-gradient(90deg,transparent 0,transparent 28px,rgba(255,255,255,.025) 28px,rgba(255,255,255,.025) 29px),
+      repeating-linear-gradient(0deg,transparent 0,transparent 28px,rgba(255,255,255,.02) 28px,rgba(255,255,255,.02) 29px);
+      mask:radial-gradient(ellipse at center,#000 30%,transparent 70%)}
+  .brand-shield{width:88px;height:104px;margin:0 auto 18px;position:relative;display:flex;align-items:center;justify-content:center}
+  .brand-shield svg{width:100%;height:100%;filter:drop-shadow(0 12px 28px rgba(0,154,84,.4))}
+  .brand-word{text-align:center;font-family:Geist;font-weight:900;font-size:26px;letter-spacing:-.04em;color:#fff;margin-bottom:6px}
+  .brand-word b{color:var(--ok)}
+  .brand-tag{text-align:center;color:var(--fg3);font-size:11px;letter-spacing:.22em;font-weight:700;text-transform:uppercase;margin-bottom:36px}
+
+  .social-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .social{height:48px;border-radius:14px;background:#0C111E;border:1px solid var(--line2);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer}
+  .divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:var(--fg4);font-size:10px;letter-spacing:.24em;font-weight:700;text-transform:uppercase}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--line2)}
+
+  .auth-foot{text-align:center;color:var(--fg3);font-size:13px;margin-top:24px}
+  .auth-foot a{color:var(--ok);font-weight:700;cursor:pointer;text-decoration:none}
+
+  /* ───────── PROFILE ───────── */
+  .pf-cover{height:200px;position:relative;overflow:hidden;background:
+      linear-gradient(160deg,#0F3A24 0%,#072314 70%,#021109 100%)}
+  .pf-cover::before{content:'';position:absolute;inset:0;background:
+      repeating-linear-gradient(90deg,transparent 0,transparent 22px,rgba(255,255,255,.04) 22px,rgba(255,255,255,.04) 44px)}
+  .pf-cover::after{content:'';position:absolute;left:0;right:0;bottom:0;height:60px;background:linear-gradient(180deg,transparent,#05070B)}
+  .pf-overall{position:absolute;left:18px;bottom:14px;display:flex;align-items:flex-end;gap:14px}
+  .pf-overall .num{font-family:'Bebas Neue';font-size:74px;color:#fff;line-height:.85;letter-spacing:.02em}
+  .pf-overall .lbl{padding-bottom:8px}
+  .pf-overall .lbl b{display:block;color:var(--gold-a);font-size:12px;letter-spacing:.18em;font-weight:800;text-transform:uppercase}
+  .pf-overall .lbl span{color:var(--fg2);font-size:11px}
+
+  .pf-avatar{position:absolute;left:50%;transform:translateX(-50%);bottom:-40px;width:96px;height:96px;border-radius:24px;
+    background:linear-gradient(160deg,#1B3A5F,#071428);border:3px solid var(--gold-b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:28px;box-shadow:0 14px 34px rgba(0,0,0,.6)}
+
+  .pf-name{padding:54px 18px 4px;text-align:center}
+  .pf-name b{color:#fff;font-size:20px;font-weight:800;display:block;letter-spacing:-.01em}
+  .pf-name small{color:var(--fg3);font-size:12px}
+
+  .pf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin:16px 18px}
+  .pf-stats .cell{background:#0C111E;padding:14px 8px;text-align:center}
+  .pf-stats .cell .v{font-family:'Bebas Neue';font-size:26px;color:#fff;letter-spacing:.04em;line-height:1}
+  .pf-stats .cell .l{font-size:9px;color:var(--fg3);letter-spacing:.16em;font-weight:700;text-transform:uppercase;margin-top:2px}
+
+  /* ───────── PLANOS / STORE ───────── */
+  .plan-hero{margin:0 18px 14px;padding:18px;border-radius:20px;background:
+      radial-gradient(400px 200px at 80% 0%, rgba(212,161,58,.18), transparent 70%),
+      linear-gradient(160deg,#1A1306 0%,#0A0703 100%);
+    border:1px solid rgba(212,161,58,.28);position:relative;overflow:hidden}
+  .plan-hero .crown{position:absolute;right:14px;top:14px;font-family:'Bebas Neue';font-size:80px;color:rgba(212,161,58,.14);line-height:.8;letter-spacing:.02em}
+  .plan-hero h2{color:var(--gold-a);font-size:11px;letter-spacing:.22em;font-weight:800;text-transform:uppercase;margin:0 0 4px}
+  .plan-hero h1{color:#fff;font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0;padding:0}
+  .plan-hero p{color:var(--fg2);font-size:12px;line-height:1.5;margin:8px 0 0;max-width:240px}
+
+  .plan-toggle{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#0C111E;border:1px solid var(--line2);border-radius:14px;padding:4px;margin:0 18px 14px}
+  .plan-toggle button{height:40px;border:none;background:transparent;color:var(--fg2);font-weight:600;font-size:12px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-family:Geist}
+  .plan-toggle button.a{background:rgba(255,255,255,.07);color:#fff;box-shadow:0 1px 0 rgba(255,255,255,.05) inset}
+  .plan-toggle .save{font-size:9px;color:var(--gold-a);background:rgba(212,161,58,.14);border:1px solid rgba(212,161,58,.3);padding:1px 4px;border-radius:4px;letter-spacing:.06em;font-weight:700}
+
+  .plan-card{margin:0 18px 12px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(180deg,var(--surf2),#0A0F1C);padding:18px;position:relative;overflow:hidden}
+  .plan-card.gold{border-color:rgba(212,161,58,.4);background:
+      radial-gradient(360px 180px at 100% 0%, rgba(212,161,58,.16), transparent 70%),
+      linear-gradient(180deg,#191207,#0A0703)}
+  .plan-card.elite{border-color:rgba(34,183,108,.4);background:
+      radial-gradient(360px 180px at 100% 0%, rgba(0,154,84,.18), transparent 70%),
+      linear-gradient(180deg,#06180D,#040A06)}
+  .plan-tag{position:absolute;right:14px;top:14px;font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:4px 9px;border-radius:6px}
+  .plan-tag.gold{background:linear-gradient(160deg,#F6D27A,#D4A13A);color:#2A1A05}
+  .plan-tag.popular{background:rgba(34,183,108,.18);border:1px solid rgba(34,183,108,.4);color:#86E5B4}
+  .plan-card .nm{font-size:11px;color:var(--gold-a);letter-spacing:.22em;font-weight:800;text-transform:uppercase;margin-bottom:6px}
+  .plan-card .nm.elite{color:#86E5B4}
+  .plan-card .nm.free{color:var(--fg3)}
+  .plan-card h3{color:#fff;font-size:22px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+  .plan-card .desc{color:var(--fg2);font-size:12px;line-height:1.5;margin-bottom:14px}
+  .plan-price{display:flex;align-items:baseline;gap:6px;margin-bottom:14px}
+  .plan-price .currency{color:var(--fg3);font-size:14px;font-weight:600}
+  .plan-price .num{font-family:'Bebas Neue';font-size:46px;color:#fff;letter-spacing:.02em;line-height:.85}
+  .plan-price .per{color:var(--fg3);font-size:12px;font-weight:600}
+  .plan-price .strike{color:var(--fg4);font-size:12px;text-decoration:line-through;margin-left:4px}
+
+  .plan-feat{list-style:none;padding:0;margin:0 0 16px;display:flex;flex-direction:column;gap:8px}
+  .plan-feat li{display:flex;align-items:flex-start;gap:8px;color:var(--fg2);font-size:12px;line-height:1.4}
+  .plan-feat li svg{flex-shrink:0;margin-top:2px;color:var(--ok)}
+  .plan-feat li.gold svg{color:var(--gold-b)}
+  .plan-feat li b{color:#fff;font-weight:600}
+
+  /* ───────── CHAT ───────── */
+  .chat-list-item{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer}
+  .chat-list-item:hover{background:rgba(255,255,255,.02)}
+  .chat-list-item .av{width:48px;height:48px;font-size:15px}
+  .chat-li-info{flex:1;min-width:0}
+  .chat-li-info .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+  .chat-li-info .top b{color:#fff;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chat-li-info .top time{color:var(--fg3);font-size:10px;font-weight:600;flex-shrink:0;margin-left:8px}
+  .chat-li-info .top time.unread{color:var(--ok)}
+  .chat-li-info .bot{display:flex;justify-content:space-between;align-items:center}
+  .chat-li-info .bot p{margin:0;color:var(--fg3);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+  .chat-li-info .bot p.unread{color:var(--fg2);font-weight:500}
+  .chat-li-info .bot .badge{flex-shrink:0;margin-left:8px;width:18px;height:18px;border-radius:999px;background:var(--ok);color:#05070B;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .chat-li-info .bot .check{flex-shrink:0;margin-left:8px;color:var(--fg3)}
+  .chat-li-info .bot .check.read{color:#5AB1FF}
+  .chat-context{padding:10px 18px;background:rgba(34,183,108,.06);border-bottom:1px solid var(--line);font-size:11px;color:var(--fg2);display:flex;align-items:center;gap:6px}
+  .chat-context b{color:#86E5B4;font-weight:700}
+
+  /* Chat conversation */
+  .chat-head{padding:6px 12px 10px;display:flex;align-items:center;gap:10px}
+  .chat-head .av{width:38px;height:38px;font-size:13px}
+  .chat-head .info{flex:1}
+  .chat-head .info b{color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;gap:5px}
+  .chat-head .info small{color:#86E5B4;font-size:10px;font-weight:600}
+
+  .chat-banner{margin:6px 14px 10px;padding:12px 14px;border-radius:14px;background:linear-gradient(160deg,rgba(0,154,84,.14),rgba(0,154,84,.04));border:1px solid rgba(34,183,108,.3);display:flex;align-items:center;gap:10px}
+  .chat-banner .ic{width:34px;height:34px;border-radius:10px;background:rgba(34,183,108,.18);color:#86E5B4;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .chat-banner .body{flex:1;min-width:0}
+  .chat-banner b{color:#fff;font-size:12px;font-weight:700;display:block}
+  .chat-banner small{color:var(--fg2);font-size:10px}
+
+  .chat-stream{padding:8px 14px 100px;display:flex;flex-direction:column;gap:4px}
+  .day-sep{align-self:center;font-size:10px;color:var(--fg3);background:rgba(255,255,255,.05);padding:5px 12px;border-radius:999px;margin:10px 0;letter-spacing:.16em;font-weight:700;text-transform:uppercase}
+  .bubble{max-width:78%;padding:8px 12px 6px;border-radius:14px;font-size:13px;line-height:1.4;color:#fff;position:relative;word-break:break-word}
+  .bubble time{display:block;font-size:9px;color:var(--fg4);margin-top:3px;text-align:right;letter-spacing:.04em}
+  .bubble.them{align-self:flex-start;background:#141C2E;border-top-left-radius:4px}
+  .bubble.me{align-self:flex-end;background:linear-gradient(160deg,#0A6E3D,#054C2A);border-top-right-radius:4px}
+  .bubble.me time{color:rgba(255,255,255,.55)}
+  .bubble.me time::after{content:' ✓✓';color:#5AB1FF}
+  .bubble.system{align-self:center;background:rgba(212,161,58,.1);border:1px solid rgba(212,161,58,.25);color:var(--gold-a);font-size:11px;padding:6px 14px;border-radius:999px}
+  .bubble-author{font-size:10px;color:var(--gold-a);font-weight:700;margin-bottom:2px;letter-spacing:.04em}
+
+  .chat-input{position:absolute;bottom:0;left:0;right:0;padding:12px 14px 28px;background:rgba(10,14,24,.95);backdrop-filter:blur(20px);border-top:1px solid var(--line);display:flex;align-items:flex-end;gap:8px;z-index:30}
+  .chat-input .field-wrap{flex:1;min-height:44px;background:#0C111E;border:1px solid var(--line2);border-radius:22px;padding:11px 14px;color:#fff;font-size:13px;display:flex;align-items:center;gap:8px}
+  .chat-input .field-wrap .placeholder{color:var(--fg3);flex:1}
+  .chat-input .send{width:44px;height:44px;border-radius:999px;background:var(--ok);color:#05070B;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:none;cursor:pointer;box-shadow:0 8px 22px -6px rgba(0,154,84,.5)}
+  .chat-input .icon-btn{width:36px;height:36px;border-radius:999px;color:var(--fg3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* ───────── DRAWER (hambúrguer) ───────── */
+  .drawer{position:absolute;top:0;left:0;bottom:0;width:320px;background:linear-gradient(180deg,#0F1625 0%,#05070B 100%);z-index:60;border-right:1px solid var(--line);padding-top:54px;display:flex;flex-direction:column;box-shadow:30px 0 60px rgba(0,0,0,.5)}
+  .drawer-overlay{position:absolute;left:320px;top:0;right:0;bottom:0;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);z-index:55}
+  .drawer-head{padding:18px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line)}
+  .drawer-head .av{width:46px;height:46px;border:2px solid var(--gold-b);background:linear-gradient(160deg,#1B3A5F,#071428)}
+  .drawer-head .info{flex:1;min-width:0}
+  .drawer-head .info b{color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .drawer-head .info small{color:var(--gold-a);font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+  .drawer-list{padding:8px 0;flex:1}
+  .d-item{display:flex;align-items:center;gap:14px;padding:14px 22px;color:var(--fg1);font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:Geist}
+  .d-item:hover{background:rgba(255,255,255,.04)}
+  .d-item .ic{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--fg2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .d-item.a .ic{background:rgba(34,183,108,.14);border-color:rgba(34,183,108,.35);color:#86E5B4}
+  .d-item .arrow{margin-left:auto;color:var(--fg4)}
+  .d-item .badge{margin-left:auto;background:var(--ok);color:#05070B;font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px}
+  .d-section{padding:14px 22px 6px;font-size:9px;color:var(--fg4);letter-spacing:.22em;text-transform:uppercase;font-weight:800}
+  .drawer-foot{padding:14px 22px;border-top:1px solid var(--line);font-size:10px;color:var(--fg4);letter-spacing:.04em;display:flex;justify-content:space-between}
+  .drawer-foot b{color:var(--gold-a);font-weight:700}
+
+  /* + da Agenda — bottom sheet */
+  .sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:55}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,#0F1625,#05070B);border-radius:32px 32px 0 0;border-top:1px solid var(--line);padding:14px 18px calc(34px + env(safe-area-inset-bottom));z-index:60;box-shadow:0 -30px 80px rgba(0,0,0,.6)}
+  .sheet-grip{width:40px;height:5px;border-radius:999px;background:rgba(255,255,255,.18);margin:0 auto 12px}
+  .sheet h2.t{color:#fff;font-size:18px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+  .sheet p.s{color:var(--fg3);font-size:12px;margin:0 0 16px;line-height:1.4}
+
+  .quick-action{display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:#0C111E;border:1px solid var(--line2);margin-bottom:8px;cursor:pointer}
+  .quick-action:hover{border-color:rgba(34,183,108,.35);background:rgba(34,183,108,.04)}
+  .quick-action .ic{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .quick-action .ic.green{background:rgba(34,183,108,.14);border:1px solid rgba(34,183,108,.3);color:#86E5B4}
+  .quick-action .ic.gold{background:rgba(212,161,58,.14);border:1px solid rgba(212,161,58,.3);color:var(--gold-a)}
+  .quick-action .ic.sky{background:rgba(90,177,255,.14);border:1px solid rgba(90,177,255,.3);color:#7AC0FF}
+  .quick-action .ic.violet{background:rgba(139,108,245,.14);border:1px solid rgba(139,108,245,.3);color:#B69DFF}
+  .quick-action .body{flex:1;min-width:0}
+  .quick-action b{color:#fff;font-size:14px;font-weight:600;display:block}
+  .quick-action small{color:var(--fg3);font-size:11px;line-height:1.3}
+  .quick-action .arr{color:var(--fg4);flex-shrink:0}
+
+  /* SETTINGS rows */
+  .set-grp{margin:14px 18px;border-radius:18px;background:#0C111E;border:1px solid var(--line2);overflow:hidden}
+  .set-row{display:flex;align-items:center;gap:14px;padding:14px;border-bottom:1px solid var(--line);cursor:pointer}
+  .set-row:last-child{border-bottom:none}
+  .set-row .ic{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.05);color:var(--fg2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .set-row .ic.ok{background:rgba(34,183,108,.14);color:#86E5B4}
+  .set-row .ic.gold{background:rgba(212,161,58,.14);color:var(--gold-a)}
+  .set-row .ic.bad{background:rgba(232,76,55,.14);color:#FF8B7A}
+  .set-row .ic.sky{background:rgba(90,177,255,.14);color:#7AC0FF}
+  .set-row .body{flex:1;min-width:0}
+  .set-row .body b{color:#fff;font-size:14px;font-weight:500;display:block}
+  .set-row .body small{color:var(--fg3);font-size:11px}
+  .set-row .right{color:var(--fg3);font-size:12px;display:flex;align-items:center;gap:6px}
+  .set-row .arrow{color:var(--fg4)}
+
+  .set-grp-title{padding:0 22px 6px;font-size:9px;color:var(--fg4);letter-spacing:.22em;text-transform:uppercase;font-weight:800;margin-top:18px}
+
+  /* OTP boxes for forgot-password */
+  .otp-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:18px 18px 14px}
+  .otp-row .box{aspect-ratio:1;border-radius:14px;background:#0C111E;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Bebas Neue';font-size:32px;letter-spacing:.04em}
+  .otp-row .box.f{border-color:var(--ok);box-shadow:0 0 0 3px rgba(34,183,108,.18)}
+
+  /* ───────── BIG SECTION TITLE ───────── */
+  .group-cap{max-width:1280px;margin:6px auto 0;padding:0 8px;color:var(--fg3);font-size:12px;line-height:1.5;max-width:840px}
+</style>
+</head>
+<body>
+
+<div class="doc-head">
+  <h1>Hub de Partidas <b>·</b> App Completo</h1>
+  <p>App standalone para marcar e participar de partidas amadoras (Futsal, Society, Campo 11). Engloba autenticação, descoberta, criação, gestão, comunicação host↔jogador e monetização via planos de assinatura. Substitui a aba "Times" pela aba "Planos" — esse app não tem times próprios, é puramente matchmaking de partidas avulsas.</p>
+  <div class="meta">
+    <span>5 telas existentes</span>
+    <span>+ 9 telas novas</span>
+    <span>iPhone 14 · 390 × 844</span>
+    <span>pt-BR</span>
+    <span>Bottom-tab nav · 5 tabs</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION A — AUTENTICAÇÃO
+     ════════════════════════════════════════════════════════════════ -->
+<div class="group-title">A · Autenticação · Onboarding</div>
+<p class="group-cap" style="margin:6px auto 28px;max-width:1280px;padding:0 8px">Login com social ou email, cadastro com tipo de conta (Jogador / Técnico / Torcedor é mantido do app principal), e fluxo de recuperação de senha em 3 passos (email → código OTP → nova senha).</p>
+
+<div class="grid">
+
+<!-- ═══════ LOGIN ═══════ -->
+<div class="stage">
+  <div class="stage-label">A1 · Login<small>Entrada · Social + email</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page no-tab" style="background:transparent">
+    <div class="auth-bg"></div>
+    <div style="position:relative;padding:30px 24px 24px">
+      <div class="brand-shield">
+        <svg viewBox="0 0 88 104">
+          <defs><linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22B76C"/><stop offset="1" stop-color="#007E44"/></linearGradient></defs>
+          <path d="M44 4 L82 16 L82 52 C82 78 64 94 44 100 C24 94 6 78 6 52 L6 16 Z" fill="url(#lg1)" stroke="#F6D27A" stroke-width="1.5"/>
+          <path d="M44 28 L52 36 L60 32 L56 44 L66 50 L54 54 L56 66 L44 60 L32 66 L34 54 L22 50 L32 44 L28 32 L36 36 Z" fill="#05070B" opacity=".3"/>
+          <text x="44" y="62" text-anchor="middle" font-family="Bebas Neue" font-size="22" fill="#fff" letter-spacing="2">HP</text>
+        </svg>
+      </div>
+      <div class="brand-word">HUB DE <b>PARTIDAS</b></div>
+      <div class="brand-tag">Marque · Jogue · Avalie</div>
+
+      <div class="field">
+        <div class="lab">E-mail ou telefone</div>
+        <div class="input"><svg class="ico" width="16" height="16" viewBox="0 0 24 24" style="color:var(--fg3)"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span class="placeholder"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="086e696a7a616b6167486e7d7c647126787a67">[email&#160;protected]</a></span></div>
+      </div>
+      <div class="field">
+        <div class="lab">Senha</div>
+        <div class="input focus"><svg class="ico" width="16" height="16" viewBox="0 0 24 24" style="color:var(--fg3)"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>•••••••••<span class="right"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:8px;color:var(--fg2);font-size:12px;font-weight:500">
+          <span style="width:18px;height:18px;border-radius:6px;background:var(--ok);display:inline-flex;align-items:center;justify-content:center;color:#05070B"><svg class="ico" width="11" height="11" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
+          Lembrar
+        </label>
+        <a class="auth-foot" style="margin:0;color:var(--ok);font-size:12px;font-weight:600">Esqueci a senha</a>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%">Entrar
+        <svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+
+      <div class="divider">ou continue com</div>
+      <div class="social-row">
+        <button class="social"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.05 5.05 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.24 1.06-3.72 1.06-2.86 0-5.28-1.93-6.15-4.53H2.18v2.84A11 11 0 0 0 12 23z" fill="#34A853"/><path d="M5.85 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.35-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.93l3.67-2.83z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.07.56 4.21 1.64l3.15-3.15C17.45 2.1 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.67 2.83C6.72 7.31 9.14 5.38 12 5.38z" fill="#EA4335"/></svg>Google</button>
+        <button class="social"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Apple</button>
+      </div>
+
+      <div class="auth-foot">
+        Ainda não tem conta? <a>Criar conta grátis</a>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ═══════ CADASTRO ═══════ -->
+<div class="stage">
+  <div class="stage-label">A2 · Cadastro<small>Criar conta · 1 etapa</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page no-tab" style="background:transparent">
+    <div class="auth-bg"></div>
+    <div style="position:relative">
+      <div class="nav">
+        <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <div class="nav-title"><b>Criar Conta</b><small>Vamos jogar</small></div>
+        <button class="nav-btn flat">Entrar</button>
+      </div>
+
+      <div style="padding:8px 24px 0">
+        <h1 style="color:#fff;font-size:24px;font-weight:800;margin:0 0 6px;letter-spacing:-.02em">Bem-vindo, atleta.</h1>
+        <p style="color:var(--fg2);font-size:13px;line-height:1.5;margin:0 0 22px">Crie sua conta para encontrar partidas perto de você — leva 30 segundos.</p>
+
+        <div class="lab" style="margin-bottom:8px">Você é</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px">
+          <button style="padding:12px 6px;border-radius:14px;background:rgba(34,183,108,.12);border:1.5px solid var(--ok);color:#fff;cursor:pointer;font-family:Geist">
+            <svg class="ico" width="22" height="22" viewBox="0 0 24 24" style="color:#86E5B4;margin-bottom:6px"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            <div style="font-size:12px;font-weight:700">Jogador</div>
+            <div style="font-size:9px;color:var(--fg3);font-weight:600;margin-top:2px">Marca e joga</div>
+          </button>
+          <button style="padding:12px 6px;border-radius:14px;background:#0C111E;border:1px solid var(--line2);color:var(--fg2);cursor:pointer;font-family:Geist">
+            <svg class="ico" width="22" height="22" viewBox="0 0 24 24" style="margin-bottom:6px"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-7h6v7"/></svg>
+            <div style="font-size:12px;font-weight:700">Técnico</div>
+            <div style="font-size:9px;color:var(--fg4);font-weight:600;margin-top:2px">Treina time</div>
+          </button>
+          <button style="padding:12px 6px;border-radius:14px;background:#0C111E;border:1px solid var(--line2);color:var(--fg2);cursor:pointer;font-family:Geist">
+            <svg class="ico" width="22" height="22" viewBox="0 0 24 24" style="margin-bottom:6px"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <div style="font-size:12px;font-weight:700">Torcedor</div>
+            <div style="font-size:9px;color:var(--fg4);font-weight:600;margin-top:2px">Acompanha</div>
+          </button>
+        </div>
+
+        <div class="field"><div class="lab">Nome completo</div><div class="input"><span class="placeholder">Fabrício Rodrigues</span></div></div>
+        <div class="field"><div class="lab">E-mail</div><div class="input"><span class="placeholder"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d7b1b6b5a5beb4beb897b2bab6bebbf9b4b8ba">[email&#160;protected]</a></span><span class="right"><svg class="ico" width="14" height="14" viewBox="0 0 24 24" style="color:var(--ok)"><path d="M5 12l5 5L20 7"/></svg></span></div></div>
+
+        <div class="grid2">
+          <div class="field"><div class="lab">DDD</div><div class="input"><span class="placeholder">+55 51</span></div></div>
+          <div class="field"><div class="lab">Telefone</div><div class="input"><span class="placeholder">99820-1144</span></div></div>
+        </div>
+
+        <div class="field">
+          <div class="lab">Senha</div>
+          <div class="input focus">•••••••••<span class="right"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span></div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <div style="flex:1;height:3px;border-radius:999px;background:var(--ok)"></div>
+            <div style="flex:1;height:3px;border-radius:999px;background:var(--ok)"></div>
+            <div style="flex:1;height:3px;border-radius:999px;background:var(--ok)"></div>
+            <div style="flex:1;height:3px;border-radius:999px;background:rgba(255,255,255,.08)"></div>
+          </div>
+          <div style="font-size:10px;color:var(--fg3);margin-top:4px">Forte · 9 caracteres · maiúscula + número</div>
+        </div>
+
+        <div class="field"><div class="lab">Cidade · Estado</div><div class="input"><svg class="ico" width="14" height="14" viewBox="0 0 24 24" style="color:var(--fg3)"><path d="M12 2a8 8 0 0 1 8 8c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 8-8z"/><circle cx="12" cy="10" r="3"/></svg>Porto Alegre · RS<span class="right"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span></div></div>
+
+        <label style="display:flex;align-items:flex-start;gap:10px;color:var(--fg2);font-size:11px;line-height:1.5;margin:6px 0 16px">
+          <span style="width:18px;height:18px;border-radius:6px;background:var(--ok);display:inline-flex;align-items:center;justify-content:center;color:#05070B;flex-shrink:0;margin-top:1px"><svg class="ico" width="11" height="11" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>
+          <span>Concordo com os <a style="color:var(--ok);font-weight:700">Termos de Uso</a> e <a style="color:var(--ok);font-weight:700">Política de Privacidade</a>. Eu tenho 16+ anos.</span>
+        </label>
+
+        <button class="btn btn-primary" style="width:100%;margin-bottom:12px">Criar conta grátis</button>
+        <div class="auth-foot" style="margin-top:8px;margin-bottom:24px">Já tem conta? <a>Entrar</a></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ═══════ ESQUECEU SENHA ═══════ -->
+<div class="stage">
+  <div class="stage-label">A3 · Esqueci a Senha<small>3 passos: email · OTP · nova senha</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page no-tab" style="background:transparent">
+    <div class="auth-bg"></div>
+    <div style="position:relative">
+      <div class="nav">
+        <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <div class="nav-title"><b>Recuperar Senha</b><small>ETAPA 2 DE 3</small></div>
+        <span style="width:40px"></span>
+      </div>
+
+      <!-- 3-step indicator -->
+      <div style="display:flex;align-items:center;gap:8px;padding:0 22px 12px">
+        <div style="flex:1;height:3px;border-radius:999px;background:var(--ok)"></div>
+        <div style="flex:1;height:3px;border-radius:999px;background:linear-gradient(90deg,var(--ok),var(--gold-a))"></div>
+        <div style="flex:1;height:3px;border-radius:999px;background:rgba(255,255,255,.08)"></div>
+      </div>
+
+      <div style="padding:8px 24px 0">
+        <div style="width:70px;height:70px;border-radius:20px;background:linear-gradient(160deg,rgba(34,183,108,.18),rgba(34,183,108,.04));border:1px solid rgba(34,183,108,.35);display:flex;align-items:center;justify-content:center;color:#86E5B4;margin-bottom:18px">
+          <svg class="ico" width="32" height="32" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/><circle cx="20" cy="7" r="3" fill="#22B76C" stroke="none"/></svg>
+        </div>
+        <h1 style="color:#fff;font-size:22px;font-weight:800;margin:0 0 6px;letter-spacing:-.02em">Digite o código</h1>
+        <p style="color:var(--fg2);font-size:13px;line-height:1.5;margin:0 0 8px">Enviamos um código de 6 dígitos para</p>
+        <p style="color:#fff;font-weight:600;font-size:14px;margin:0 0 4px">fab••••@email.com</p>
+        <p style="color:var(--fg3);font-size:11px;margin:0">Não chegou? <a style="color:var(--ok);font-weight:700">Reenviar em 0:42</a></p>
+      </div>
+
+      <div class="otp-row" style="margin:24px 22px 14px">
+        <div class="box">4</div>
+        <div class="box">8</div>
+        <div class="box">2</div>
+        <div class="box f">1</div>
+        <div class="box" style="color:var(--fg4)">·</div>
+        <div class="box" style="color:var(--fg4)">·</div>
+      </div>
+
+      <div style="padding:0 22px">
+        <button class="btn btn-primary" style="width:100%;margin-bottom:10px">Verificar código</button>
+        <button class="btn btn-ghost" style="width:100%">Voltar e mudar email</button>
+      </div>
+
+      <!-- preview steps below -->
+      <div style="margin:30px 22px 14px;padding-top:18px;border-top:1px dashed var(--line2)">
+        <div style="font-size:9px;color:var(--fg4);letter-spacing:.22em;text-transform:uppercase;font-weight:800;margin-bottom:14px">Próxima etapa · Nova senha</div>
+        <div style="opacity:.55">
+          <div class="field"><div class="lab">Nova senha</div><div class="input">•••••••••<span class="right"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span></div></div>
+          <div class="field" style="margin-bottom:6px"><div class="lab">Confirmar senha</div><div class="input">•••••••••</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION B — TELAS PRINCIPAIS (existing)
+     ════════════════════════════════════════════════════════════════ -->
+<div class="group-title">B · Núcleo do App · Já criadas</div>
+<p class="group-cap" style="margin:6px auto 28px;max-width:1280px;padding:0 8px">Encontrar partidas, criar partida (4 etapas), agenda, detalhes da partida e avaliação dual. <b style="color:var(--gold-a)">Mantidas como estão</b> — abrem em <a href="../futly_pro_mobile/HubDePartidas.html" style="color:var(--ok)">HubDePartidas.html</a>. Tabbar atualizada nesse documento ("Times" → "Planos").</p>
+
+<div class="grid">
+  <div class="stage">
+    <div class="stage-label">B · Núcleo (5 telas)<small>Encontrar · Criar · Agenda · Detalhes · Avaliação</small></div>
+    <div class="device" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#0F1625,#05070B);border-radius:54px">
+      <div style="text-align:center;padding:30px">
+        <div style="width:80px;height:80px;border-radius:24px;background:rgba(34,183,108,.14);border:1px solid rgba(34,183,108,.35);display:flex;align-items:center;justify-content:center;color:#86E5B4;margin:0 auto 18px">
+          <svg class="ico" width="36" height="36" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+        </div>
+        <div style="color:#fff;font-size:18px;font-weight:800;margin-bottom:8px">5 telas existentes</div>
+        <p style="color:var(--fg3);font-size:12px;line-height:1.5;margin:0 0 18px">Encontrar Partidas · Criar Partida · Minha Agenda · Detalhes · Avaliação</p>
+        <a href="../futly_pro_mobile/HubDePartidas.html" target="_blank" class="btn btn-primary btn-sm" style="text-decoration:none;display:inline-flex">Abrir telas existentes →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION C — NOVAS: PERFIL · CONFIGURAÇÕES · PLANOS
+     ════════════════════════════════════════════════════════════════ -->
+<div class="group-title">C · Perfil · Configurações · Planos</div>
+<p class="group-cap" style="margin:6px auto 28px;max-width:1280px;padding:0 8px">Perfil do atleta com OVR, partidas, badges. Configurações com privacidade, notificações, conta e logout. <b style="color:var(--gold-a)">Tela Planos substitui Times</b> — loja de assinaturas com 3 planos (Free, Gold, Elite) e opção mensal/semestral/anual.</p>
+
+<div class="grid">
+
+<!-- ═══════ PERFIL ═══════ -->
+<div class="stage">
+  <div class="stage-label">C1 · Perfil<small>OVR · Stats · Badges · Histórico</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page">
+    <div class="nav" style="background:transparent">
+      <button class="nav-btn" style="background:rgba(0,0,0,.4);border-color:rgba(255,255,255,.15)"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="nav-title"><b>Meu Perfil</b><small>JOGADOR</small></div>
+      <button class="nav-btn" style="background:rgba(0,0,0,.4);border-color:rgba(255,255,255,.15)"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.1-1.2L14 3h-4l-.5 2.7a7 7 0 0 0-2.1 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.1 1.2L10 21h4l.5-2.7a7 7 0 0 0 2.1-1.2l2.3 1 2-3.4-2-1.5c0-.4.1-.8.1-1.2z"/></svg></button>
+    </div>
+
+    <div class="pf-cover" style="margin-top:-54px;padding-top:54px">
+      <div class="pf-overall">
+        <span class="num">82</span>
+        <div class="lbl"><b>OVR · Pivô</b><span>Nível 11 · 2.140 / 3.500 XP</span></div>
+      </div>
+      <div class="pf-avatar">FR</div>
+    </div>
+
+    <div class="pf-name">
+      <b>Fabrício Rodrigues</b>
+      <small>@fabricio.rv · Porto Alegre, RS · Membro desde abr/26</small>
+      <div style="display:flex;justify-content:center;gap:6px;margin-top:10px">
+        <span class="pill gold" style="font-size:10px;letter-spacing:.1em">PLANO GOLD</span>
+        <span class="pill" style="font-size:10px;border-color:rgba(34,183,108,.4);color:#86E5B4;background:rgba(34,183,108,.08)">★ 4.8 · 23 partidas</span>
+      </div>
+    </div>
+
+    <!-- XP bar -->
+    <div style="margin:18px 18px 0">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--fg3);letter-spacing:.14em;font-weight:700;margin-bottom:6px"><span>NÍVEL 11</span><span>61% até NÍVEL 12</span></div>
+      <div style="height:8px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden;border:1px solid var(--line)">
+        <div style="height:100%;width:61%;background:linear-gradient(90deg,var(--ok),var(--gold-a));border-radius:999px"></div>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="pf-stats">
+      <div class="cell"><div class="v">23</div><div class="l">Partidas</div></div>
+      <div class="cell"><div class="v">14</div><div class="l">Vitórias</div></div>
+      <div class="cell"><div class="v">31</div><div class="l">Gols</div></div>
+    </div>
+
+    <!-- Posições -->
+    <div class="sec">
+      <div class="h2" style="margin:6px 0 10px">Posições</div>
+      <div class="panel" style="padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div><div style="color:#fff;font-size:13px;font-weight:600">Pivô</div><small style="color:var(--fg3);font-size:11px">Posição principal</small></div>
+          <div style="font-family:'Bebas Neue';font-size:24px;color:var(--gold-a);letter-spacing:.04em">PIV</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><div style="color:var(--fg2);font-size:13px;font-weight:500">Ala Direita</div><small style="color:var(--fg3);font-size:11px">Posição secundária</small></div>
+          <div style="font-family:'Bebas Neue';font-size:18px;color:var(--fg2);letter-spacing:.04em">ALD</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Atributos -->
+    <div class="sec">
+      <div class="h2" style="margin:14px 0 10px">Atributos</div>
+      <div class="panel" style="padding:14px">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px 18px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg2)">RIT</span><b style="color:#fff;font-family:'Bebas Neue';font-size:18px;letter-spacing:.04em">86</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg2)">FIN</span><b style="color:var(--gold-a);font-family:'Bebas Neue';font-size:18px;letter-spacing:.04em">91</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg2)">PAS</span><b style="color:#fff;font-family:'Bebas Neue';font-size:18px;letter-spacing:.04em">78</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg2)">DRI</span><b style="color:#fff;font-family:'Bebas Neue';font-size:18px;letter-spacing:.04em">84</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg2)">DEF</span><b style="color:var(--fg3);font-family:'Bebas Neue';font-size:18px;letter-spacing:.04em">62</b></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--fg2)">FIS</span><b style="color:#fff;font-family:'Bebas Neue';font-size:18px;letter-spacing:.04em">80</b></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conquistas -->
+    <div class="sec">
+      <div class="sec-head"><div class="h2">Conquistas<span class="num">7 / 24</span></div><span class="more">Ver tudo</span></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 0 6px">
+        <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(160deg,rgba(212,161,58,.2),transparent);border:1px solid rgba(212,161,58,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gold-a);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">
+          <span style="font-family:'Bebas Neue';font-size:24px;line-height:1">★</span>MVP
+        </div>
+        <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(160deg,rgba(212,161,58,.2),transparent);border:1px solid rgba(212,161,58,.4);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gold-a);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">
+          <span style="font-family:'Bebas Neue';font-size:22px;line-height:1">10</span>HAT-TRICK
+        </div>
+        <div style="aspect-ratio:1;border-radius:14px;background:linear-gradient(160deg,rgba(34,183,108,.16),transparent);border:1px solid rgba(34,183,108,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#86E5B4;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">
+          <span style="font-family:'Bebas Neue';font-size:22px;line-height:1">5★</span>5 ESTRELAS
+        </div>
+        <div style="aspect-ratio:1;border-radius:14px;background:#0C111E;border:1px solid var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--fg4);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.5">
+          <span style="font-family:'Bebas Neue';font-size:22px;line-height:1">?</span>BLOQUEADO
+        </div>
+      </div>
+    </div>
+
+    <!-- Card actions -->
+    <div class="sec" style="padding-top:14px;padding-bottom:30px">
+      <button class="btn btn-ghost" style="width:100%;margin-bottom:8px"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Editar perfil</button>
+      <button class="btn btn-ghost" style="width:100%;background:transparent"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartilhar perfil</button>
+    </div>
+  </div>
+
+  <!-- TABBAR (Times → Planos) -->
+  <div class="tabbar">
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>Buscar</button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>Agenda</button>
+    <button class="tab"><div class="fab">+</div></button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z"/></svg></div>Planos</button>
+    <button class="tab a"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>Perfil</button>
+  </div>
+</div></div>
+
+<!-- ═══════ CONFIGURAÇÕES ═══════ -->
+<div class="stage">
+  <div class="stage-label">C2 · Configurações<small>Conta · Privacidade · Suporte · Sair</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page">
+    <div class="nav">
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="nav-title"><b>Configurações</b><small>v 1.4.2</small></div>
+      <span style="width:40px"></span>
+    </div>
+
+    <!-- Account preview card -->
+    <div style="margin:6px 18px 8px;padding:14px;border-radius:18px;background:linear-gradient(160deg,#0F3A24 0%,#072314 80%);border:1px solid rgba(34,183,108,.3);display:flex;align-items:center;gap:12px">
+      <div class="av" style="background:linear-gradient(160deg,#1B3A5F,#071428);width:46px;height:46px;border-color:var(--gold-b)">FR</div>
+      <div style="flex:1">
+        <div style="color:#fff;font-size:14px;font-weight:700">Fabrício Rodrigues</div>
+        <div style="color:#86E5B4;font-size:11px;letter-spacing:.06em"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="86e0e7e4f4efe5efe9c6e3ebe7efeaa8e5e9eb">[email&#160;protected]</a> · Plano Gold</div>
+      </div>
+      <button class="nav-btn" style="background:rgba(255,255,255,.08)"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+
+    <div class="set-grp-title">Conta</div>
+    <div class="set-grp">
+      <div class="set-row">
+        <div class="ic ok"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>
+        <div class="body"><b>Editar perfil</b><small>Nome, foto, posição, cidade</small></div>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+        <div class="body"><b>Senha e segurança</b><small>Trocar senha · 2 fatores</small></div>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="set-row">
+        <div class="ic gold"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z"/></svg></div>
+        <div class="body"><b>Plano e pagamento</b><small>Gold · Renova 10/05</small></div>
+        <span class="right">Gerenciar</span>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+
+    <div class="set-grp-title">Preferências</div>
+    <div class="set-grp">
+      <div class="set-row">
+        <div class="ic sky"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></div>
+        <div class="body"><b>Notificações</b><small>Push · Chat · Convites</small></div>
+        <div class="switch on"></div>
+      </div>
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 8-8z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div class="body"><b>Localização</b><small>Encontrar partidas perto</small></div>
+        <div class="switch on"></div>
+      </div>
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div>
+        <div class="body"><b>Idioma</b><small>Português (Brasil)</small></div>
+        <span class="right">pt-BR</span>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg></div>
+        <div class="body"><b>Tema</b><small>Escuro · Sempre ligado</small></div>
+        <span class="right">Escuro</span>
+      </div>
+    </div>
+
+    <div class="set-grp-title">Privacidade</div>
+    <div class="set-grp">
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M12 2 4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg></div>
+        <div class="body"><b>Quem pode me convidar</b><small>Apenas amigos e plano Gold+</small></div>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="body"><b>Visibilidade do perfil</b><small>Público</small></div>
+        <span class="right">Público</span>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg></div>
+        <div class="body"><b>Bloqueados</b><small>3 contas bloqueadas</small></div>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+
+    <div class="set-grp-title">Suporte</div>
+    <div class="set-grp">
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></div>
+        <div class="body"><b>Central de ajuda</b><small>FAQ · Tutoriais</small></div>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg></div>
+        <div class="body"><b>Falar com suporte</b><small>Resposta em até 4h</small></div>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+      <div class="set-row">
+        <div class="ic"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 8h18"/></svg></div>
+        <div class="body"><b>Termos · Privacidade</b><small>Atualizado em 15/04/26</small></div>
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </div>
+    </div>
+
+    <div class="set-grp-title">Zona perigosa</div>
+    <div class="set-grp">
+      <div class="set-row">
+        <div class="ic bad"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg></div>
+        <div class="body" style="color:#FF8B7A"><b style="color:#FF8B7A">Sair da conta</b><small>Você precisará entrar de novo</small></div>
+      </div>
+      <div class="set-row">
+        <div class="ic bad"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+        <div class="body"><b style="color:#FF8B7A">Excluir conta</b><small>Permanente · Remove todo o histórico</small></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:var(--fg4);font-size:10px;letter-spacing:.16em;font-weight:600;padding:30px 0 20px">
+      HUB DE PARTIDAS<br/>v 1.4.2 · Build 240425
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>Buscar</button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>Agenda</button>
+    <button class="tab"><div class="fab">+</div></button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z"/></svg></div>Planos</button>
+    <button class="tab a"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>Perfil</button>
+  </div>
+</div></div>
+
+<!-- ═══════ PLANOS / STORE ═══════ -->
+<div class="stage">
+  <div class="stage-label">C3 · Planos · Loja<small>Mensal · Semestral · Anual</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page">
+    <div class="nav">
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="nav-title"><b>Planos</b><small>SEU PLANO ATUAL · GOLD</small></div>
+      <button class="nav-btn"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M9 12 11 14 15 10"/><circle cx="12" cy="12" r="9"/></svg></button>
+    </div>
+
+    <!-- HERO -->
+    <div class="plan-hero">
+      <div class="crown">PRO</div>
+      <h2>Hub de Partidas <b>·</b> Pro</h2>
+      <h1>Mais partidas. Mais visibilidade. Mais futebol.</h1>
+      <p>Desbloqueie raio de busca ampliado, criação ilimitada de partidas e prioridade nas vagas concorridas.</p>
+    </div>
+
+    <!-- Period toggle -->
+    <div class="plan-toggle">
+      <button>Mensal</button>
+      <button class="a">Semestral <span class="save">-15%</span></button>
+      <button>Anual <span class="save">-25%</span></button>
+    </div>
+
+    <!-- FREE -->
+    <div class="plan-card">
+      <span class="plan-tag" style="background:rgba(255,255,255,.06);border:1px solid var(--line2);color:var(--fg2)">Atual de novos</span>
+      <div class="nm free">Free · Pelada</div>
+      <h3>Pelada de Bairro</h3>
+      <p class="desc">Para começar e marcar suas primeiras partidas no app.</p>
+      <div class="plan-price"><span class="currency">R$</span><span class="num">0</span><span class="per">/mês · grátis</span></div>
+      <ul class="plan-feat">
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Buscar partidas em <b>raio de 5km</b></li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Participar de partidas (até <b>3/mês</b>)</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Criar até <b>1 partida/mês</b> como host</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Chat básico com host</li>
+        <li style="color:var(--fg4)"><svg class="ico" width="14" height="14" viewBox="0 0 24 24" style="color:var(--fg4)"><path d="M9 9l6 6M15 9l-6 6"/></svg>Anúncios entre partidas</li>
+      </ul>
+    </div>
+
+    <!-- GOLD -->
+    <div class="plan-card gold">
+      <span class="plan-tag gold">⭐ Mais popular</span>
+      <div class="nm">Gold · Atleta</div>
+      <h3>Atleta Gold</h3>
+      <p class="desc">Para quem joga toda semana e quer prioridade nas melhores partidas.</p>
+      <div class="plan-price">
+        <span class="currency">R$</span><span class="num">19,90</span><span class="per">/mês</span>
+        <span class="strike">R$ 23,90</span>
+      </div>
+      <div style="font-size:10px;color:var(--gold-a);margin-bottom:14px;letter-spacing:.06em;font-weight:700">⚡ R$ 119,40 a cada 6 meses · economiza R$ 24</div>
+      <ul class="plan-feat">
+        <li class="gold"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg><span>Tudo do <b>Free</b>, e mais:</span></li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Raio de busca <b>ilimitado</b> + filtros avançados</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg><b>Partidas ilimitadas</b> como jogador e host</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg><b>Prioridade na fila</b> em partidas lotadas</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Card FIFA Gold + selo no perfil</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Estatísticas detalhadas e histórico completo</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Sem anúncios</li>
+      </ul>
+      <button class="btn btn-gold" style="width:100%">Plano atual · Gerenciar</button>
+    </div>
+
+    <!-- ELITE -->
+    <div class="plan-card elite">
+      <span class="plan-tag popular">Para hosts</span>
+      <div class="nm elite">Elite · Anfitrião</div>
+      <h3>Host Elite</h3>
+      <p class="desc">Para quem organiza partidas e quer monetizar — receba pagamentos no app, gerencie reservas.</p>
+      <div class="plan-price">
+        <span class="currency">R$</span><span class="num">39,90</span><span class="per">/mês</span>
+      </div>
+      <div style="font-size:10px;color:#86E5B4;margin-bottom:14px;letter-spacing:.06em;font-weight:700">⚡ R$ 359,00/ano · economiza R$ 119,80</div>
+      <ul class="plan-feat">
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg><span>Tudo do <b>Gold</b>, e mais:</span></li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg><b>Receba pagamentos</b> direto pelo app (taxa 4,9%)</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg><b>Multi-quadras</b> · gerencie até 5 locais</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Selo "Host Verificado" + destaque no feed</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Lista de espera automática</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Dashboard financeiro mensal</li>
+        <li><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>Suporte prioritário em até 1h</li>
+      </ul>
+      <button class="btn btn-primary" style="width:100%">Fazer upgrade · R$ 39,90/mês</button>
+    </div>
+
+    <!-- Trust strip -->
+    <div style="margin:18px 18px 24px;padding:14px;border-radius:14px;background:rgba(255,255,255,.02);border:1px dashed var(--line2)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <svg class="ico" width="16" height="16" viewBox="0 0 24 24" style="color:#86E5B4"><path d="M12 2 4 5v7c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V5l-8-3z"/></svg>
+        <b style="color:#fff;font-size:12px;font-weight:700">Pague à vontade. Cancele quando quiser.</b>
+      </div>
+      <p style="color:var(--fg3);font-size:11px;margin:0;line-height:1.5">PIX, cartão de crédito ou Apple/Google Pay. Sem fidelidade. Reembolso integral nos primeiros 7 dias. Faturamento por <b style="color:var(--fg2)">Futly Pro Tecnologia LTDA</b> · CNPJ 50.123.456/0001-89.</p>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>Buscar</button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>Agenda</button>
+    <button class="tab"><div class="fab">+</div></button>
+    <button class="tab a"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z"/></svg></div>Planos</button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>Perfil</button>
+  </div>
+</div></div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION D — CHAT (lista + conversa)
+     ════════════════════════════════════════════════════════════════ -->
+<div class="group-title">D · Chat · Comunicação Host ↔ Jogador</div>
+<p class="group-cap" style="margin:6px auto 28px;max-width:1280px;padding:0 8px">Toda partida que você criou ou se inscreveu gera uma conversa de grupo (se for partida coletiva) ou 1-a-1 (host ↔ jogador). Visual estilo WhatsApp, mas com banner contextual da partida no topo da conversa, mensagens-sistema (lembretes, confirmações) e ações rápidas.</p>
+
+<div class="grid">
+
+<!-- ═══════ CHAT LISTA ═══════ -->
+<div class="stage">
+  <div class="stage-label">D1 · Lista de Conversas<small>Partidas ativas + arquivadas</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page">
+    <div class="nav">
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="nav-title"><b>Conversas</b><small>4 ATIVAS · 2 NÃO LIDAS</small></div>
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+    </div>
+
+    <!-- Filter pills -->
+    <div style="display:flex;gap:8px;padding:0 18px 12px;overflow-x:auto;scrollbar-width:none">
+      <span class="pill a" style="height:32px">Todas <span style="background:rgba(0,0,0,.18);color:#05070B;padding:0 6px;border-radius:5px;font-size:10px;margin-left:2px">4</span></span>
+      <span class="pill" style="height:32px">Ativas</span>
+      <span class="pill" style="height:32px">Como Host</span>
+      <span class="pill" style="height:32px">Como Jogador</span>
+      <span class="pill" style="height:32px">Arquivadas</span>
+    </div>
+
+    <!-- Pinned context strip -->
+    <div class="chat-context">
+      <svg class="ico" width="12" height="12" viewBox="0 0 24 24" style="color:#86E5B4"><path d="M12 2v4M5 9l3 3M19 9l-3 3M2 22l5-5"/><circle cx="12" cy="14" r="6"/></svg>
+      Cada conversa é vinculada a uma <b>partida marcada</b>. Auto-arquiva 7 dias após o jogo.
+    </div>
+
+    <!-- Conversations -->
+    <div class="chat-list-item">
+      <div class="av" style="background:linear-gradient(160deg,#0F3A24,#072314);border-color:var(--ok);position:relative">
+        AC
+        <span style="position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:999px;background:linear-gradient(160deg,#F6D27A,#D4A13A);border:2px solid #05070B;display:flex;align-items:center;justify-content:center;color:#2A1A05;font-size:8px;font-weight:900">★</span>
+      </div>
+      <div class="chat-li-info">
+        <div class="top">
+          <b>Arena Central · Quinta 19h30</b>
+          <time class="unread">agora</time>
+        </div>
+        <div class="bot">
+          <p class="unread"><b style="color:var(--gold-a);font-weight:700">Pedro K.:</b> Gente, vamos chegar 19h15 que aí dá tempo de aquecer 🔥</p>
+          <span class="badge">3</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-list-item">
+      <div class="av" style="background:linear-gradient(160deg,#1A2236,#0F1828)">EB</div>
+      <div class="chat-li-info">
+        <div class="top">
+          <b>Estádio do Bairro · Sáb 16h00</b>
+          <time class="unread">12min</time>
+        </div>
+        <div class="bot">
+          <p class="unread"><b style="color:#7AC0FF;font-weight:700">Carla S.:</b> Confirmado pra mim! Levo 2 garrafas d'água</p>
+          <span class="badge">1</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-list-item">
+      <div class="av" style="background:linear-gradient(160deg,#5a3018,#2A160A)">LG</div>
+      <div class="chat-li-info">
+        <div class="top">
+          <b>Luiz G. <span style="font-size:9px;color:var(--gold-a);background:rgba(212,161,58,.16);padding:1px 5px;border-radius:4px;margin-left:4px;letter-spacing:.06em;font-weight:700">PRIVADO</span></b>
+          <time>1h</time>
+        </div>
+        <div class="bot">
+          <p>Você: Tô com o uniforme amarelo, vê se acha igual 👕</p>
+          <span class="check read"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 13l4 4L20 7M9 13l4 4L24 6"/></svg></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-list-item">
+      <div class="av" style="background:linear-gradient(160deg,#241015,#170A0F)">CT</div>
+      <div class="chat-li-info">
+        <div class="top">
+          <b>CT Bola Cheia · Sex 21h00</b>
+          <time>ontem</time>
+        </div>
+        <div class="bot">
+          <p><b style="color:var(--fg2);font-weight:600">Sistema:</b> Partida confirmada! 14/14 vagas preenchidas.</p>
+          <span class="check"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M5 13l4 4L20 7"/></svg></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Arquivadas -->
+    <div class="sec" style="padding-top:14px"><div class="h2">Arquivadas<span class="num">12</span></div></div>
+
+    <div class="chat-list-item" style="opacity:.6">
+      <div class="av" style="background:linear-gradient(160deg,#0F3A24,#072314)">QP</div>
+      <div class="chat-li-info">
+        <div class="top">
+          <b>Quadra Pôr-do-Sol · Sáb passado</b>
+          <time>há 1 sem</time>
+        </div>
+        <div class="bot">
+          <p><b style="color:var(--fg2)">Amanda M.:</b> Foi muito bom! 5⭐ pro host</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-list-item" style="opacity:.6">
+      <div class="av" style="background:linear-gradient(160deg,#3A2A05,#1F1605)">CB</div>
+      <div class="chat-li-info">
+        <div class="top">
+          <b>Copa do Bairro R3 · há 4 dias</b>
+          <time>há 4d</time>
+        </div>
+        <div class="bot">
+          <p><b style="color:var(--fg2)">Sistema:</b> Avalie os atletas da partida (+50 XP)</p>
+          <span class="badge" style="background:var(--gold-b);color:#2A1A05">!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>Buscar</button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>Agenda</button>
+    <button class="tab"><div class="fab">+</div></button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z"/></svg></div>Planos</button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>Perfil</button>
+  </div>
+</div></div>
+
+<!-- ═══════ CHAT CONVERSA ═══════ -->
+<div class="stage">
+  <div class="stage-label">D2 · Conversa<small>Grupo da partida · Banner contextual</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page no-tab" style="padding-bottom:0">
+    <div class="nav" style="background:linear-gradient(180deg,rgba(5,7,11,.95),rgba(5,7,11,.85));border-bottom:1px solid var(--line)">
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="chat-head" style="padding:0;flex:1">
+        <div class="av" style="background:linear-gradient(160deg,#0F3A24,#072314);border-color:var(--ok);width:36px;height:36px;font-size:13px">AC</div>
+        <div class="info">
+          <b>Arena Central · Q. B<svg class="ico" width="11" height="11" viewBox="0 0 24 24" style="color:var(--gold-a)"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z" fill="#D4A13A" stroke="none"/></svg></b>
+          <small><span style="display:inline-block;width:5px;height:5px;border-radius:999px;background:var(--ok);margin-right:4px;vertical-align:middle"></span>Pedro K. + 4 atletas · online</small>
+        </div>
+      </div>
+      <button class="nav-btn"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></button>
+    </div>
+
+    <!-- contextual match banner -->
+    <div class="chat-banner">
+      <div class="ic">
+        <svg class="ico" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+      </div>
+      <div class="body">
+        <b>Quinta · 25 abr · 19h30 · 5/7 vagas</b>
+        <small>R. dos Andradas, 1234 · Cidade Baixa · Confirma em <b style="color:var(--gold-a);font-weight:700">2h 14m</b></small>
+      </div>
+      <button class="nav-btn" style="width:32px;height:32px;background:rgba(34,183,108,.14);border-color:rgba(34,183,108,.3);color:#86E5B4"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+
+    <!-- Stream -->
+    <div class="chat-stream">
+      <div class="day-sep">Hoje</div>
+
+      <div class="bubble system">📌 Pedro K. (host) criou esta conversa</div>
+
+      <div class="bubble them">
+        <div class="bubble-author">Pedro K. · Host</div>
+        Fala galera! Confirmação geral até 17h, beleza? Quem não confirmar a vaga libera.
+        <time>17:02</time>
+      </div>
+
+      <div class="bubble them">
+        <div class="bubble-author">Luiz G. · Fixo</div>
+        Confirmado aqui chefe 💪 levo a bola
+        <time>17:08</time>
+      </div>
+
+      <div class="bubble me">
+        Tô dentro! Posição: Pivô. Quanto fica o pix?
+        <time>17:14</time>
+      </div>
+
+      <div class="bubble them">
+        <div class="bubble-author">Pedro K. · Host</div>
+        R$ 25 cada. Pix do CNPJ aí em cima da partida. Aceita até 18h30
+        <time>17:15</time>
+      </div>
+
+      <div class="bubble system">✓ Carla S. confirmou presença</div>
+
+      <div class="bubble them">
+        <div class="bubble-author">Carla S. · Ala</div>
+        Galera, alguém tem espaço de carona vindo do Menino Deus? 🚗
+        <time>18:24</time>
+      </div>
+
+      <div class="bubble me">
+        Eu vou pelo Menino Deus tbm! Te chamo no privado
+        <time>18:26</time>
+      </div>
+
+      <div class="bubble them">
+        <div class="bubble-author">Pedro K. · Host</div>
+        Gente, vamos chegar 19h15 que aí dá tempo de aquecer 🔥
+        <time>agora</time>
+      </div>
+
+      <!-- Typing indicator -->
+      <div class="bubble them" style="background:rgba(255,255,255,.04);padding:10px 14px;display:inline-flex;gap:4px;align-items:center;width:fit-content">
+        <div class="bubble-author" style="margin:0 8px 0 0">Amanda M.</div>
+        <span style="width:6px;height:6px;border-radius:999px;background:var(--fg3);animation:p 1.4s infinite"></span>
+        <span style="width:6px;height:6px;border-radius:999px;background:var(--fg3);animation:p 1.4s infinite .2s"></span>
+        <span style="width:6px;height:6px;border-radius:999px;background:var(--fg3);animation:p 1.4s infinite .4s"></span>
+      </div>
+    </div>
+
+    <!-- Chat input -->
+    <div class="chat-input">
+      <button class="icon-btn" style="background:rgba(34,183,108,.14);color:#86E5B4">
+        <svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <div class="field-wrap">
+        <span class="placeholder">Mensagem…</span>
+        <svg class="ico" width="16" height="16" viewBox="0 0 24 24" style="color:var(--fg3)"><circle cx="12" cy="12" r="9"/><path d="M9 9h.01M15 9h.01M9 15a4 4 0 0 0 6 0"/></svg>
+      </div>
+      <button class="send">
+        <svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>
+      </button>
+    </div>
+  </div>
+</div></div>
+
+<style>@keyframes p{50%{opacity:.35}}</style>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECTION E — DRAWER + SHEET (cliques pendentes)
+     ════════════════════════════════════════════════════════════════ -->
+<div class="group-title">E · Conteúdos dos Botões · Drawer e Bottom-Sheet</div>
+<p class="group-cap" style="margin:6px auto 28px;max-width:1280px;padding:0 8px">
+  <b style="color:var(--gold-a)">Hambúrguer</b> abre um drawer lateral com perfil compacto, navegação secundária (Carteira, Convidar amigos, Histórico, Notificações), ajuda e modo escuro.<br/>
+  <b style="color:var(--gold-a)">+</b> da agenda abre um bottom-sheet com 4 ações rápidas: Criar partida, Entrar por código, Convidar amigos, Buscar partida hoje.<br/>
+  <b style="color:var(--gold-a)">Ícone Agenda</b> da agenda — <span style="color:#86E5B4">decisão:</span> não precisa fazer nada novo. O usuário já está em "Agenda". Um clique nesse mesmo ícone (no header da agenda) deve abrir o <b>seletor de mês/calendário</b>, mostrado abaixo.
+</p>
+
+<div class="grid">
+
+<!-- ═══════ DRAWER ═══════ -->
+<div class="stage">
+  <div class="stage-label">E1 · Drawer (Hambúrguer)<small>Aberto sobre Encontrar Partidas</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page" style="filter:blur(.5px)">
+    <div class="nav">
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+      <div class="nav-title"><b>Hub de Partidas</b><small>Quinta · POA</small></div>
+      <button class="nav-btn"></button>
+    </div>
+    <div class="h1">Achar Jogo</div>
+    <div style="padding:0 18px"><div class="panel" style="height:120px;opacity:.6"></div></div>
+  </div>
+
+  <div class="drawer-overlay"></div>
+  <div class="drawer">
+    <div class="drawer-head">
+      <div class="av">FR</div>
+      <div class="info"><b>Fabrício R.<svg class="ico" width="11" height="11" viewBox="0 0 24 24" style="color:var(--gold-a)"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z" fill="#D4A13A" stroke="none"/></svg></b><small>OVR 82 · GOLD</small></div>
+    </div>
+
+    <div class="drawer-list">
+      <button class="d-item a">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span>
+        Encontrar partidas
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>
+        Minha agenda
+        <span class="badge">3</span>
+      </button>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg></span>
+        Conversas
+        <span class="badge">4</span>
+      </button>
+
+      <div class="d-section">Sua jornada</div>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z"/></svg></span>
+        Conquistas e XP
+      </button>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg></span>
+        Estatísticas
+      </button>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20M6 14h4"/></svg></span>
+        Carteira · R$ 87,40
+        <span class="arrow"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+
+      <div class="d-section">Comunidade</div>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></span>
+        Convidar amigos
+        <span class="badge" style="background:rgba(212,161,58,.18);color:var(--gold-a)">+50 XP</span>
+      </button>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg></span>
+        Notificações
+        <span class="badge" style="background:#FF6E5B;color:#fff">2</span>
+      </button>
+
+      <div class="d-section">App</div>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2.1-1.2L14 3h-4l-.5 2.7a7 7 0 0 0-2.1 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2.1 1.2L10 21h4l.5-2.7a7 7 0 0 0 2.1-1.2l2.3 1 2-3.4-2-1.5c0-.4.1-.8.1-1.2z"/></svg></span>
+        Configurações
+      </button>
+      <button class="d-item">
+        <span class="ic"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></span>
+        Ajuda · Suporte
+      </button>
+    </div>
+
+    <div class="drawer-foot">
+      <span>v 1.4.2 · Build 240425</span>
+      <span><b>HUB DE PARTIDAS</b></span>
+    </div>
+  </div>
+</div></div>
+
+<!-- ═══════ BOTTOM SHEET (+ da Agenda) ═══════ -->
+<div class="stage">
+  <div class="stage-label">E2 · "+" da Agenda<small>Bottom-sheet com ações rápidas</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page" style="filter:brightness(.5)">
+    <div class="nav">
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button>
+      <div class="nav-title"><b>Minha Agenda</b><small>3 ATIVAS</small></div>
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+    <div style="padding:0 18px"><div class="panel" style="height:80px;margin-bottom:10px"></div><div class="panel" style="height:140px"></div></div>
+  </div>
+
+  <div class="sheet-overlay"></div>
+  <div class="sheet">
+    <div class="sheet-grip"></div>
+    <h2 class="t">Marcar uma partida</h2>
+    <p class="s">Escolha como você quer começar.</p>
+
+    <button class="quick-action">
+      <span class="ic green"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span>
+      <div class="body"><b>Criar nova partida</b><small>Você é o host · Configura local, vagas e valor</small></div>
+      <span class="arr"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </button>
+
+    <button class="quick-action">
+      <span class="ic gold"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 2v4M16 2v4M4 12h16"/><circle cx="12" cy="16" r="1.5"/></svg></span>
+      <div class="body"><b>Entrar por código</b><small>Recebeu um convite? Cole o código de 6 dígitos</small></div>
+      <span class="arr"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </button>
+
+    <button class="quick-action">
+      <span class="ic sky"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M11 8v6M8 11h6"/></svg></span>
+      <div class="body"><b>Buscar partidas hoje</b><small>14 partidas abertas em Porto Alegre agora</small></div>
+      <span class="arr"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </button>
+
+    <button class="quick-action">
+      <span class="ic violet"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6M19 8v6"/></svg></span>
+      <div class="body"><b>Convidar um amigo</b><small>Ganhe +50 XP por amigo que jogar a 1ª partida</small></div>
+      <span class="arr"><svg class="ico" width="16" height="16" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </button>
+
+    <button class="btn btn-ghost" style="width:100%;margin-top:14px">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- ═══════ CALENDAR / MES (clique no ícone agenda) ═══════ -->
+<div class="stage">
+  <div class="stage-label">E3 · Seletor de Mês<small>Clique no ícone agenda dentro de "Minha Agenda"</small></div>
+<div class="device">
+  <div class="island"></div><div class="status"><span>9:41</span><span>●●● ◉</span></div><div class="home-bar"></div>
+  <div class="page">
+    <div class="nav">
+      <button class="nav-btn"><svg class="ico" width="18" height="18" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div class="nav-title"><b>Calendário</b><small>ABRIL · 2026</small></div>
+      <button class="nav-btn flat">Hoje</button>
+    </div>
+
+    <!-- Month switcher -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 18px 18px">
+      <button class="nav-btn" style="background:rgba(255,255,255,.04)"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <div style="text-align:center">
+        <div style="font-family:'Bebas Neue';font-size:34px;color:#fff;letter-spacing:.04em;line-height:1">ABRIL</div>
+        <div style="font-size:11px;color:var(--gold-a);letter-spacing:.22em;font-weight:800">2026</div>
+      </div>
+      <button class="nav-btn" style="background:rgba(255,255,255,.04)"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+
+    <!-- Days header -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 18px 8px;font-size:9px;color:var(--fg3);letter-spacing:.16em;font-weight:700;text-align:center">
+      <span>DOM</span><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SÁB</span>
+    </div>
+
+    <!-- Calendar grid -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 18px">
+      <!-- prev month tail -->
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--fg4);font-size:13px">29</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--fg4);font-size:13px">30</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--fg4);font-size:13px">31</div>
+      <!-- abr -->
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;border-radius:10px">1</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">2</div>
+      <div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:13px;background:rgba(34,183,108,.1);border-radius:10px;border:1px solid rgba(34,183,108,.3)">3<span style="width:4px;height:4px;border-radius:999px;background:var(--ok);margin-top:2px"></span></div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">4</div>
+
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">5</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">6</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">7</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">8</div>
+      <div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:13px;background:rgba(34,183,108,.1);border-radius:10px;border:1px solid rgba(34,183,108,.3)">9<span style="width:4px;height:4px;border-radius:999px;background:var(--ok);margin-top:2px"></span></div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">10</div>
+      <div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:13px;background:rgba(212,161,58,.1);border-radius:10px;border:1px solid rgba(212,161,58,.35)">11<span style="width:4px;height:4px;border-radius:999px;background:var(--gold-a);margin-top:2px"></span></div>
+
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">12</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">13</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">14</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">15</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">16</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">17</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">18</div>
+
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">19</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">20</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">21</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">22</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">23</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">24</div>
+      <!-- HOJE - 25 abr -->
+      <div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;background:var(--ok);color:#05070B;border-radius:10px;font-weight:800;box-shadow:0 0 0 2px rgba(34,183,108,.3),0 6px 16px rgba(34,183,108,.4)">25<span style="width:4px;height:4px;border-radius:999px;background:#05070B;margin-top:2px"></span></div>
+
+      <div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-size:13px;background:rgba(34,183,108,.1);border-radius:10px;border:1px solid rgba(34,183,108,.3)">26<span style="width:4px;height:4px;border-radius:999px;background:var(--ok);margin-top:2px"></span></div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">27</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">28</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">29</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px">30</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--fg4);font-size:13px">1</div>
+      <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;color:var(--fg4);font-size:13px">2</div>
+    </div>
+
+    <!-- Legend -->
+    <div style="display:flex;justify-content:center;gap:14px;padding:18px;font-size:10px;color:var(--fg2)">
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:999px;background:var(--ok)"></span>Como jogador</div>
+      <div style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:999px;background:var(--gold-a)"></span>Como host</div>
+    </div>
+
+    <!-- Selected day detail -->
+    <div class="sec">
+      <div class="h2" style="margin:6px 0 10px"><span style="font-family:'Bebas Neue';font-size:20px;color:var(--gold-a);letter-spacing:.04em">25 ABR</span> · Hoje · 1 partida</div>
+      <div class="panel" style="padding:12px 14px;display:flex;align-items:center;gap:12px">
+        <div style="width:46px;height:46px;border-radius:14px;background:linear-gradient(160deg,#0F3A24,#072314);border:1px solid rgba(34,183,108,.35);display:flex;flex-direction:column;align-items:center;justify-content:center">
+          <div style="font-family:'Bebas Neue';font-size:14px;color:#fff;line-height:1">19h30</div>
+          <div style="font-size:8px;color:#86E5B4;letter-spacing:.14em;font-weight:700">FUTSAL</div>
+        </div>
+        <div style="flex:1">
+          <div style="color:#fff;font-size:13px;font-weight:700">Arena Central · Q. B</div>
+          <div style="font-size:11px;color:var(--fg3)">5/7 vagas · R$ 25 · Você é Host</div>
+        </div>
+        <button class="nav-btn"><svg class="ico" width="14" height="14" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>Buscar</button>
+    <button class="tab a"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>Agenda</button>
+    <button class="tab"><div class="fab">+</div></button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4.5 2 7-6.5-4.5-6.5 4.5 2-7L2 9h7z"/></svg></div>Planos</button>
+    <button class="tab"><div class="g"><svg class="ico" width="22" height="22" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div>Perfil</button>
+  </div>
+</div></div>
+
+</div>
+
+<div style="max-width:1280px;margin:60px auto 0;padding:18px;color:var(--fg4);font-size:11px;letter-spacing:.16em;font-weight:600;text-align:center;text-transform:uppercase;border-top:1px solid var(--line)">
+  Hub de Partidas · App Standalone · 14 telas · Futly Pro Design System
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script></body></html>
