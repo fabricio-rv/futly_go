@@ -9,8 +9,8 @@ export { MapPreviewCard } from './details/MapPreviewCard';
 export { MatchBackground } from './details/MatchBackground';
 export { MatchTopNav } from './details/MatchTopNav';
 
+export { AdvancedFilterPanel } from './explore/AdvancedFilterPanel';
 export { EmptyStateCard } from './explore/EmptyStateCard';
-export { FilterBar } from './explore/FilterBar';
 export { MatchCard } from './explore/MatchCard';
 export { MatchPricePill } from './explore/MatchPricePill';
 export { SearchInput } from './explore/SearchInput';

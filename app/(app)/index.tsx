@@ -5,14 +5,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   EmptyStateCard,
-  FilterBar,
+  AdvancedFilterPanel,
   HubHeader,
   MatchCard,
   MatchBottomNav,
   SearchInput,
 } from '@/src/components/features/matches';
 import { Text } from '@/src/components/ui';
-import { findFilters } from '@/src/features/matches/mockData';
+import type { AdvancedFilters } from '@/src/components/features/matches/explore/AdvancedFilterPanel';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
@@ -21,6 +21,8 @@ export default function ExploreMatchesScreen() {
   const router = useRouter();
   const { availableMatches, fetchAvailableMatches, loadingAvailable } = useMatches();
   const [query, setQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({});
 
   useEffect(() => {
     fetchAvailableMatches().catch(() => undefined);
@@ -35,10 +37,23 @@ export default function ExploreMatchesScreen() {
   }, [query, fetchAvailableMatches]);
 
   const filteredMatches = useMemo(() => {
+    let result = availableMatches;
+
     const q = query.trim().toLowerCase();
-    if (!q) return availableMatches;
-    return availableMatches.filter((item) => `${item.title} ${item.location}`.toLowerCase().includes(q));
-  }, [availableMatches, query]);
+    if (q) {
+      result = result.filter((item) => `${item.title} ${item.location}`.toLowerCase().includes(q));
+    }
+
+    if (advancedFilters.shift) {
+      result = result.filter((item) => item.shiftLabel.toLowerCase().includes(advancedFilters.shift!.toLowerCase()));
+    }
+
+    if (advancedFilters.maxPrice !== undefined) {
+      result = result.filter((item) => item.pricePerPlayer <= advancedFilters.maxPrice!);
+    }
+
+    return result;
+  }, [availableMatches, query, advancedFilters]);
 
   const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
 
@@ -49,8 +64,12 @@ export default function ExploreMatchesScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={2} />
 
-        <SearchInput value={query} onChangeText={setQuery} placeholder="Buscar local, time, organizador..." />
-        <FilterBar filters={findFilters} />
+        <SearchInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder="Buscar local, time, organizador..."
+          onFilterPress={() => setShowFilters(true)}
+        />
 
         <View className="px-[18px]">
           {filteredMatches.map((partida, index) => (
@@ -80,6 +99,13 @@ export default function ExploreMatchesScreen() {
           />
         ) : null}
       </ScrollView>
+
+      <AdvancedFilterPanel
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        filters={advancedFilters}
+        onFiltersChange={setAdvancedFilters}
+      />
 
       <MatchBottomNav active="buscar" />
     </SafeAreaView>

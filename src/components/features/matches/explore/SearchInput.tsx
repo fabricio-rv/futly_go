@@ -1,5 +1,5 @@
 import { Search, SlidersHorizontal } from 'lucide-react-native';
-import { TextInput, View } from 'react-native';
+import { TextInput, View, Pressable } from 'react-native';
 
 import { useMatchTheme } from '../shared/theme';
 
@@ -7,9 +7,10 @@ type SearchInputProps = {
   value: string;
   onChangeText: (value: string) => void;
   placeholder?: string;
+  onFilterPress?: () => void;
 };
 
-export function SearchInput({ value, onChangeText, placeholder }: SearchInputProps) {
+export function SearchInput({ value, onChangeText, placeholder, onFilterPress }: SearchInputProps) {
   const matchTheme = useMatchTheme();
 
   return (
@@ -27,7 +28,9 @@ export function SearchInput({ value, onChangeText, placeholder }: SearchInputPro
           className="flex-1 text-[14px] ml-2"
           style={{ color: matchTheme.colors.fgPrimary }}
         />
-        <SlidersHorizontal size={18} stroke={matchTheme.colors.ok} />
+        <Pressable onPress={onFilterPress}>
+          <SlidersHorizontal size={18} stroke={matchTheme.colors.ok} />
+        </Pressable>
       </View>
     </View>
   );
