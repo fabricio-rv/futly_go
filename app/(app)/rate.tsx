@@ -88,7 +88,7 @@ export default function RateScreen() {
 
         <View className="rounded-[20px] border overflow-hidden mb-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
           {ratePlayers.map((player, index) => (
-            <PlayerRow key={player.id} player={{ id: player.id, name: player.name, initials: player.initials, ovr: player.ovr, position: player.position, gradient: [player.gradient[0], player.gradient[1]] }} showStars={index < 2 ? (index === 0 ? 5 : 4) : undefined} pendingLabel={index > 1 ? 'Pendente' : undefined} />
+            <PlayerRow key={player.id} player={{ id: player.id, name: player.name, initials: player.initials, rating: player.rating, position: player.position, gradient: [player.gradient[0], player.gradient[1]] }} showStars={index < 2 ? (index === 0 ? 5 : 4) : undefined} pendingLabel={index > 1 ? 'Pendente' : undefined} />
           ))}
         </View>
 

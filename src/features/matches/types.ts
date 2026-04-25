@@ -1,45 +1,8 @@
-﻿type Database = {
-  public: {
-    Tables: {
-      matches: {
-        Row: Record<string, unknown>;
-        Insert: Record<string, unknown>;
-      };
-      match_players: {
-        Row: Record<string, unknown>;
-      };
-    };
-    Enums: {
-      match_status: string;
-      match_type: string;
-      match_shift: string;
-      player_position: string;
-    };
-  };
-};
+﻿import type { Enums, Tables, TablesInsert } from '@/src/types/database';
 
-export type MatchRow = Database['public']['Tables']['matches']['Row'];
-export type MatchInsert = Database['public']['Tables']['matches']['Insert'];
-export type MatchStatus = Database['public']['Enums']['match_status'];
-export type MatchType = Database['public']['Enums']['match_type'];
-export type MatchShift = Database['public']['Enums']['match_shift'];
-export type PlayerPosition = Database['public']['Enums']['player_position'];
-
-export type MatchPlayerRow = Database['public']['Tables']['match_players']['Row'];
-
-export type MatchPlayerWithProfile = MatchPlayerRow & {
-  profile: {
-    id: string;
-    fullName: string | null;
-    username: string | null;
-    avatarUrl: string | null;
-    overall: number;
-  } | null;
-};
-
-export type MatchDetail = MatchRow & {
-  players: MatchPlayerWithProfile[];
-};
+export type MatchRow = Tables<'matches'>;
+export type MatchInsert = TablesInsert<'matches'>;
+export type MatchStatus = Enums<'match_status'>;
 
 export type MatchModality = 'futsal' | 'society' | 'campo11';
 export type MatchUiStatus = 'open' | 'confirmed' | 'live' | 'done' | 'host';
@@ -59,7 +22,7 @@ export interface Jogador {
   id: string;
   name: string;
   initials: string;
-  ovr: number;
+  rating: number;
   position: string;
   gradient: [string, string];
   isHost?: boolean;
@@ -129,7 +92,7 @@ export interface Player {
   name: string;
   initials: string;
   role: string;
-  ovr: number;
+  rating: number;
   position: string;
   gradient: [string, string];
   isHost?: boolean;
@@ -155,7 +118,16 @@ export interface Match {
   players: Player[];
 }
 
-export type MatchLevel = 'NIVEL OURO' | 'INTERMED.' | 'PRATA 70+' | 'ELITE 85+';
+export type MatchLevel =
+  | 'Pereba'
+  | 'Resenha'
+  | 'Casual'
+  | 'Intermediário'
+  | 'Avançado'
+  | 'Competitivo'
+  | 'Semi-Amador'
+  | 'Amador'
+  | 'Ex-profissional';
 
 export interface Avaliacao {
   id: string;

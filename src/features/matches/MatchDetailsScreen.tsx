@@ -51,7 +51,7 @@ export function MatchDetailsScreen() {
               </Text>
             </View>
             <View className="flex-row gap-2 mt-[14px] flex-wrap">
-              <StatBadge label="NIVEL OURO 75+" tone="gold" small />
+              <StatBadge label="Intermediário" tone="gold" small />
               <StatBadge label="R$ 25/pessoa" tone="neutral" small />
               <StatBadge label="5/7 vagas" tone="neutral" small />
             </View>

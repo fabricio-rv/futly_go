@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { ScrollView, Pressable, View, Platform } from 'react-native';
+import { router } from 'expo-router';
+import { ScrollView, Pressable, View, Modal, Alert } from 'react-native';
 
 import {
   DateTimeField,
@@ -15,26 +15,33 @@ import {
   ToggleRow,
   matchTheme,
 } from '@/src/components/features/matches';
-import { TacticalPitch } from '@/src/components/fifa';
+import { TacticalPitch, type PitchMode } from '@/src/components/fifa';
 import { Button, Card, Input, Screen, SelectField, Text } from '@/src/components/ui';
 import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
 import { fetchAddressByCep, formatCep } from '@/src/features/location/cep';
+import { useMatches } from '@/src/features/matches/hooks/useMatches';
 
 type MinLevelValue =
+  | 'pereba'
   | 'resenha'
-  | 'iniciante'
+  | 'casual'
   | 'intermediario'
   | 'avancado'
+  | 'competitivo'
   | 'semi_amador'
-  | 'amador';
+  | 'amador'
+  | 'ex_profissional';
 
 const MIN_LEVEL_OPTIONS: Array<{ value: MinLevelValue; label: string }> = [
+  { value: 'pereba', label: 'Pereba' },
   { value: 'resenha', label: 'Resenha' },
-  { value: 'iniciante', label: 'Iniciante' },
-  { value: 'intermediario', label: 'Intermediario' },
-  { value: 'avancado', label: 'Avancado' },
+  { value: 'casual', label: 'Casual' },
+  { value: 'intermediario', label: 'Intermediário' },
+  { value: 'avancado', label: 'Avançado' },
+  { value: 'competitivo', label: 'Competitivo' },
   { value: 'semi_amador', label: 'Semi-Amador' },
   { value: 'amador', label: 'Amador' },
+  { value: 'ex_profissional', label: 'Ex-profissional' },
 ];
 
 const TURNO_OPTIONS = [
@@ -54,6 +61,23 @@ function formatTimeField(value: Date) {
   const hour = String(value.getHours()).padStart(2, '0');
   const minute = String(value.getMinutes()).padStart(2, '0');
   return `${hour}:${minute}`;
+}
+
+function toIsoDate(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toIsoTime(value: Date) {
+  const hour = String(value.getHours()).padStart(2, '0');
+  const minute = String(value.getMinutes()).padStart(2, '0');
+  return `${hour}:${minute}:00`;
+}
+
+function daysInMonth(year: number, monthIndex: number) {
+  return new Date(year, monthIndex + 1, 0).getDate();
 }
 
 function MinLevelCheckbox({
@@ -89,16 +113,24 @@ function MinLevelCheckbox({
 }
 
 export default function CreateMatchScreen() {
-  const [mode, setMode] = useState('futsal');
+  const { createMatch, submitting } = useMatches();
+
+  const [mode, setMode] = useState<PitchMode>('futsal');
   const [restBreak, setRestBreak] = useState(true);
   const [referee, setReferee] = useState(false);
   const [externalReserves, setExternalReserves] = useState(true);
+  const [description, setDescription] = useState(
+    'Time fechado de Pivo e Goleiro - buscamos 2 alas e 1 fixo. Camiseta amarela. Encontro 19h15 no Bar do Carlos.',
+  );
+  const [selectedPositionIndexes, setSelectedPositionIndexes] = useState<number[]>([0, 1, 2, 3]);
 
   const [stateCode, setStateCode] = useState('RS');
   const [city, setCity] = useState('Porto Alegre');
   const [address, setAddress] = useState('R. dos Andradas, 1234');
   const [district, setDistrict] = useState('Cidade Baixa');
   const [cep, setCep] = useState('90020-300');
+  const [venueName, setVenueName] = useState('Arena Central - Quadra B');
+  const [contactPhone, setContactPhone] = useState('(51) 3221-0455');
 
   const [matchDate, setMatchDate] = useState(() => {
     const initialDate = new Date();
@@ -111,17 +143,20 @@ export default function CreateMatchScreen() {
     initialTime.setHours(19, 30, 0, 0);
     return initialTime;
   });
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showWebDateModal, setShowWebDateModal] = useState(false);
+  const [showWebTimeModal, setShowWebTimeModal] = useState(false);
+  const [webDateCursor, setWebDateCursor] = useState(() => new Date(matchDate.getFullYear(), matchDate.getMonth(), 1));
+  const [webHour, setWebHour] = useState(matchTime.getHours());
+  const [webMinute, setWebMinute] = useState(matchTime.getMinutes());
   const [turno, setTurno] = useState<(typeof TURNO_OPTIONS)[number]['value']>('noite');
+  const [pricePerPerson, setPricePerPerson] = useState('25');
+  const [durationMinutes, setDurationMinutes] = useState('60');
 
   const [acceptedLevels, setAcceptedLevels] = useState<MinLevelValue[]>([
     'resenha',
     'intermediario',
     'amador',
   ]);
-  const [confirmedPlayers] = useState(15);
-  const [totalPlayers] = useState(26);
 
   const stateOptions = BRAZIL_STATE_OPTIONS.map((state) => ({
     value: state.value,
@@ -135,35 +170,64 @@ export default function CreateMatchScreen() {
     );
   };
 
-  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (event.type === 'dismissed') {
-      setShowDatePicker(false);
-      return;
-    }
-
-    if (selectedDate) {
-      setMatchDate(selectedDate);
-    }
-
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
+  const togglePosition = (index: number) => {
+    setSelectedPositionIndexes((prev) =>
+      prev.includes(index) ? prev.filter((item) => item !== index) : [...prev, index].sort((a, b) => a - b),
+    );
   };
 
-  const onTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
-    if (event.type === 'dismissed') {
-      setShowTimePicker(false);
-      return;
-    }
+  async function handleCreateMatch() {
+    try {
+      await createMatch({
+        title: venueName.trim() || 'Partida sem título',
+        description: description.trim(),
+        modality: mode,
+        matchDate: toIsoDate(matchDate),
+        matchTime: toIsoTime(matchTime),
+        turno,
+        durationMinutes: Number(durationMinutes) || 60,
+        pricePerPerson: Number(pricePerPerson) || 0,
+        minAge: 16,
+        maxAge: 80,
+        acceptedLevels,
+        allowExternalReserves: externalReserves,
+        restBreak,
+        refereeIncluded: referee,
+        contactPhone: contactPhone.trim() || null,
+        venueName: venueName.trim() || null,
+        cep: cep.trim() || null,
+        district: district.trim() || null,
+        city: city.trim() || null,
+        state: stateCode.trim() || null,
+        address: address.trim() || null,
+        selectedPositionIndexes,
+        facilities: [
+          { label: 'Vestiario', selected: true },
+          { label: 'Chuveiro', selected: true },
+          { label: 'Estacionamento', selected: true },
+          { label: 'Bar / Lanche', selected: false },
+        ],
+      });
 
-    if (selectedTime) {
-      setMatchTime(selectedTime);
+      Alert.alert('Partida criada', 'Sua partida já está disponível em Encontrar Jogo e na Agenda.', [
+        {
+          text: 'OK',
+          onPress: () => router.replace('/(app)'),
+        },
+      ]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível criar a partida.';
+      Alert.alert('Falha ao criar partida', message);
     }
+  }
 
-    if (Platform.OS === 'android') {
-      setShowTimePicker(false);
-    }
-  };
+  const monthYearLabel = webDateCursor.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const currentYear = webDateCursor.getFullYear();
+  const currentMonth = webDateCursor.getMonth();
+  const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
+  const monthDays = daysInMonth(currentYear, currentMonth);
+  const leadingEmpty = Array.from({ length: firstWeekday });
+  const dayNumbers = Array.from({ length: monthDays }, (_, idx) => idx + 1);
 
   return (
     <Screen padded={false} showBackground={false}>
@@ -185,8 +249,39 @@ export default function CreateMatchScreen() {
             className="p-4"
             style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
           >
-            <SectionTitle title="Informacoes Basicas" />
+            <SectionTitle title="Detalhes da Partida" />
             <View className="gap-3 mt-2">
+              <Input
+                label="CEP"
+                value={cep}
+                onChangeText={async (value) => {
+                  const formatted = formatCep(value);
+                  setCep(formatted);
+
+                  const cleanCep = formatted.replace(/\D/g, '');
+                  if (cleanCep.length !== 8) return;
+
+                  const addressData = await fetchAddressByCep(cleanCep);
+                  if (!addressData) return;
+
+                  setAddress(addressData.street || address);
+                  setCity(addressData.city);
+                  setDistrict(addressData.district || district);
+                  setStateCode(addressData.state);
+                }}
+                keyboardType="number-pad"
+                placeholder="00000-000"
+              />
+
+              <Input label="Bairro" value={district} onChangeText={setDistrict} placeholder="Seu bairro" />
+
+              <Input
+                label="Nome do Campo / Quadra"
+                value={venueName}
+                onChangeText={setVenueName}
+                placeholder="Ex.: Arena Central - Quadra B"
+              />
+
               <View className="flex-row gap-2">
                 <View className="flex-1">
                   <SelectField
@@ -199,19 +294,30 @@ export default function CreateMatchScreen() {
                   />
                 </View>
                 <View className="flex-1">
-                  <Input label="Cidade" value={city} onChangeText={setCity} />
+                  <Input label="Cidade" value={city} onChangeText={setCity} placeholder="Sua cidade" />
                 </View>
               </View>
 
-              <Input label="Endereco" value={address} onChangeText={setAddress} />
+              <Input label="Endereco" value={address} onChangeText={setAddress} placeholder="Rua e numero" />
+            </View>
+          </Card>
 
+          <Card
+            className="p-4"
+            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
+          >
+            <SectionTitle title="Informacoes da Partida" />
+            <View className="gap-3 mt-2">
               <View className="flex-row gap-2">
                 <View className="flex-1">
                   <DateTimeField
                     label="Data"
                     value={formatDateField(matchDate)}
                     placeholder="Selecione a data"
-                    onPress={() => setShowDatePicker(true)}
+                    onPress={() => {
+                      setWebDateCursor(new Date(matchDate.getFullYear(), matchDate.getMonth(), 1));
+                      setShowWebDateModal(true);
+                    }}
                   />
                 </View>
                 <View className="flex-1">
@@ -219,7 +325,11 @@ export default function CreateMatchScreen() {
                     label="Horario"
                     value={formatTimeField(matchTime)}
                     placeholder="Selecione o horario"
-                    onPress={() => setShowTimePicker(true)}
+                    onPress={() => {
+                      setWebHour(matchTime.getHours());
+                      setWebMinute(matchTime.getMinutes());
+                      setShowWebTimeModal(true);
+                    }}
                   />
                 </View>
                 <View className="flex-1">
@@ -235,62 +345,13 @@ export default function CreateMatchScreen() {
                 </View>
               </View>
 
-              {showDatePicker ? (
-                <DateTimePicker
-                  value={matchDate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  minimumDate={new Date()}
-                  onChange={onDateChange}
-                />
-              ) : null}
-
-              {showTimePicker ? (
-                <DateTimePicker
-                  value={matchTime}
-                  mode="time"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={onTimeChange}
-                />
-              ) : null}
-            </View>
-          </Card>
-
-          <Card
-            className="p-4"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
-          >
-            <SectionTitle title="Detalhes do Local" />
-            <View className="gap-3 mt-2">
-              <Input label="Nome do Campo / Quadra" value="Arena Central - Quadra B" onChangeText={() => {}} />
-              <View className="flex-row gap-2">
-                <View className="flex-1">
-                  <Input
-                    label="CEP"
-                    value={cep}
-                    onChangeText={async (value) => {
-                      const formatted = formatCep(value);
-                      setCep(formatted);
-
-                      const cleanCep = formatted.replace(/\D/g, '');
-                      if (cleanCep.length !== 8) return;
-
-                      const addressData = await fetchAddressByCep(cleanCep);
-                      if (!addressData) return;
-
-                      setAddress(addressData.street || address);
-                      setCity(addressData.city);
-                      setDistrict(addressData.district || district);
-                      setStateCode(addressData.state);
-                    }}
-                    keyboardType="number-pad"
-                  />
-                </View>
-                <View className="flex-1">
-                  <Input label="Bairro" value={district} onChangeText={setDistrict} />
-                </View>
-              </View>
-              <Input label="Telefone do Local" value="(51) 3221-0455" onChangeText={() => {}} />
+              <Input
+                label="Telefone para contato"
+                value={contactPhone}
+                onChangeText={setContactPhone}
+                keyboardType="phone-pad"
+                placeholder="(00) 00000-0000"
+              />
             </View>
 
             <Text
@@ -326,43 +387,33 @@ export default function CreateMatchScreen() {
               Nivel do Jogo
             </Text>
             <View className="flex-row flex-wrap gap-2 mt-2">
-              <StatBadge label="Iniciante" tone="neutral" />
-              <StatBadge label="Casual" tone="neutral" />
-              <StatBadge label="Intermediario" tone="active" />
-              <StatBadge label="Ouro" tone="gold" />
-              <StatBadge label="Avancado" tone="neutral" />
+              {MIN_LEVEL_OPTIONS.map((level) => (
+                <StatBadge
+                  key={`game-level-${level.value}`}
+                  label={level.label}
+                  tone={acceptedLevels.includes(level.value) ? 'active' : 'neutral'}
+                />
+              ))}
             </View>
 
             <View className="flex-row gap-2 mt-4">
               <View className="flex-1">
-                <Text variant="micro" className="uppercase tracking-[2px]" style={{ color: matchTheme.colors.fgMuted }}>
-                  Valor por pessoa
-                </Text>
-                <View
-                  className="mt-2 h-12 rounded-[14px] border px-2 flex-row items-center justify-between"
-                  style={{ backgroundColor: '#0C111E', borderColor: matchTheme.colors.lineStrong }}
-                >
-                  <Button label="-" size="sm" variant="ghost" fullWidth={false} onPress={() => {}} />
-                  <Text variant="number" className="text-[22px]">
-                    R$ 25
-                  </Text>
-                  <Button label="+" size="sm" variant="ghost" fullWidth={false} onPress={() => {}} />
-                </View>
+                <Input
+                  label="Valor por pessoa"
+                  value={pricePerPerson}
+                  onChangeText={setPricePerPerson}
+                  keyboardType="number-pad"
+                  placeholder="Ex.: 25"
+                />
               </View>
               <View className="flex-1">
-                <Text variant="micro" className="uppercase tracking-[2px]" style={{ color: matchTheme.colors.fgMuted }}>
-                  Duracao
-                </Text>
-                <View
-                  className="mt-2 h-12 rounded-[14px] border px-2 flex-row items-center justify-between"
-                  style={{ backgroundColor: '#0C111E', borderColor: matchTheme.colors.lineStrong }}
-                >
-                  <Button label="-" size="sm" variant="ghost" fullWidth={false} onPress={() => {}} />
-                  <Text variant="number" className="text-[22px]">
-                    60
-                  </Text>
-                  <Button label="+" size="sm" variant="ghost" fullWidth={false} onPress={() => {}} />
-                </View>
+                <Input
+                  label="Duracao (min)"
+                  value={durationMinutes}
+                  onChangeText={setDurationMinutes}
+                  keyboardType="number-pad"
+                  placeholder="Ex.: 60"
+                />
               </View>
             </View>
 
@@ -370,9 +421,9 @@ export default function CreateMatchScreen() {
               <Text variant="micro" className="uppercase tracking-[2px]" style={{ color: matchTheme.colors.fgMuted }}>
                 Restricoes de idade
               </Text>
-              <RangeSelector min={16} max={45} minPercent={8} maxPercent={72} />
+              <RangeSelector min={16} max={80} minPercent={8} maxPercent={72} />
               <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                Apenas atletas entre 16 e 45 anos podem se inscrever
+                Apenas atletas entre 16 e 80 anos podem se inscrever
               </Text>
             </View>
 
@@ -404,14 +455,6 @@ export default function CreateMatchScreen() {
           >
             <View className="flex-row items-center justify-between">
               <SectionTitle title="Requisitos dos Jogadores" />
-              <View
-                className="px-3 py-1.5 rounded-full border"
-                style={{ backgroundColor: '#060B16', borderColor: matchTheme.colors.lineStrong }}
-              >
-                <Text variant="label" className="text-[16px]" style={{ color: matchTheme.colors.fgPrimary }}>
-                  {confirmedPlayers}/{totalPlayers}
-                </Text>
-              </View>
             </View>
             <Text variant="caption" className="mt-1" style={{ color: matchTheme.colors.fgMuted }}>
               Niveis Minimos Aceitos
@@ -439,14 +482,15 @@ export default function CreateMatchScreen() {
                   Toque para abrir / bloquear vagas
                 </Text>
               </View>
-              <View className="w-[130px]">
+              <View className="w-[194px]">
                 <SegmentedControl
                   options={[
                     { id: 'futsal', label: 'Futsal' },
                     { id: 'society', label: 'Society' },
+                    { id: 'campo', label: 'Campo' },
                   ]}
                   activeId={mode}
-                  onChange={setMode}
+                  onChange={(value) => setMode(value as PitchMode)}
                   compact
                 />
               </View>
@@ -454,8 +498,9 @@ export default function CreateMatchScreen() {
 
             <View className="flex-row gap-3 items-start">
               <TacticalPitch
-                mode={mode === 'society' ? 'society' : 'futsal'}
-                selectedIndexes={[0, 1, 2, 3]}
+                mode={mode}
+                selectedIndexes={selectedPositionIndexes}
+                onToggleIndex={togglePosition}
                 width={170}
               />
               <View className="flex-1 gap-2">
@@ -484,21 +529,133 @@ export default function CreateMatchScreen() {
               <Input
                 multiline
                 numberOfLines={5}
-                value="Time fechado de Pivo e Goleiro - buscamos 2 alas e 1 fixo. Camiseta amarela. Encontro 19h15 no Bar do Carlos."
-                onChangeText={() => {}}
+                value={description}
+                onChangeText={setDescription}
               />
               <Text variant="caption" className="text-right mt-1" style={{ color: matchTheme.colors.fgMuted }}>
-                98 / 280
+                {description.length} / 280
               </Text>
             </View>
           </Card>
 
-          <Button label="Continuar para Revisao" onPress={() => {}} />
-          <Button label="Salvar Rascunho" variant="ghost" onPress={() => {}} />
+          <Button label="Continuar para Revisao" loading={submitting} disabled={submitting} onPress={handleCreateMatch} />
+          <Button label="Salvar Rascunho" variant="ghost" disabled={submitting} onPress={handleCreateMatch} />
           <View className="h-2" />
         </View>
       </ScrollView>
       <MatchBottomNav active="new" />
+
+      <Modal transparent visible={showWebDateModal} onRequestClose={() => setShowWebDateModal(false)}>
+        <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
+          <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: '#0C111E', borderColor: matchTheme.colors.lineStrong }}>
+            <View className="flex-row items-center justify-between mb-3">
+              <Button
+                label="<"
+                variant="ghost"
+                size="sm"
+                fullWidth={false}
+                onPress={() => setWebDateCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+              />
+              <Text variant="label" className="font-bold capitalize" style={{ color: matchTheme.colors.fgPrimary }}>
+                {monthYearLabel}
+              </Text>
+              <Button
+                label=">"
+                variant="ghost"
+                size="sm"
+                fullWidth={false}
+                onPress={() => setWebDateCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+              />
+            </View>
+
+            <View className="flex-row mb-2">
+              {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((weekDay, idx) => (
+                <View key={`weekday-${weekDay}-${idx}`} className="flex-1 items-center">
+                  <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>{weekDay}</Text>
+                </View>
+              ))}
+            </View>
+
+            <View className="flex-row flex-wrap">
+              {leadingEmpty.map((_, idx) => (
+                <View key={`empty-${idx}`} className="w-[14.28%] h-10" />
+              ))}
+              {dayNumbers.map((day) => {
+                const isSelected =
+                  matchDate.getFullYear() === currentYear &&
+                  matchDate.getMonth() === currentMonth &&
+                  matchDate.getDate() === day;
+
+                return (
+                  <Pressable
+                    key={`day-${day}`}
+                    className="w-[14.28%] h-10 items-center justify-center"
+                    onPress={() => {
+                      const selected = new Date(currentYear, currentMonth, day);
+                      setMatchDate(selected);
+                      setShowWebDateModal(false);
+                    }}
+                  >
+                    <View
+                      className="h-8 w-8 rounded-full items-center justify-center"
+                      style={{ backgroundColor: isSelected ? matchTheme.colors.ok : 'transparent' }}
+                    >
+                      <Text variant="caption" style={{ color: isSelected ? '#05070B' : matchTheme.colors.fgPrimary }}>
+                        {day}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Button label="Fechar" variant="ghost" size="md" className="mt-3" onPress={() => setShowWebDateModal(false)} />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal transparent visible={showWebTimeModal} onRequestClose={() => setShowWebTimeModal(false)}>
+        <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
+          <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: '#0C111E', borderColor: matchTheme.colors.lineStrong }}>
+            <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
+              Selecione o horario
+            </Text>
+            <View className="flex-row items-center justify-center gap-4">
+              <Button label="-" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 23) % 24)} />
+              <Text variant="number" className="text-[34px]" style={{ color: matchTheme.colors.fgPrimary }}>
+                {String(webHour).padStart(2, '0')}
+              </Text>
+              <Text variant="number" className="text-[34px]" style={{ color: matchTheme.colors.fgMuted }}>
+                :
+              </Text>
+              <Text variant="number" className="text-[34px]" style={{ color: matchTheme.colors.fgPrimary }}>
+                {String(webMinute).padStart(2, '0')}
+              </Text>
+              <Button label="+" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 1) % 24)} />
+            </View>
+            <View className="flex-row items-center justify-center gap-2 mt-3">
+              <Button label="- min" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 55) % 60)} />
+              <Button label="+ min" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 5) % 60)} />
+            </View>
+            <Button
+              label="Confirmar"
+              size="md"
+              className="mt-4"
+              onPress={() => {
+                const selected = new Date(matchTime);
+                selected.setHours(webHour, webMinute, 0, 0);
+                setMatchTime(selected);
+                setShowWebTimeModal(false);
+              }}
+            />
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
+
+
+
+
+

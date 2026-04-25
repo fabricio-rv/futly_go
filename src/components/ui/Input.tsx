@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react';
+import { forwardRef, useState, type ReactNode } from 'react';
 import {
     TextInput,
     type TextInputProps,
@@ -11,10 +11,28 @@ type InputProps = TextInputProps & {
   label?: string;
   error?: string;
   hint?: string;
+  leftAdornment?: ReactNode;
+  rightAdornment?: ReactNode;
+  containerClassName?: string;
+  inputClassName?: string;
+  labelClassName?: string;
 };
 
 export const Input = forwardRef<TextInput, InputProps>(function Input(
-  { label, error, hint, onFocus, onBlur, style, ...rest },
+  {
+    label,
+    error,
+    hint,
+    leftAdornment,
+    rightAdornment,
+    containerClassName,
+    inputClassName,
+    labelClassName,
+    onFocus,
+    onBlur,
+    style,
+    ...rest
+  },
   ref,
 ) {
   const [focused, setFocused] = useState(false);
@@ -32,36 +50,40 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   return (
     <View className="w-full">
       {label ? (
-        <Text variant="label" tone="secondary" className="mb-2">
+        <Text variant="label" tone="secondary" className={`mb-2 ${labelClassName ?? ''}`.trim()}>
           {label}
         </Text>
       ) : null}
       <View
-        className={`rounded-md border ${borderClass} bg-ink-2 px-4 ${containerHeightClass} justify-center`}
+        className={`rounded-md border ${borderClass} bg-ink-2 px-4 ${containerHeightClass} justify-center ${containerClassName ?? ''}`.trim()}
         style={{ minWidth: 0, width: '100%', overflow: 'hidden' }}
       >
-        <TextInput
-          ref={ref}
-          placeholderTextColor="#7A8699"
-          className={inputClass}
-          textAlignVertical={isMultiline ? 'top' : 'center'}
-          underlineColorAndroid="transparent"
-          selectionColor="#22C54D"
-          autoCorrect={rest.autoCorrect ?? false}
-          style={[
-            { borderWidth: 0, width: '100%', minWidth: 0, maxWidth: '100%' },
-            style,
-          ]}
-          onFocus={(e) => {
-            setFocused(true);
-            onFocus?.(e);
-          }}
-          onBlur={(e) => {
-            setFocused(false);
-            onBlur?.(e);
-          }}
-          {...rest}
-        />
+        <View className={`flex-row gap-2 ${isMultiline ? 'items-start' : 'items-center'}`}>
+          {leftAdornment ? <View className={isMultiline ? 'pt-1' : ''}>{leftAdornment}</View> : null}
+          <TextInput
+            ref={ref}
+            placeholderTextColor="#7A8699"
+            className={`${inputClass} flex-1 ${inputClassName ?? ''}`.trim()}
+            textAlignVertical={isMultiline ? 'top' : 'center'}
+            underlineColorAndroid="transparent"
+            selectionColor="#22C54D"
+            autoCorrect={rest.autoCorrect ?? false}
+            style={[
+              { borderWidth: 0, minWidth: 0 },
+              style,
+            ]}
+            onFocus={(e) => {
+              setFocused(true);
+              onFocus?.(e);
+            }}
+            onBlur={(e) => {
+              setFocused(false);
+              onBlur?.(e);
+            }}
+            {...rest}
+          />
+          {rightAdornment ? <View className={isMultiline ? 'pt-1' : ''}>{rightAdornment}</View> : null}
+        </View>
       </View>
       {error ? (
         <Text variant="caption" tone="danger" className="mt-1">

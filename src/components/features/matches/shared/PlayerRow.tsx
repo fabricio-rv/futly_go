@@ -22,7 +22,7 @@ export function PlayerRow({ player, showStars, pendingLabel }: PlayerRowProps) {
 
       <View className="flex-1">
         <Text variant="label" className="font-semibold" style={{ color: matchTheme.colors.fgPrimary }}>{player.name}</Text>
-        <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>OVR {player.ovr} - {player.position}</Text>
+        <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{player.rating.toFixed(1)} estrelas - {player.position}</Text>
       </View>
 
       {typeof showStars === 'number' ? <RatingStars value={showStars} /> : null}

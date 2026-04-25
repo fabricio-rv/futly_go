@@ -1,11 +1,11 @@
 ﻿import type { ReactNode } from 'react';
-import { CalendarDays, Plus, Search, Store, UserRound } from 'lucide-react-native';
+import { CalendarDays, Plus, Search, Settings, UserRound } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type BottomNavProps = {
-  active: 'buscar' | 'agenda' | 'new' | 'none';
+  active: 'buscar' | 'agenda' | 'new' | 'settings' | 'profile' | 'none';
 };
 
 function NavItem({
@@ -73,10 +73,17 @@ export function MatchBottomNav({ active }: BottomNavProps) {
             <Plus size={30} color="#05070B" strokeWidth={2.6} />
           </View>
         </Pressable>
-        <NavItem icon={<Store color="rgba(255,255,255,0.45)" size={21} />} />
-        <NavItem icon={<UserRound color="rgba(255,255,255,0.45)" size={21} />} />
+        <NavItem
+          active={active === 'settings'}
+          icon={<Settings color={active === 'settings' ? '#22B76C' : 'rgba(255,255,255,0.45)'} size={20} />}
+          onPress={() => router.replace('/(app)/settings')}
+        />
+        <NavItem
+          active={active === 'profile'}
+          icon={<UserRound color={active === 'profile' ? '#22B76C' : 'rgba(255,255,255,0.45)'} size={21} />}
+          onPress={() => router.replace('/(app)/profile')}
+        />
       </View>
     </View>
   );
 }
-

@@ -19,7 +19,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: '(app)',
+  initialRouteName: '(auth)',
 };
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -51,6 +51,7 @@ export default function RootLayout() {
                 animation: 'fade',
               }}
             >
+              <Stack.Screen name="(auth)" />
               <Stack.Screen name="(app)" />
             </Stack>
           </View>

@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,24 +12,38 @@ import {
   SearchInput,
 } from '@/src/components/features/matches';
 import { Text } from '@/src/components/ui';
-import { findFilters, findMatches } from '@/src/features/matches/mockData';
+import { findFilters } from '@/src/features/matches/mockData';
+import { useMatches } from '@/src/features/matches/hooks/useMatches';
 
 export default function ExploreMatchesScreen() {
   const router = useRouter();
+  const { availableMatches, fetchAvailableMatches, loadingAvailable } = useMatches();
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    fetchAvailableMatches().catch(() => undefined);
+  }, [fetchAvailableMatches]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      fetchAvailableMatches({ query }).catch(() => undefined);
+    }, 250);
+
+    return () => clearTimeout(handler);
+  }, [query, fetchAvailableMatches]);
 
   const filteredMatches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return findMatches;
-    return findMatches.filter((item) => `${item.title} ${item.location}`.toLowerCase().includes(q));
-  }, [query]);
+    if (!q) return availableMatches;
+    return availableMatches.filter((item) => `${item.title} ${item.location}`.toLowerCase().includes(q));
+  }, [availableMatches, query]);
 
   return (
     <SafeAreaView className="flex-1 bg-ink-0">
       <View className="absolute inset-0 bg-ink-0" />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubHeader badgeLabel="14 ABERTAS" />
+        <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={2} />
 
         <SearchInput value={query} onChangeText={setQuery} placeholder="Buscar local, time, organizador..." />
         <FilterBar filters={findFilters} />
@@ -45,18 +59,22 @@ export default function ExploreMatchesScreen() {
           ))}
         </View>
 
-        <View className="mt-2 px-[18px]">
-          <Text variant="micro" className="uppercase tracking-[2.4px] font-bold mb-2" style={{ color: 'rgba(255,255,255,0.85)' }}>
-            Voce buscou "Pivo + Manha"
-          </Text>
-        </View>
+        {loadingAvailable ? (
+          <View className="px-[18px] mt-2">
+            <Text variant="caption" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              Carregando partidas...
+            </Text>
+          </View>
+        ) : null}
 
-        <EmptyStateCard
-          title="Nenhuma partida encontrada"
-          description="Ninguem marcou jogo de manha para Pivo em Porto Alegre. Que tal ser o primeiro?"
-          actionLabel="+ Criar Partida"
-          onAction={() => router.push('/(app)/create')}
-        />
+        {filteredMatches.length === 0 ? (
+          <EmptyStateCard
+            title="Nenhuma partida encontrada"
+            description="Ninguém marcou jogo com os filtros atuais. Que tal ser o primeiro?"
+            actionLabel="+ Criar Partida"
+            onAction={() => router.push('/(app)/create')}
+          />
+        ) : null}
       </ScrollView>
 
       <MatchBottomNav active="buscar" />

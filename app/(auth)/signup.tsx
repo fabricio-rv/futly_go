@@ -1,0 +1,489 @@
+﻿import { router } from 'expo-router';
+import { Check, Eye, Lock, Mail, UserRound } from 'lucide-react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { cities as getBrazilianCities, states as getBrazilianStates } from 'estados-cidades';
+
+import {
+	AuthBackground,
+	AuthFeedbackModal,
+	PasswordStrengthMeter,
+	AuthToast,
+} from '@/src/components/features/auth';
+import { Button, Input, SelectField, Text } from '@/src/components/ui';
+import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
+import { signUpWithProfile } from '@/src/features/auth/service';
+import { formatCep } from '@/src/features/location/cep';
+
+function getPasswordStrength(password: string) {
+	if (!password) return 0;
+
+	let score = 0;
+	if (password.length >= 8) score += 1;
+	if (/[A-Z]/.test(password)) score += 1;
+	if (/[0-9]/.test(password)) score += 1;
+	if (/[^A-Za-z0-9]/.test(password)) score += 1;
+	return Math.min(score, 4);
+}
+
+function getStrengthLabel(level: number) {
+	if (level <= 0) return 'Muito fraca';
+	if (level === 1) return 'Fraca';
+	if (level === 2) return 'Média';
+	if (level === 3) return 'Forte';
+	return 'Muito forte';
+}
+
+function formatDdd(value: string) {
+	return value.replace(/\D/g, '').slice(0, 2);
+}
+
+function formatPhone(value: string) {
+	const digits = value.replace(/\D/g, '').slice(0, 9);
+
+	if (digits.length <= 5) {
+		return digits;
+	}
+
+	return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+export default function SignupScreen() {
+	const [fullName, setFullName] = useState('');
+	const [email, setEmail] = useState('');
+	const [ddd, setDdd] = useState('');
+	const [phone, setPhone] = useState('');
+	const [password, setPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [selectedState, setSelectedState] = useState<string | null>('RS');
+	const [selectedCity, setSelectedCity] = useState<string | null>(null);
+	const [cep, setCep] = useState('');
+	const [acceptedTerms, setAcceptedTerms] = useState(true);
+	const [loading, setLoading] = useState(false);
+	const [toast, setToast] = useState<{ visible: boolean; message: string; tone: 'success' | 'error' | 'info' }>({
+		visible: false,
+		message: '',
+		tone: 'info',
+	});
+	const [feedback, setFeedback] = useState<{
+		visible: boolean;
+		tone: 'success' | 'error' | 'info';
+		title: string;
+		message: string;
+		primaryLabel: string;
+		onPrimary: () => void;
+		secondaryLabel?: string;
+		onSecondary?: () => void;
+	}>({
+		visible: false,
+		tone: 'info',
+		title: '',
+		message: '',
+		primaryLabel: 'Fechar',
+		onPrimary: () => undefined,
+	});
+
+	function showToast(message: string, tone: 'success' | 'error' | 'info' = 'info') {
+		setToast({ visible: true, message, tone });
+		setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 1800);
+	}
+
+	const passwordLevel = useMemo(() => getPasswordStrength(password), [password]);
+	const confirmPasswordError =
+		confirmPassword.length > 0 && confirmPassword !== password
+			? 'As senhas não conferem'
+			: undefined;
+	const availableStateCodes = useMemo(() => getBrazilianStates(), []);
+	const stateOptions = useMemo(
+		() =>
+			BRAZIL_STATE_OPTIONS.filter((state) => availableStateCodes.includes(state.value)).map((state) => ({
+				value: state.value,
+				label: state.label,
+				description: state.value,
+			})),
+		[availableStateCodes],
+	);
+	const cityOptions = useMemo(() => {
+		if (!selectedState) {
+			return [];
+		}
+
+		try {
+			return getBrazilianCities(selectedState).map((city) => ({
+				value: city,
+				label: city,
+			}));
+		} catch {
+			return [];
+		}
+	}, [selectedState]);
+
+	useEffect(() => {
+		if (!selectedState || stateOptions.some((item) => item.value === selectedState)) {
+			return;
+		}
+
+		setSelectedState(stateOptions[0]?.value ?? null);
+	}, [selectedState, stateOptions]);
+
+	useEffect(() => {
+		if (!selectedState) {
+			setSelectedCity(null);
+			return;
+		}
+
+		setSelectedCity((previous) => {
+			if (previous && cityOptions.some((item) => item.value === previous)) {
+				return previous;
+			}
+
+			if (selectedState === 'RS' && cityOptions.some((item) => item.value === 'Porto Alegre')) {
+				return 'Porto Alegre';
+			}
+
+			return cityOptions[0]?.value ?? null;
+		});
+	}, [selectedState, cityOptions]);
+
+	async function handleSignup() {
+		if (!fullName.trim() || !email.trim() || !password.trim()) {
+			showToast('Preencha os campos obrigatórios', 'error');
+			setFeedback({
+				visible: true,
+				tone: 'error',
+				title: 'Dados incompletos',
+				message: 'Preencha nome, e-mail e senha para criar a conta.',
+				primaryLabel: 'Ok',
+				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
+			});
+			return;
+		}
+
+		if (password.length < 6) {
+			showToast('Senha muito curta', 'error');
+			setFeedback({
+				visible: true,
+				tone: 'error',
+				title: 'Senha inválida',
+				message: 'A senha precisa ter pelo menos 6 caracteres.',
+				primaryLabel: 'Ok',
+				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
+			});
+			return;
+		}
+
+		if (confirmPassword !== password) {
+			showToast('As senhas não conferem', 'error');
+			setFeedback({
+				visible: true,
+				tone: 'error',
+				title: 'Senhas diferentes',
+				message: 'As senhas não conferem.',
+				primaryLabel: 'Ok',
+				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
+			});
+			return;
+		}
+
+		if (!acceptedTerms) {
+			showToast('Aceite os termos para continuar', 'error');
+			setFeedback({
+				visible: true,
+				tone: 'error',
+				title: 'Termos obrigatórios',
+				message: 'Aceite os termos para concluir o cadastro.',
+				primaryLabel: 'Ok',
+				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
+			});
+			return;
+		}
+
+		const normalizedPhone = `${ddd}${phone}`.replace(/\D/g, '');
+
+		try {
+			setLoading(true);
+
+			const result = await signUpWithProfile({
+				fullName,
+				email,
+				password,
+				phone: normalizedPhone.length > 0 ? normalizedPhone : null,
+				state: selectedState,
+				city: selectedCity,
+				cep: cep.replace(/\D/g, '') || null,
+			});
+
+			if (result.requiresEmailConfirmation) {
+				showToast('Conta criada. Confirme no e-mail', 'success');
+				setFeedback({
+					visible: true,
+					tone: 'success',
+					title: 'Conta criada com sucesso',
+					message: 'Enviamos um e-mail de confirmação. Após confirmar, faça login para entrar no app.',
+					primaryLabel: 'Ir para login',
+					onPrimary: () => {
+						setFeedback((prev) => ({ ...prev, visible: false }));
+						router.replace('/(auth)');
+					},
+					secondaryLabel: 'Ficar no cadastro',
+					onSecondary: () => setFeedback((prev) => ({ ...prev, visible: false })),
+				});
+				return;
+			}
+
+			showToast('Cadastro concluído', 'success');
+			setTimeout(() => router.replace('/(app)'), 500);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Não foi possível concluir o cadastro.';
+			showToast('Falha no cadastro', 'error');
+			setFeedback({
+				visible: true,
+				tone: 'error',
+				title: 'Falha no cadastro',
+				message,
+				primaryLabel: 'Ir para login',
+				onPrimary: () => {
+					setFeedback((prev) => ({ ...prev, visible: false }));
+					router.replace('/(auth)');
+				},
+				secondaryLabel: 'Tentar novamente',
+				onSecondary: () => setFeedback((prev) => ({ ...prev, visible: false })),
+			});
+		} finally {
+			setLoading(false);
+		}
+	}
+
+	return (
+		<SafeAreaView className="flex-1 bg-ink-0">
+			<AuthBackground />
+			<AuthToast visible={toast.visible} message={toast.message} tone={toast.tone} />
+
+			<ScrollView
+				showsVerticalScrollIndicator={false}
+				contentContainerStyle={{ paddingBottom: 56 }}
+				keyboardShouldPersistTaps="handled"
+			>
+				<View className="relative pt-5 pb-10">
+					<View className="px-6 pt-2">
+						<Text variant="heading" className="font-extrabold text-white tracking-[-0.5px]">
+							Bem-vindo, atleta.
+						</Text>
+						<Text variant="label" className="mt-1 mb-7 leading-[20px] text-fg2">
+							Crie sua conta para encontrar partidas perto de você.
+						</Text>
+
+						<View className="gap-[18px]">
+							<Input
+								label="Nome completo"
+								value={fullName}
+								onChangeText={setFullName}
+								placeholder="Seu nome completo"
+								leftAdornment={<UserRound size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+								containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
+							/>
+
+							<Input
+								label="E-mail"
+								value={email}
+								onChangeText={setEmail}
+								placeholder="seuemail@dominio.com"
+								autoCapitalize="none"
+								keyboardType="email-address"
+								leftAdornment={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+								rightAdornment={<Check size={14} color="#22B76C" strokeWidth={2.8} />}
+								containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
+							/>
+
+							<View className="flex-row gap-[10px]">
+								<View className="flex-1">
+									<Input
+										label="DDD"
+										value={ddd}
+										onChangeText={(value) => setDdd(formatDdd(value))}
+										keyboardType="number-pad"
+										maxLength={2}
+										placeholder="51"
+										leftAdornment={<Text variant="caption" className="text-fg3 font-semibold">+55</Text>}
+										containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+										labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
+									/>
+								</View>
+								<View className="flex-1">
+									<Input
+										label="Telefone"
+										value={phone}
+										onChangeText={(value) => setPhone(formatPhone(value))}
+										keyboardType="phone-pad"
+										maxLength={10}
+										placeholder="99820-1144"
+										containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+										labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
+									/>
+								</View>
+							</View>
+
+							<Input
+								label="Senha"
+								value={password}
+								onChangeText={setPassword}
+								placeholder="Crie uma senha"
+								secureTextEntry={!showPassword}
+								leftAdornment={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+								rightAdornment={(
+									<Pressable
+										accessibilityRole="button"
+										onPress={() => setShowPassword((prev) => !prev)}
+										className="h-8 w-8 items-center justify-center"
+									>
+										<Eye size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />
+									</Pressable>
+								)}
+								containerClassName="h-12 rounded-[14px] border-ok bg-[#0C111E]"
+								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
+							/>
+
+							<PasswordStrengthMeter level={passwordLevel} label={getStrengthLabel(passwordLevel)} />
+
+							<Input
+								label="Confirmar senha"
+								value={confirmPassword}
+								onChangeText={setConfirmPassword}
+								placeholder="Repita sua senha"
+								secureTextEntry={!showConfirmPassword}
+								error={confirmPasswordError}
+								leftAdornment={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+								rightAdornment={(
+									<Pressable
+										accessibilityRole="button"
+										onPress={() => setShowConfirmPassword((prev) => !prev)}
+										className="h-8 w-8 items-center justify-center"
+									>
+										<Eye size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />
+									</Pressable>
+								)}
+								containerClassName={`h-12 rounded-[14px] bg-[#0C111E] ${confirmPasswordError ? 'border-danger' : 'border-line2'}`}
+								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
+							/>
+
+							<View className="gap-3">
+								<View className="rounded-[14px] border border-[#22B76C40] bg-[#22B76C1A] px-3 py-3">
+									<View className="flex-row items-center justify-between">
+										<Text variant="label" className="font-semibold text-white">
+											Localização
+										</Text>
+										<Text variant="micro" className="uppercase tracking-[1.6px] font-bold text-[#86E5B4]">
+											Opcional
+										</Text>
+									</View>
+									<Text variant="caption" className="mt-1 text-fg2 leading-[18px]">
+										Preencha Estado, Cidade e CEP para indicarmos partidas próximas da sua região.
+									</Text>
+								</View>
+
+								<SelectField
+									label="Estado"
+									value={selectedState}
+									options={stateOptions}
+									onChange={(value) => {
+										setSelectedState(value);
+										setSelectedCity(null);
+									}}
+									searchable
+									placeholder="Selecione o estado"
+									disabled={stateOptions.length === 0}
+								/>
+
+								<SelectField
+									label="Cidade"
+									value={selectedCity}
+									options={cityOptions}
+									onChange={setSelectedCity}
+									searchable
+									placeholder={
+										!selectedState
+											? 'Selecione o estado primeiro'
+											: 'Selecione a cidade'
+									}
+									disabled={!selectedState || cityOptions.length === 0}
+								/>
+
+								<Input
+									label="CEP"
+									value={cep}
+									onChangeText={(value) => setCep(formatCep(value))}
+									keyboardType="number-pad"
+									maxLength={9}
+									placeholder="00000-000"
+									containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
+								/>
+							</View>
+						</View>
+
+						<Pressable
+							accessibilityRole="checkbox"
+							accessibilityState={{ checked: acceptedTerms }}
+							onPress={() => setAcceptedTerms((prev) => !prev)}
+							className="mt-4 mb-6 flex-row items-center gap-2"
+						>
+							<View className={`h-6 w-6 rounded-[8px] items-center justify-center ${acceptedTerms ? 'bg-ok' : 'bg-[#0C111E] border border-line2'}`}>
+								{acceptedTerms ? <Check size={13} color="#05070B" strokeWidth={2.8} /> : null}
+							</View>
+							<Text variant="caption" className="flex-1 text-fg3 leading-[18px]">
+								Concordo com os{' '}
+								<Text variant="caption" className="text-ok font-semibold">
+									Termos de Uso
+								</Text>{' '}
+								e{' '}
+								<Text variant="caption" className="text-ok font-semibold">
+									Política de Privacidade
+								</Text>
+								. Tenho 16+ anos.
+							</Text>
+						</Pressable>
+
+						<Button
+							label="Criar conta grátis"
+							variant="primary"
+							size="xl"
+							loading={loading}
+							disabled={loading}
+							className="mt-2 rounded-[14px]"
+							onPress={handleSignup}
+						/>
+
+						<View className="mt-6 items-center">
+							<Text variant="label" className="text-fg3">
+								Já tem conta?
+							</Text>
+							<Pressable onPress={() => router.replace('/(auth)')} className="mt-2 px-1 py-0.5">
+								<Text variant="label" className="font-bold" style={{ color: '#22B76C' }}>
+									Entrar
+								</Text>
+							</Pressable>
+						</View>
+					</View>
+				</View>
+			</ScrollView>
+			<AuthFeedbackModal
+				visible={feedback.visible}
+				tone={feedback.tone}
+				title={feedback.title}
+				message={feedback.message}
+				primaryLabel={feedback.primaryLabel}
+				onPrimaryPress={feedback.onPrimary}
+				secondaryLabel={feedback.secondaryLabel}
+				onSecondaryPress={feedback.onSecondary}
+				onClose={() => setFeedback((prev) => ({ ...prev, visible: false }))}
+			/>
+		</SafeAreaView>
+	);
+}
+
+
