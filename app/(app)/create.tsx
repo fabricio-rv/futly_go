@@ -527,13 +527,15 @@ export default function CreateMatchScreen() {
               </View>
             </View>
 
-            <View className="items-center" style={{ marginTop: 16 }}>
-              <TacticalPitch
-                mode={mode}
-                selectedIndexes={selectedPositionIndexes}
-                onToggleIndex={togglePosition}
-                width={300}
-              />
+            <View className="items-center" style={{ marginTop: -130 }} pointerEvents="box-none">
+              <View pointerEvents="auto">
+                <TacticalPitch
+                  mode={mode}
+                  selectedIndexes={selectedPositionIndexes}
+                  onToggleIndex={togglePosition}
+                  width={300}
+                />
+              </View>
             </View>
           </Card>
 
