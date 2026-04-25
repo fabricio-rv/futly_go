@@ -244,6 +244,61 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           </Card>
 
           <View className="mt-[14px]">
+            <SectionTitle title="Posições Disponíveis" />
+            <Card className="p-4 gap-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                Toque para abrir / bloquear vagas
+              </Text>
+              {details.slots.map((slot) => {
+                const blockedCount = !slot.open ? 1 : 0;
+                const openCount = !slot.occupied && slot.open ? 1 : 0;
+                const confirmedCount = slot.occupied ? 1 : 0;
+                const isMyPosition = details.myParticipant && (details.myParticipant as any).position_key === slot.key;
+
+                return (
+                  <View
+                    key={`${slot.key}-${slot.index}`}
+                    className="p-3 rounded-[12px] border"
+                    style={{ backgroundColor: matchTheme.colors.bgBase, borderColor: matchTheme.colors.line }}
+                  >
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {details.isHost && isMyPosition ? `Você (Host) - ${slot.label}` : slot.label}
+                    </Text>
+                    <View className="flex-row gap-4 mt-2">
+                      <View>
+                        <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
+                          Confirmados
+                        </Text>
+                        <Text variant="label" style={{ color: matchTheme.colors.ok }}>
+                          {confirmedCount}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
+                          Vagas abertas
+                        </Text>
+                        <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                          {openCount}
+                        </Text>
+                      </View>
+                      {blockedCount > 0 && (
+                        <View>
+                          <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
+                            Bloqueada
+                          </Text>
+                          <Text variant="label" style={{ color: matchTheme.colors.fgMuted }}>
+                            {blockedCount}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </Card>
+          </View>
+
+          <View className="mt-[14px]">
             <SectionTitle title="Atletas Confirmados" badge={String(details.participants.length)} />
             <Card className="p-0 overflow-hidden" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
               {details.participants.length === 0 ? (
@@ -392,17 +447,43 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           </View>
 
           <View className="mt-[14px]">
+            <SectionTitle title="Requisitos dos Jogadores" />
+            <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }} className="mb-3">
+                Níveis Mínimos Aceitos
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {['pereba', 'casual', 'resenha', 'avançado', 'competitivo', 'semi-amador', 'amador', 'ex-profissional'].map((level) => {
+                  const isAccepted = Array.isArray(match.accepted_levels) && match.accepted_levels.includes(level as any);
+                  return (
+                    <View
+                      key={level}
+                      className="px-3 py-2 rounded-[10px] border"
+                      style={{
+                        backgroundColor: isAccepted ? matchTheme.colors.bgSurfaceB : 'transparent',
+                        borderColor: isAccepted ? matchTheme.colors.ok : matchTheme.colors.line,
+                      }}
+                    >
+                      <Text
+                        variant="caption"
+                        style={{
+                          color: isAccepted ? matchTheme.colors.ok : matchTheme.colors.fgMuted,
+                          fontWeight: isAccepted ? '600' : '400',
+                        }}
+                      >
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </Card>
+          </View>
+
+          <View className="mt-[14px]">
             <SectionTitle title="Configurações da Partida" />
             <Card className="p-4 gap-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
               <View className="gap-3">
-                <View>
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    Nível do Jogo
-                  </Text>
-                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                    {Array.isArray(match.accepted_levels) ? match.accepted_levels.map(l => l.charAt(0).toUpperCase() + l.slice(1)).join(', ') : 'Não informado'}
-                  </Text>
-                </View>
                 <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
