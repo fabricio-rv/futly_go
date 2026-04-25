@@ -1,4 +1,4 @@
-import { Share2 } from 'lucide-react-native';
+import { Share2, MapPin, Phone, Clock, Users } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -257,6 +257,218 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               )}
             </Card>
           </View>
+
+          <View className="mt-[14px]">
+            <SectionTitle title="Detalhes da Partida" />
+            <Card className="p-4 gap-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              <View className="gap-3">
+                <View>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    CEP
+                  </Text>
+                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {match.cep ?? 'Não informado'}
+                  </Text>
+                </View>
+                <View>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Bairro
+                  </Text>
+                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {match.district ?? 'Não informado'}
+                  </Text>
+                </View>
+                <View>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Nome do Campo / Quadra
+                  </Text>
+                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {match.venue_name ?? 'Não informado'}
+                  </Text>
+                </View>
+                <View className="flex-row gap-2">
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Estado
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {match.state ?? 'Não informado'}
+                    </Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Cidade
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {match.city ?? 'Não informado'}
+                    </Text>
+                  </View>
+                </View>
+                <View>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Endereço
+                  </Text>
+                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {match.address ?? 'Não informado'}
+                  </Text>
+                </View>
+              </View>
+            </Card>
+          </View>
+
+          <View className="mt-[14px]">
+            <SectionTitle title="Informações da Partida" />
+            <Card className="p-4 gap-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              <View className="gap-3">
+                <View className="flex-row gap-2">
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Data
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {match.match_date}
+                    </Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Horário
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {match.match_time}
+                    </Text>
+                  </View>
+                </View>
+                <View>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Turno
+                  </Text>
+                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {match.turno?.charAt(0).toUpperCase() + match.turno?.slice(1)}
+                  </Text>
+                </View>
+                <View>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Telefone para contato
+                  </Text>
+                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {match.contact_phone ?? 'Não informado'}
+                  </Text>
+                </View>
+              </View>
+            </Card>
+          </View>
+
+          <View className="mt-[14px]">
+            <SectionTitle title="Facilidades" />
+            <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              {Array.isArray(match.facilities) && match.facilities.length > 0 ? (
+                <View className="gap-2 flex-row flex-wrap">
+                  {match.facilities.map((facility: any, idx: number) => (
+                    <View
+                      key={`${facility.label}-${idx}`}
+                      className="px-3 py-2 rounded-[10px] border"
+                      style={{
+                        backgroundColor: facility.selected ? matchTheme.colors.bgSurfaceB : 'transparent',
+                        borderColor: facility.selected ? matchTheme.colors.ok : matchTheme.colors.line,
+                      }}
+                    >
+                      <Text
+                        variant="caption"
+                        style={{
+                          color: facility.selected ? matchTheme.colors.ok : matchTheme.colors.fgMuted,
+                        }}
+                      >
+                        {facility.label}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                  Nenhuma facilidade informada
+                </Text>
+              )}
+            </Card>
+          </View>
+
+          <View className="mt-[14px]">
+            <SectionTitle title="Configurações da Partida" />
+            <Card className="p-4 gap-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              <View className="gap-3">
+                <View>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Nível do Jogo
+                  </Text>
+                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {Array.isArray(match.accepted_levels) ? match.accepted_levels.map(l => l.charAt(0).toUpperCase() + l.slice(1)).join(', ') : 'Não informado'}
+                  </Text>
+                </View>
+                <View className="flex-row gap-2">
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Valor por pessoa
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      R$ {match.price_per_person}
+                    </Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Duração (min)
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {match.duration_minutes}
+                    </Text>
+                  </View>
+                </View>
+                <View>
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                    Restrições de Idade
+                  </Text>
+                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    De {match.min_age} até {match.max_age} anos
+                  </Text>
+                </View>
+                <View className="flex-row justify-between gap-2">
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Tem intervalo
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {match.rest_break ? 'Sim' : 'Não'}
+                    </Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Árbitro incluído
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {match.referee_included ? 'Sim' : 'Não'}
+                    </Text>
+                  </View>
+                  <View className="flex-1">
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      Aceitar reservas
+                    </Text>
+                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      {match.allow_external_reserves ? 'Sim' : 'Não'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </Card>
+          </View>
+
+          {match.description ? (
+            <View className="mt-[14px]">
+              <SectionTitle title="Descrição" />
+              <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+                <Text variant="label" style={{ color: matchTheme.colors.fgPrimary, lineHeight: 20 }}>
+                  {match.description}
+                </Text>
+              </Card>
+            </View>
+          ) : null}
 
           <View className="mt-[14px] gap-2">
             {details.isHost ? (
