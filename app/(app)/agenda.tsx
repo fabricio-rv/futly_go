@@ -77,19 +77,21 @@ export default function AgendaScreen() {
         />
 
         <View className="px-[18px]">
-          <SectionTitle
-            title={
-              tab === 'criadas'
-                ? 'Como Anfitriao'
-                : tab === 'marcadas'
-                  ? 'Como Jogador'
-                  : 'Solicitacoes Pendentes'
-            }
-            badge={String(list.length)}
-            actionText="Ver todas"
-          />
+          {tab !== 'pendentes' && (
+            <SectionTitle
+              title={
+                tab === 'criadas'
+                  ? 'Como Anfitriao'
+                  : tab === 'marcadas'
+                    ? 'Como Jogador'
+                    : 'Solicitacoes Pendentes'
+              }
+              badge={String(list.length)}
+              actionText="Ver todas"
+            />
+          )}
 
-          {list.map((partida) => (
+          {tab !== 'pendentes' && list.map((partida) => (
             <MatchCard
               key={partida.id}
               partida={partida}
