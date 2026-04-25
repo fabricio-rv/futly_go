@@ -1,6 +1,7 @@
 ﻿import type { AuthError, User } from '@supabase/supabase-js';
 
 import { supabase } from '@/src/lib/supabase';
+import { sendWelcomeEmail } from '@/src/features/email/resendService';
 
 export type SignupPayload = {
 	fullName: string;
@@ -93,6 +94,9 @@ export async function signUpWithProfile(payload: SignupPayload) {
 	if (!userId) {
 		throw new Error('Não foi possível criar a conta no momento.');
 	}
+
+	// Enviar email de boas-vindas
+	await sendWelcomeEmail(payload.email, payload.fullName).catch(() => undefined);
 
 	return {
 		requiresEmailConfirmation: !data.session,

@@ -4,6 +4,7 @@ import { getMatchSlotMetrics, mapMatchRowToPartida } from '@/src/features/matche
 import type { Jogador, Partida } from '@/src/features/matches/types';
 import { fetchUsersPositionStats, type UserPositionStat } from '@/src/features/profile/services/profileService';
 import type { Tables, TablesInsert } from '@/src/types/database';
+import { sendMatchCreatedEmail } from '@/src/features/email/resendService';
 
 export type CreateMatchInput = {
   title: string;
@@ -326,6 +327,18 @@ export async function createMatch(input: CreateMatchInput) {
   if (participantError) {
     await supabase.from('matches').delete().eq('id', match.id);
     throw new Error('Nao foi possivel registrar o host da partida. Tente novamente.');
+  }
+
+  // Enviar email de confirmação ao host
+  const { data: hostProfile } = await supabase
+    .from('profiles')
+    .select('email, full_name')
+    .eq('id', userId)
+    .single();
+
+  if (hostProfile?.email) {
+    const date = new Date(match.match_date).toLocaleDateString('pt-BR');
+    await sendMatchCreatedEmail(hostProfile.email, hostProfile.full_name || 'Host', match.title, date, match.match_time).catch(() => undefined);
   }
 
   return match;

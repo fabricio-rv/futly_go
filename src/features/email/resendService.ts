@@ -1,4 +1,7 @@
+import { emailTemplates } from './templates';
+
 const RESEND_API_KEY = process.env.EXPO_PUBLIC_RESEND_API_KEY || '';
+const FROM_EMAIL = 'Futly Go <suporte@futlygo.com.br>';
 
 type EmailOptions = {
   to: string;
@@ -6,7 +9,7 @@ type EmailOptions = {
   html: string;
 };
 
-export async function sendEmail({ to, subject, html }: EmailOptions) {
+async function sendEmail({ to, subject, html }: EmailOptions) {
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -15,7 +18,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'onboarding@resend.dev',
+        from: FROM_EMAIL,
         to,
         subject,
         html,
@@ -23,28 +26,33 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
     });
 
     if (!response.ok) {
-      throw new Error(`Resend API error: ${response.statusText}`);
+      console.error('Resend API error:', response.statusText);
+      return null;
     }
 
     return await response.json();
   } catch (error) {
     console.error('Email send failed:', error);
-    throw error;
+    return null;
   }
 }
 
 export async function sendWelcomeEmail(email: string, name: string) {
-  return sendEmail({
-    to: email,
-    subject: 'Bem-vindo ao Futly!',
-    html: `<p>Olá ${name}, bem-vindo ao Futly!</p>`,
-  });
+  const template = emailTemplates.welcome(name);
+  return sendEmail({ to: email, ...template });
 }
 
-export async function sendPasswordResetEmail(email: string, resetLink: string) {
-  return sendEmail({
-    to: email,
-    subject: 'Redefinir sua senha - Futly',
-    html: `<p>Clique no link para redefinir sua senha: <a href="${resetLink}">Redefinir Senha</a></p>`,
-  });
+export async function sendMatchCreatedEmail(hostEmail: string, hostName: string, matchTitle: string, date: string, time: string) {
+  const template = emailTemplates.matchCreated(hostName, matchTitle, date, time);
+  return sendEmail({ to: hostEmail, ...template });
+}
+
+export async function sendPlayerJoinedEmail(hostEmail: string, playerName: string, matchTitle: string, date: string, time: string) {
+  const template = emailTemplates.playerJoined(playerName, matchTitle, date, time);
+  return sendEmail({ to: hostEmail, ...template });
+}
+
+export async function sendPlayerConfirmationEmail(playerEmail: string, playerName: string, matchTitle: string, location: string, date: string, time: string) {
+  const template = emailTemplates.playerConfirmation(playerName, matchTitle, location, date, time);
+  return sendEmail({ to: playerEmail, ...template });
 }
