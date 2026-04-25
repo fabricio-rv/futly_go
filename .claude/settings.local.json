@@ -4,7 +4,8 @@
       "Bash(npx tsc *)",
       "Bash(npm install *)",
       "Bash(cat)",
-      "Bash(bash /tmp/update_theme.sh)"
+      "Bash(bash /tmp/update_theme.sh)",
+      "Bash(python3 /tmp/fix_theme.py)"
     ]
   }
 }

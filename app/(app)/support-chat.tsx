@@ -33,6 +33,8 @@ const statusColors: Record<Status, string> = {
 };
 
 export default function SupportChatScreen() {
+  const theme = useAppColorScheme();
+  const bgColor = theme === 'light' ? '#FFFFFF' : '#05070B';
   const [subject, setSubject] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -83,7 +85,7 @@ export default function SupportChatScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubTopNav title="Falar com Suporte" subtitle="CENTRAL DE SUPORTE" />
 

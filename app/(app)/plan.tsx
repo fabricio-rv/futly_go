@@ -8,8 +8,11 @@ import { HubTopNav } from '@/src/components/features/store';
 import { Button, Pill, Text } from '@/src/components/ui';
 
 export default function PlanScreen() {
+  const theme = useAppColorScheme();
+  const bgColor = theme === 'light' ? '#FFFFFF' : '#05070B';
+
   return (
-    <SafeAreaView className="flex-1 bg-white dark:bg-ink-0">
+    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubTopNav title="Plano e Pagamento" subtitle="SEU PLANO ATUAL" />
 
