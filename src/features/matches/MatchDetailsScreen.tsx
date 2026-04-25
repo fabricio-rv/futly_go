@@ -206,7 +206,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               <TacticalPitch
                 mode={(match.modality as 'futsal' | 'society' | 'campo')}
                 selectedIndexes={occupiedIndexes}
-                width={210}
+                width={300}
               />
             </View>
 

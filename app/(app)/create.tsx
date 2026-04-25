@@ -513,14 +513,14 @@ export default function CreateMatchScreen() {
               </View>
             </View>
 
-            <View className="flex-row gap-3 items-start">
+            <View className="items-center gap-3">
               <TacticalPitch
                 mode={mode}
                 selectedIndexes={selectedPositionIndexes}
                 onToggleIndex={togglePosition}
-                width={170}
+                width={300}
               />
-              <View className="flex-1 gap-2">
+              <View className="gap-1 items-center">
                 <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
                   Voce (Host) - Goleiro
                 </Text>
