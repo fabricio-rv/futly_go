@@ -1,6 +1,7 @@
 import { emailTemplates } from '../src/features/email/templates';
 import {
   handleOptions,
+  isString,
   parseBody,
   setCorsHeaders,
   type VercelRequest,
