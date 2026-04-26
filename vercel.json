@@ -4,10 +4,10 @@
   "outputDirectory": "dist/client",
   "functions": {
     "api/index.ts": {
-      "runtime": "@vercel/node"
+      "runtime": "@vercel/node@18"
     },
     "api/**/*.ts": {
-      "runtime": "@vercel/node"
+      "runtime": "@vercel/node@18"
     }
   },
   "rewrites": [
