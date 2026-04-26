@@ -2,6 +2,7 @@
 
 import { supabase } from '@/src/lib/supabase';
 import { sendWelcomeEmail } from '@/src/features/email/resendService';
+import { getApiUrl } from '@/src/lib/api';
 
 export type SignupPayload = {
 	fullName: string;
@@ -31,6 +32,25 @@ export function normalizeAuthError(error: AuthError | Error | null) {
 
 export function sanitizeEmail(value: string) {
 	return value.trim().toLowerCase();
+}
+
+async function requestEmailAction<T>(path: string, body: unknown) {
+	const response = await fetch(getApiUrl(path), {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(body),
+	});
+
+	const data = (await response.json().catch(() => null)) as T | { error?: string } | null;
+
+	if (!response.ok) {
+		const message = data && 'error' in data && data.error ? data.error : 'Não foi possível enviar o e-mail.';
+		throw new Error(message);
+	}
+
+	return data as T;
 }
 
 function extractProfileFromUser(user: User) {
@@ -72,50 +92,27 @@ export async function signInWithPassword(email: string, password: string) {
 }
 
 export async function signUpWithProfile(payload: SignupPayload) {
-	const { data, error } = await supabase.auth.signUp({
+	await requestEmailAction<{ userId: string; requiresEmailConfirmation: boolean }>('/api/auth-signup', {
 		email: sanitizeEmail(payload.email),
 		password: payload.password,
-		options: {
-			data: {
-				full_name: payload.fullName,
-				phone: payload.phone,
-				state: payload.state,
-				city: payload.city,
-				cep: payload.cep,
-			},
-		},
+		fullName: payload.fullName,
+		phone: payload.phone,
+		state: payload.state,
+		city: payload.city,
+		cep: payload.cep,
 	});
-
-	if (error) {
-		throw new Error(normalizeAuthError(error));
-	}
-
-	const userId = data.user?.id;
-	if (!userId) {
-		throw new Error('Não foi possível criar a conta no momento.');
-	}
 
 	// Enviar email de boas-vindas
 	await sendWelcomeEmail(payload.email, payload.fullName).catch(() => undefined);
 
 	return {
-		requiresEmailConfirmation: !data.session,
+		requiresEmailConfirmation: true,
 	};
 }
 
 export async function sendPasswordResetCode(email: string) {
 	const sanitizedEmail = sanitizeEmail(email);
-	const { error } = await supabase.auth.signInWithOtp({
-		email: sanitizedEmail,
-		options: {
-			shouldCreateUser: false,
-			emailRedirectTo: 'futlygo://reset-password',
-		},
-	});
-
-	if (error) {
-		throw new Error(normalizeAuthError(error));
-	}
+	await requestEmailAction('/api/send-password-reset-code', { email: sanitizedEmail });
 
 	return { email: sanitizedEmail };
 }

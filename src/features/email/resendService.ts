@@ -1,32 +1,24 @@
-import { emailTemplates } from './templates';
+import { getApiUrl } from '@/src/lib/api';
 
-const RESEND_API_KEY = process.env.EXPO_PUBLIC_RESEND_API_KEY || '';
-const FROM_EMAIL = 'Futly Go <suporte@futlygo.com.br>';
+type EmailPayload =
+  | { type: 'welcome'; to: string; name: string }
+  | { type: 'matchCreated'; to: string; hostName: string; matchTitle: string; date: string; time: string }
+  | { type: 'playerJoined'; to: string; playerName: string; matchTitle: string; date: string; time: string }
+  | { type: 'playerConfirmation'; to: string; playerName: string; matchTitle: string; location: string; date: string; time: string };
 
-type EmailOptions = {
-  to: string;
-  subject: string;
-  html: string;
-};
-
-async function sendEmail({ to, subject, html }: EmailOptions) {
+async function sendEmail(payload: EmailPayload) {
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    const response = await fetch(getApiUrl('/api/send-email'), {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to,
-        subject,
-        html,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-      console.error('Resend API error:', response.statusText);
+      const details = await response.text().catch(() => response.statusText);
+      console.error('Email API error:', details || response.statusText);
       return null;
     }
 
@@ -38,21 +30,17 @@ async function sendEmail({ to, subject, html }: EmailOptions) {
 }
 
 export async function sendWelcomeEmail(email: string, name: string) {
-  const template = emailTemplates.welcome(name);
-  return sendEmail({ to: email, ...template });
+  return sendEmail({ type: 'welcome', to: email, name });
 }
 
 export async function sendMatchCreatedEmail(hostEmail: string, hostName: string, matchTitle: string, date: string, time: string) {
-  const template = emailTemplates.matchCreated(hostName, matchTitle, date, time);
-  return sendEmail({ to: hostEmail, ...template });
+  return sendEmail({ type: 'matchCreated', to: hostEmail, hostName, matchTitle, date, time });
 }
 
 export async function sendPlayerJoinedEmail(hostEmail: string, playerName: string, matchTitle: string, date: string, time: string) {
-  const template = emailTemplates.playerJoined(playerName, matchTitle, date, time);
-  return sendEmail({ to: hostEmail, ...template });
+  return sendEmail({ type: 'playerJoined', to: hostEmail, playerName, matchTitle, date, time });
 }
 
 export async function sendPlayerConfirmationEmail(playerEmail: string, playerName: string, matchTitle: string, location: string, date: string, time: string) {
-  const template = emailTemplates.playerConfirmation(playerName, matchTitle, location, date, time);
-  return sendEmail({ to: playerEmail, ...template });
+  return sendEmail({ type: 'playerConfirmation', to: playerEmail, playerName, matchTitle, location, date, time });
 }
