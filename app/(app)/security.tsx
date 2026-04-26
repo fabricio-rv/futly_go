@@ -18,6 +18,8 @@ import {
 
 type Step = 1 | 2 | 3;
 
+const VERIFICATION_CODE_LENGTH = 8;
+
 function getPasswordStrength(password: string): { level: number; label: string } {
   if (!password) return { level: 0, label: 'Digite uma senha' };
   if (password.length < 6) return { level: 1, label: 'Muito fraca' };
@@ -78,8 +80,8 @@ export default function SecurityScreen() {
   }
 
   async function handleStep2() {
-    if (code.length !== 6) {
-      showToast('Digite os 6 dígitos do código');
+    if (code.length !== VERIFICATION_CODE_LENGTH) {
+      showToast(`Digite os ${VERIFICATION_CODE_LENGTH} digitos do codigo`);
       return;
     }
 
@@ -200,12 +202,12 @@ export default function SecurityScreen() {
               </View>
 
               <Input
-                label="Código (6 dígitos)"
+                label={`Codigo (${VERIFICATION_CODE_LENGTH} digitos)`}
                 value={code}
-                onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
+                onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, VERIFICATION_CODE_LENGTH))}
                 keyboardType="number-pad"
-                placeholder="000000"
-                maxLength={6}
+                placeholder="00000000"
+                maxLength={VERIFICATION_CODE_LENGTH}
               />
             </View>
 

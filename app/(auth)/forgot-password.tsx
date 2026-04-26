@@ -21,6 +21,8 @@ import {
 	verifyPasswordResetCode,
 } from '@/src/features/auth/service';
 
+const VERIFICATION_CODE_LENGTH = 8;
+
 function getPasswordStrength(password: string) {
 	let score = 0;
 	if (password.length >= 8) score += 1;
@@ -122,13 +124,13 @@ export default function ForgotPasswordScreen() {
 	}
 
 	async function handleVerifyCode() {
-		if (code.length !== 6) {
+		if (code.length !== VERIFICATION_CODE_LENGTH) {
 			showToast('Código incompleto', 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
 				title: 'Código incompleto',
-				message: 'Digite os 6 dígitos do código.',
+				message: `Digite os ${VERIFICATION_CODE_LENGTH} dígitos do código.`,
 				primaryLabel: 'Ok',
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
@@ -266,7 +268,7 @@ export default function ForgotPasswordScreen() {
 									Informe seu e-mail
 								</Text>
 								<Text variant="label" className="mt-1 mb-4 text-fg2 leading-[20px]">
-									Vamos enviar um codigo de recuperacao de 6 digitos.
+									Vamos enviar um codigo de recuperacao de {VERIFICATION_CODE_LENGTH} digitos.
 								</Text>
 
 								<Input
@@ -303,7 +305,7 @@ export default function ForgotPasswordScreen() {
 									Digite o codigo
 								</Text>
 								<Text variant="label" className="mt-1 text-fg2 leading-[20px]">
-									Enviamos um codigo de 6 digitos para
+									Enviamos um codigo de {VERIFICATION_CODE_LENGTH} digitos para
 								</Text>
 								<Text variant="label" className="text-white font-semibold mt-1">
 									{maskEmail(email)}
@@ -320,9 +322,10 @@ export default function ForgotPasswordScreen() {
 								<Input
 									label="Codigo de verificacao"
 									value={code}
-									onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, 6))}
-									placeholder="Digite o codigo de 6 digitos"
+									onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, VERIFICATION_CODE_LENGTH))}
+									placeholder={`Digite o codigo de ${VERIFICATION_CODE_LENGTH} digitos`}
 									keyboardType="number-pad"
+									maxLength={VERIFICATION_CODE_LENGTH}
 									containerClassName="mt-4 h-12 rounded-[14px] border-line2 bg-[#0C111E]"
 									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 								/>
