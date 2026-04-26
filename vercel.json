@@ -9,7 +9,7 @@
       }
     },
     {
-      "src": "api/index.ts",
+      "src": "api/**/*.ts",
       "use": "@vercel/node"
     }
   ],
@@ -20,7 +20,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/"
+      "dest": "/$1"
     }
   ]
 }
