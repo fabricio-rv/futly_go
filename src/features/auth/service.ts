@@ -46,7 +46,7 @@ async function requestEmailAction<T>(path: string, body: unknown) {
 	const data = (await response.json().catch(() => null)) as T | { error?: string } | null;
 
 	if (!response.ok) {
-		const message = data && 'error' in data && data.error ? data.error : 'Não foi possível enviar o e-mail.';
+		const message = data && typeof data === 'object' && 'error' in data && data.error ? data.error : 'Não foi possível enviar o e-mail.';
 		throw new Error(message);
 	}
 
