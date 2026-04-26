@@ -45,8 +45,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 	}
 
 	try {
+		console.log('Starting signup process for:', body.email);
 		const supabase = getSupabaseAdmin();
 		const email = body.email.trim().toLowerCase();
+
+		console.log('Creating user:', { email, hasPassword: !!body.password });
+
 		const { data, error } = await supabase.auth.admin.createUser({
 			email,
 			password: body.password,
@@ -60,10 +64,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			},
 		});
 
+		console.log('User creation result:', {
+			success: !!data.user,
+			userId: data.user?.id,
+			error: error?.message
+		});
+
 		if (error || !data.user) {
+			console.log('User creation failed, sending error response');
 			res.status(400).json({ error: normalizeAuthMessage(error?.message || 'Não foi possível criar a conta no momento.') });
 			return;
 		}
+
+		console.log('User created successfully, generating confirmation link');
 
 		const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
 			type: 'signup',
@@ -80,19 +93,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 			},
 		});
 
+		console.log('Link generation result:', {
+			success: !!linkData.properties?.action_link,
+			hasEmailOtp: !!linkData.properties?.email_otp,
+			error: linkError?.message
+		});
+
 		if (linkError || !linkData.properties?.action_link) {
+			console.log('Link generation failed, deleting user and returning error');
 			await supabase.auth.admin.deleteUser(data.user.id).catch(() => undefined);
 			res.status(500).json({ error: 'Error sending confirmation email' });
 			return;
 		}
 
-		await sendEmail({
-			type: 'confirmSignup',
-			to: email,
-			name: body.fullName,
-			confirmationUrl: linkData.properties.action_link,
-		});
+		console.log('Link generated, sending confirmation email to:', email);
 
+		try {
+			await sendEmail({
+				type: 'confirmSignup',
+				to: email,
+				name: body.fullName,
+				confirmationUrl: linkData.properties.action_link,
+			});
+			console.log('Confirmation email sent successfully');
+		} catch (emailError) {
+			console.log('Email sending failed:', emailError);
+			await supabase.auth.admin.deleteUser(data.user.id).catch(() => undefined);
+			res.status(500).json({ error: 'Error sending confirmation email' });
+			return;
+		}
+
+		console.log('Signup completed successfully');
 		res.status(200).json({ userId: data.user.id, requiresEmailConfirmation: true });
 	} catch (error) {
 		console.error('Signup email flow failed:', error);

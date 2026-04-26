@@ -67,6 +67,12 @@ export function getSupabaseAdmin() {
 	const supabaseUrl = process.env.SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL;
 	const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+	console.log('Supabase admin config:', {
+		hasUrl: !!supabaseUrl,
+		hasServiceKey: !!serviceRoleKey,
+		url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'missing'
+	});
+
 	if (!supabaseUrl || !serviceRoleKey) {
 		throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured');
 	}
@@ -80,8 +86,16 @@ export function getSupabaseAdmin() {
 }
 
 export async function sendEmail(payload: unknown) {
-	const baseUrl = process.env.APP_URL || process.env.EXPO_PUBLIC_APP_URL || 'https://futlygo.vercel.app';
-	const response = await fetch(`${baseUrl.replace(/\/$/, '')}/api/send-email`, {
+	const baseUrl = process.env.APP_URL || process.env.EXPO_PUBLIC_APP_URL || 'https://futlygo.com.br';
+	const emailUrl = `${baseUrl.replace(/\/$/, '')}/api/send-email`;
+
+	console.log('Calling send-email endpoint:', {
+		url: emailUrl,
+		payload,
+		timestamp: new Date().toISOString(),
+	});
+
+	const response = await fetch(emailUrl, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -89,8 +103,18 @@ export async function sendEmail(payload: unknown) {
 		body: JSON.stringify(payload),
 	});
 
+	console.log('Send-email response:', {
+		status: response.status,
+		ok: response.ok,
+		timestamp: new Date().toISOString(),
+	});
+
 	if (!response.ok) {
 		const details = await response.text().catch(() => response.statusText);
+		console.log('Send-email error details:', details);
 		throw new Error(details || 'Email send failed');
 	}
+
+	const result = await response.json().catch(() => null);
+	console.log('Send-email success result:', result);
 }

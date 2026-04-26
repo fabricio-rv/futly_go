@@ -7,7 +7,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build": "expo export --platform web && node scripts/postbuild-web.mjs"
+    "build": "expo export --platform web",
+    "test-config": "node scripts/test-config.js",
+    "test-signup": "node scripts/test-signup.js"
   },
   "dependencies": {
     "@expo-google-fonts/bebas-neue": "^0.4.1",
@@ -24,6 +26,7 @@
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
     "expo-router": "~6.0.23",
+    "expo-server": "^55.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-system-ui": "^55.0.16",
