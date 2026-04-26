@@ -44,3 +44,5 @@ yarn-error.*
 
 # accidental local export
 /HubDePartidas-App.html
+
+.vercel
