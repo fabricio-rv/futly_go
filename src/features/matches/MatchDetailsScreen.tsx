@@ -19,9 +19,12 @@ import { Button, Card, Screen, Text } from '@/src/components/ui';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import type { MatchDetails } from '@/src/features/matches/services/matchesService';
 import { supabase } from '@/src/lib/supabase';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const matchTheme = useMatchTheme();
+  const theme = useAppColorScheme();
+  const isLight = theme === 'light';
   const router = useRouter();
   const { getMatchDetails, joinMatch, leaveMatch, processParticipationRequest, loadingDetails, submitting } = useMatches();
   const [details, setDetails] = useState<MatchDetails | null>(null);
@@ -231,6 +234,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const match = details.match;
   const card = details.card;
   const availableSlots = details.slots.filter((slot) => slot.open && !slot.occupied);
+  const heroGradient = isLight ? (['#1A5B33', '#0E3A23', '#082717'] as const) : (['#0F3A24', '#072314', '#021109'] as const);
 
   function formatPositionStats(request: MatchDetails['pendingRequests'][number]) {
     if (request.userPositionStats.length === 0) {
@@ -267,29 +271,113 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
         />
 
         <View className="px-[18px]">
-          <LinearGradient colors={['#0F3A24', '#072314', '#021109']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="rounded-[20px] p-[18px] mb-[14px]">
-            <View className="absolute top-[14px] right-[14px]">
-              <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={card.statusLabel} />
-            </View>
+          {isLight ? (
+            <View
+              className="rounded-[20px] p-[18px] mb-[14px] border-2"
+              style={{
+                backgroundColor: '#FAFBFC',
+                borderColor: '#22B76C',
+              }}
+            >
+              <View className="absolute top-[14px] right-[14px]">
+                <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={card.statusLabel} />
+              </View>
 
-            <Text variant="micro" className="uppercase tracking-[2px] font-bold" style={{ color: matchTheme.colors.okSoft }}>
-              {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
-            </Text>
-            <Text variant="number" className="text-[56px] leading-[50px] mt-1">{card.dateLabel.split(' - ')[0]}</Text>
-            <View className="flex-row items-end gap-2 mt-1">
-              <Text variant="number" className="text-[30px]" style={{ color: matchTheme.colors.goldA }}>{card.timeLabel}</Text>
-              <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: matchTheme.colors.fgSecondary }}>
-                - {card.shiftLabel} - {match.duration_minutes}min
+              <Text variant="micro" className="uppercase tracking-[2px] font-bold" style={{ color: '#22B76C' }}>
+                {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
               </Text>
-            </View>
+              <Text variant="number" className="text-[56px] leading-[50px] mt-1" style={{ color: '#111827' }}>
+                {card.dateLabel.split(' - ')[0]}
+              </Text>
+              <View className="flex-row items-end gap-2 mt-1">
+                <Text variant="number" className="text-[30px]" style={{ color: '#D4A13A' }}>
+                  {card.timeLabel}
+                </Text>
+                <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: '#4B5563' }}>
+                  - {card.shiftLabel} - {match.duration_minutes}min
+                </Text>
+              </View>
 
-            <View className="flex-row gap-2 mt-[14px] flex-wrap">
-              <StatBadge label={card.levelLabel} tone={card.levelTone} small />
-              <StatBadge label={`R$ ${card.pricePerPlayer}/pessoa`} tone="neutral" small />
-              <StatBadge label={`${card.occupiedSlots}/${card.totalSlots} vagas`} tone="neutral" small />
-              {details.isHost ? <StatBadge label="HOST" tone="gold" small /> : null}
+              <View className="flex-row gap-2 mt-[14px] flex-wrap">
+                <View
+                  className="h-6 px-3 rounded-full border items-center justify-center"
+                  style={{
+                    backgroundColor: 'rgba(73,180,255,0.16)',
+                    borderColor: 'rgba(73,180,255,0.45)',
+                  }}
+                >
+                  <Text variant="caption" className="text-[10px]" style={{ color: '#93D9FF' }}>
+                    {card.levelLabel}
+                  </Text>
+                </View>
+                <View
+                  className="h-6 px-3 rounded-full border items-center justify-center"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.06)', borderColor: 'rgba(0,0,0,0.12)' }}
+                >
+                  <Text variant="caption" className="text-[10px]" style={{ color: '#1F2937' }}>
+                    R$ {card.pricePerPlayer}/pessoa
+                  </Text>
+                </View>
+                <View
+                  className="h-6 px-3 rounded-full border items-center justify-center"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.06)', borderColor: 'rgba(0,0,0,0.12)' }}
+                >
+                  <Text variant="caption" className="text-[10px]" style={{ color: '#1F2937' }}>
+                    {card.occupiedSlots}/{card.totalSlots} vagas
+                  </Text>
+                </View>
+                {details.isHost ? <StatBadge label="HOST" tone="gold" small /> : null}
+              </View>
             </View>
-          </LinearGradient>
+          ) : (
+            <LinearGradient colors={heroGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="rounded-[20px] p-[18px] mb-[14px]">
+              <View className="absolute top-[14px] right-[14px]">
+                <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={card.statusLabel} />
+              </View>
+
+              <Text variant="micro" className="uppercase tracking-[2px] font-bold" style={{ color: matchTheme.colors.okSoft }}>
+                {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
+              </Text>
+              <Text variant="number" className="text-[56px] leading-[50px] mt-1">{card.dateLabel.split(' - ')[0]}</Text>
+              <View className="flex-row items-end gap-2 mt-1">
+                <Text variant="number" className="text-[30px]" style={{ color: matchTheme.colors.goldA }}>{card.timeLabel}</Text>
+                <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: matchTheme.colors.fgSecondary }}>
+                  - {card.shiftLabel} - {match.duration_minutes}min
+                </Text>
+              </View>
+
+              <View className="flex-row gap-2 mt-[14px] flex-wrap">
+                <View
+                  className="h-6 px-3 rounded-full border items-center justify-center"
+                  style={{
+                    backgroundColor: 'rgba(90,177,255,0.14)',
+                    borderColor: 'rgba(90,177,255,0.35)',
+                  }}
+                >
+                  <Text variant="caption" className="text-[10px]" style={{ color: '#7AC0FF' }}>
+                    {card.levelLabel}
+                  </Text>
+                </View>
+                <View
+                  className="h-6 px-3 rounded-full border items-center justify-center"
+                  style={{ backgroundColor: 'rgba(5,7,11,0.52)', borderColor: 'rgba(255,255,255,0.16)' }}
+                >
+                  <Text variant="caption" className="text-[10px]" style={{ color: 'rgba(255,255,255,0.82)' }}>
+                    R$ {card.pricePerPlayer}/pessoa
+                  </Text>
+                </View>
+                <View
+                  className="h-6 px-3 rounded-full border items-center justify-center"
+                  style={{ backgroundColor: 'rgba(5,7,11,0.52)', borderColor: 'rgba(255,255,255,0.16)' }}
+                >
+                  <Text variant="caption" className="text-[10px]" style={{ color: 'rgba(255,255,255,0.82)' }}>
+                    {card.occupiedSlots}/{card.totalSlots} vagas
+                  </Text>
+                </View>
+                {details.isHost ? <StatBadge label="HOST" tone="gold" small /> : null}
+              </View>
+            </LinearGradient>
+          )}
 
           <SectionTitle title="Posições e vagas" />
           <Card className="p-[14px]" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
