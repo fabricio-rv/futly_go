@@ -320,9 +320,9 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 </View>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
-                  style={{ backgroundColor: '#F3F4F6', borderColor: '#9CA3AF' }}
+                  style={{ backgroundColor: '#DBEAFE', borderColor: '#0284C7' }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: '#111827' }}>
+                  <Text variant="caption" className="text-[10px] font-semibold" style={{ color: '#0C4A6E' }}>
                     {card.occupiedSlots}/{card.totalSlots} vagas
                   </Text>
                 </View>
