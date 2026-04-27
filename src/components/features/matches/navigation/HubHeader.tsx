@@ -2,6 +2,7 @@ import { MessageCircleMore } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type HubHeaderProps = {
   onMessagesPress?: () => void;
@@ -10,6 +11,7 @@ type HubHeaderProps = {
 
 export function HubHeader({ onMessagesPress, unreadCount = 0 }: HubHeaderProps) {
   const theme = useAppColorScheme();
+  const { t } = useTranslation('matches');
   const titleColor = theme === 'light' ? '#1F2937' : '#FFFFFF';
   const subtitleColor = theme === 'light' ? '#7A8597' : 'rgba(255,255,255,0.45)';
   const buttonBg = theme === 'light' ? '#E8F3ED' : '#22B76C1F';
@@ -20,8 +22,9 @@ export function HubHeader({ onMessagesPress, unreadCount = 0 }: HubHeaderProps) 
     <View className="px-4 pb-2 pt-2">
       <View className="relative min-h-[44px] justify-center">
         <View className="absolute left-0 right-0 items-center">
-          <Text className="font-geistBold text-[15px]" style={{ color: titleColor }}>Hub de Partidas</Text>
-          <Text className="text-[10px] font-geistBold uppercase tracking-[2px]" style={{ color: subtitleColor }}>Quinta - Porto Alegre</Text>
+          <Text className="font-geistBold text-[15px]" style={{ color: titleColor }}>
+            {t('hub.title', 'Hub de Partidas')}
+          </Text>
         </View>
 
         {onMessagesPress ? (
@@ -31,7 +34,7 @@ export function HubHeader({ onMessagesPress, unreadCount = 0 }: HubHeaderProps) 
             onPress={onMessagesPress}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Abrir conversas"
+            accessibilityLabel={t('hub.openConversations', 'Abrir conversas')}
           >
             <MessageCircleMore size={18} color={buttonIcon} strokeWidth={2.2} />
             {unreadCount > 0 ? (
