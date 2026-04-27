@@ -22,15 +22,15 @@ export const ptBRChat = {
     sendMessage: 'Enviar mensagem',
     typing: 'Digitando...',
     failedSend: 'Falha ao enviar',
-    noPartida: 'Esta conversa não possui partida vinculada',
+    noPartida: 'Está conversa não possui partida vinculada',
     archived: 'Conversa arquivada',
     unarchived: 'Conversa restaurada',
     marked: 'Marcado como não lido',
-    you: 'Voce',
+    you: 'Você',
     noMessagesYet: 'Sem mensagens ainda',
     privateTag: 'PRIVADO',
     readReceiptShort: 'OK',
-    confirmedPresenceSnippet: 'confirmou presenca'
+    confirmedPresenceSnippet: 'confirmou presença'
   },
   info: {
     description: 'Cada conversa é vinculada a uma partida marcada. Auto-arquiva 7 dias após o jogo.',
@@ -62,7 +62,7 @@ export const ptBRChat = {
     sendFailedTitle: 'Falha ao enviar',
     sendFailedMessage: 'Não foi possível enviar a mensagem agora.',
     noMatchLinkedTitle: 'Sem partida vinculada',
-    noMatchLinkedMessage: 'Esta conversa não possui partida vinculada.',
+    noMatchLinkedMessage: 'Está conversa não possui partida vinculada.',
     archiveFailedTitle: 'Falha ao arquivar',
     updateFailedTitle: 'Falha ao atualizar',
     conversationNotFound: 'Conversa não encontrada.',
@@ -72,7 +72,7 @@ export const ptBRChat = {
   },
   status: {
     updatedTitle: 'Conversa atualizada',
-    markedUnreadMessage: 'Marcamos esta conversa como não lida.'
+    markedUnreadMessage: 'Marcamos está conversa como não lida.'
   },
   common: {
     error: 'Erro',

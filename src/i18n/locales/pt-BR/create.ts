@@ -64,6 +64,7 @@ export const ptBRCreate = {
     draftSavedMessage: 'Seu rascunho foi salvo e aparece na sua Agenda.',
     matchPublishedMessage: 'Sua partida já está disponível em Encontrar Jogo e na Agenda.',
     matchCreatedTitle: 'Partida criada',
+    createMatchButton: 'Criar Partida',
     createFailedTitle: 'Falha ao criar partida',
     createFailedMessage: 'Não foi possível criar a partida.',
   },

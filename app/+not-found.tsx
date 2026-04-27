@@ -8,7 +8,7 @@ export default function NotFoundScreen() {
       <Stack.Screen options={{ title: 'Ops' }} />
       <SafeAreaView className="flex-1 bg-bg">
         <View className="flex-1 items-center justify-center px-6">
-          <Text className="mb-3 text-center text-2xl font-geistBold text-white">Essa tela nao existe.</Text>
+          <Text className="mb-3 text-center text-2xl font-geistBold text-white">Essa tela não existe.</Text>
           <Text className="mb-6 text-center text-sm text-fg3">
             Verifique o endereco ou volte para o inicio do Futly Go.
           </Text>

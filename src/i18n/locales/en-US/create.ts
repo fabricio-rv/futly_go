@@ -64,6 +64,7 @@ export const enUSCreate = {
     draftSavedMessage: 'Your draft has been saved and appears in your Agenda.',
     matchPublishedMessage: 'Your match is now available in Find Game and in Agenda.',
     matchCreatedTitle: 'Match created',
+    createMatchButton: 'Create Match',
     createFailedTitle: 'Failed to create match',
     createFailedMessage: 'Unable to create the match.',
   },

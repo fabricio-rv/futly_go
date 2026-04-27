@@ -64,6 +64,7 @@ export const ptPTCreate = {
     draftSavedMessage: 'O seu rascunho foi guardado e aparece na sua Agenda.',
     matchPublishedMessage: 'O seu jogo já está disponível em Encontrar Jogo e na Agenda.',
     matchCreatedTitle: 'Jogo criado',
+    createMatchButton: 'Criar Jogo',
     createFailedTitle: 'Falha ao criar jogo',
     createFailedMessage: 'Não foi possível criar o jogo.',
   },

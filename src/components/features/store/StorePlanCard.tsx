@@ -131,7 +131,6 @@ export function StorePlanCard({ plan }: StorePlanCardProps) {
 				label={plan.ctaLabel}
 				variant={plan.ctaVariant === 'ghost' ? 'ghost' : plan.ctaVariant}
 				size="md"
-				className="rounded-[14px]"
 				labelClassName="font-bold"
 			/>
 		</View>

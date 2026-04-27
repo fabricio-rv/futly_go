@@ -51,7 +51,7 @@ export default function EditProfileScreen() {
       Alert.alert(t('success.profileUpdated', 'Perfil atualizado'), t('messages.profileSaved', 'Seus dados foram salvos com sucesso.'));
       router.back();
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('errors.saveProfileFailed', 'Nao foi possivel salvar o perfil.');
+      const message = error instanceof Error ? error.message : t('errors.saveProfileFailed', 'Não foi possível salvar o perfil.');
       Alert.alert(t('errors.saveProfileTitle', 'Falha ao salvar'), message);
     }
   }
@@ -76,7 +76,7 @@ export default function EditProfileScreen() {
 
         <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-            {t('sections.personalInfo', 'Informacoes pessoais')}
+            {t('sections.personalInfo', 'Informações pessoais')}
           </Text>
 
           <View className="mb-3">
@@ -134,7 +134,7 @@ export default function EditProfileScreen() {
               label={t('personal.bio', 'Bio')}
               value={bio}
               onChangeText={setBio}
-              placeholder={t('personal.bioPlaceholder', 'Conte um pouco sobre voce...')}
+              placeholder={t('personal.bioPlaceholder', 'Conte um pouco sobre você...')}
               multiline
               numberOfLines={4}
             />

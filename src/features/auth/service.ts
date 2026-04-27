@@ -26,12 +26,12 @@ export function normalizeAuthError(error: AuthError | Error | null) {
 
 	if (message.includes('invalid login credentials')) return 'E-mail ou senha invalidos.';
 	if (message.includes('email not confirmed')) return 'Confirme seu e-mail antes de entrar.';
-	if (message.includes('already registered')) return 'Este e-mail ja esta cadastrado.';
+	if (message.includes('already registered')) return 'Este e-mail já esta cadastrado.';
 	if (message.includes('password should be at least')) return 'A senha precisa ter no minimo 6 caracteres.';
 	if (message.includes('unable to validate email')) return 'Digite um e-mail valido.';
 	if (message.includes('same_password')) return 'A nova senha deve ser diferente da senha atual.';
-	if (message.includes('expired')) return 'Codigo expirado. Solicite um novo codigo.';
-	if (message.includes('token')) return 'Codigo invalido. Revise e tente novamente.';
+	if (message.includes('expired')) return 'Código expirado. Solicite um novo código.';
+	if (message.includes('token')) return 'Código invalido. Revise e tente novamente.';
 
 	return error.message;
 }
@@ -76,7 +76,7 @@ async function requestEmailAction<T>(path: string, body: unknown) {
 	const data = (await response.json().catch(() => null)) as T | { error?: string } | null;
 
 	if (!response.ok) {
-		const message = data && typeof data === 'object' && 'error' in data && data.error ? data.error : 'Nao foi possivel enviar o e-mail.';
+		const message = data && typeof data === 'object' && 'error' in data && data.error ? data.error : 'Não foi possível enviar o e-mail.';
 		throw new Error(message);
 	}
 
@@ -173,7 +173,7 @@ export async function signInWithSocial(provider: SocialProvider) {
 			throw new Error(normalizeAuthError(sessionError));
 		}
 	} else {
-		throw new Error('Nao foi possivel concluir o login social.');
+		throw new Error('Não foi possível concluir o login social.');
 	}
 
 	await ensureCurrentUserProfile().catch(() => undefined);
@@ -253,6 +253,6 @@ export async function deleteAccount() {
 	const { error } = await supabase.rpc('delete_my_account');
 
 	if (error) {
-		throw new Error('Nao foi possivel deletar a conta. Tente novamente.');
+		throw new Error('Não foi possível deletar a conta. Tente novamente.');
 	}
 }

@@ -47,7 +47,7 @@ export function useConversationThread(conversationId: string) {
 
       const current = rows.find((row) => row.conversation_id === conversationId);
       if (!current) {
-        throw new Error(t('errors.conversationNotFound', 'Conversa nao encontrada.'));
+        throw new Error(t('errors.conversationNotFound', 'Conversa não encontrada.'));
       }
 
       const participantById = new Map(participants.map((participant) => [participant.user_id, participant]));

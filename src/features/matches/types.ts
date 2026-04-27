@@ -131,7 +131,7 @@ export type MatchLevel =
   | 'Amador'
   | 'Ex-profissional';
 
-export interface Avaliacao {
+export interface Avaliação {
   id: string;
   targetId: string;
   targetType: 'host' | 'player';

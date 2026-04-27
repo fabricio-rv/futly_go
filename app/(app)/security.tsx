@@ -72,12 +72,12 @@ export default function SecurityScreen() {
     try {
       await sendPasswordResetCode(email);
       setStep(2);
-      showToast(t('security.codeSent', 'Codigo enviado para seu e-mail'));
+      showToast(t('security.codeSent', 'Código enviado para seu e-mail'));
     } catch (error) {
-      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.sendCodeFailed', 'Erro ao enviar codigo');
+      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.sendCodeFailed', 'Erro ao enviar código');
       setModalData({
         tone: 'error',
-        title: t('security.sendCodeFailedTitle', 'Falha ao enviar codigo'),
+        title: t('security.sendCodeFailedTitle', 'Falha ao enviar código'),
         message,
       });
       setModalVisible(true);
@@ -91,7 +91,7 @@ export default function SecurityScreen() {
       showToast(
         t(
           'security.enterCodeLength',
-          'Digite os {{VERIFICATION_CODE_LENGTH}} digitos do codigo',
+          'Digite os {{VERIFICATION_CODE_LENGTH}} dígitos do código',
           { VERIFICATION_CODE_LENGTH }
         )
       );
@@ -102,12 +102,12 @@ export default function SecurityScreen() {
     try {
       await verifyPasswordResetCode(email, code);
       setStep(3);
-      showToast(t('security.codeVerified', 'Codigo verificado com sucesso'));
+      showToast(t('security.codeVerified', 'Código verificado com sucesso'));
     } catch (error) {
-      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.invalidCode', 'Codigo invalido');
+      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.invalidCode', 'Código invalido');
       setModalData({
         tone: 'error',
-        title: t('security.invalidCodeTitle', 'Codigo invalido'),
+        title: t('security.invalidCodeTitle', 'Código invalido'),
         message,
       });
       setModalVisible(true);
@@ -123,7 +123,7 @@ export default function SecurityScreen() {
     }
 
     if (password !== confirmPassword) {
-      showToast(t('errors.passwordMismatch', 'As senhas nao coincidem'));
+      showToast(t('errors.passwordMismatch', 'As senhas não coincidem'));
       return;
     }
 
@@ -134,7 +134,7 @@ export default function SecurityScreen() {
       setModalData({
         tone: 'success',
         title: t('security.passwordChanged', 'Senha alterada com sucesso'),
-        message: t('security.passwordChangedMessage', 'Voce foi desconectado. Faca login novamente com sua nova senha.'),
+        message: t('security.passwordChangedMessage', 'Você foi desconectado. Faça login novamente com sua nova senha.'),
       });
       setModalVisible(true);
     } catch (error) {
@@ -172,7 +172,7 @@ export default function SecurityScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubTopNav title={t('security.title', 'Senha e Seguranca')} subtitle={t('security.changePassword', 'ALTERAR SENHA')} />
+        <HubTopNav title={t('security.title', 'Senha e Segurança')} subtitle={t('security.changePassword', 'ALTERAR SENHA')} />
 
         {step === 1 && (
           <View className="mx-[18px] mt-6">
@@ -181,7 +181,7 @@ export default function SecurityScreen() {
                 {t('security.step1', 'Passo 1 de 3')}
               </Text>
               <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
-                {t('security.step1Hint', 'Confirme seu e-mail para receber o codigo de verificacao')}
+                {t('security.step1Hint', 'Confirme seu e-mail para receber o código de verificacao')}
               </Text>
 
               <Input
@@ -194,7 +194,7 @@ export default function SecurityScreen() {
               />
             </View>
 
-            <Button label={t('forgotPassword.sendCode', 'Enviar codigo')} loading={loading} disabled={loading} onPress={() => void handleStep1()} />
+            <Button label={t('forgotPassword.sendCode', 'Enviar código')} loading={loading} disabled={loading} onPress={() => void handleStep1()} />
           </View>
         )}
 
@@ -205,7 +205,7 @@ export default function SecurityScreen() {
                 {t('security.step2', 'Passo 2 de 3')}
               </Text>
               <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
-                {t('security.step2Hint', 'Digite o codigo que foi enviado para {{email}}', { email })}
+                {t('security.step2Hint', 'Digite o código que foi enviado para {{email}}', { email })}
               </Text>
 
               <View className="mb-4">
@@ -213,7 +213,7 @@ export default function SecurityScreen() {
               </View>
 
               <Input
-                label={t('security.codeLabel', 'Codigo ({{VERIFICATION_CODE_LENGTH}} digitos)', { VERIFICATION_CODE_LENGTH })}
+                label={t('security.codeLabel', 'Código ({{VERIFICATION_CODE_LENGTH}} dígitos)', { VERIFICATION_CODE_LENGTH })}
                 value={code}
                 onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, VERIFICATION_CODE_LENGTH))}
                 keyboardType="number-pad"
@@ -223,8 +223,8 @@ export default function SecurityScreen() {
             </View>
 
             <View className="gap-3 mb-4">
-              <Button label={t('forgotPassword.verifyCode', 'Verificar codigo')} loading={loading} disabled={loading} onPress={() => void handleStep2()} />
-              <Button variant="ghost" label={t('forgotPassword.resendCode', 'Reenviar codigo')} onPress={handleResendCode} />
+              <Button label={t('forgotPassword.verifyCode', 'Verificar código')} loading={loading} disabled={loading} onPress={() => void handleStep2()} />
+              <Button variant="ghost" label={t('forgotPassword.resendCode', 'Reenviar código')} onPress={handleResendCode} />
               <Button variant="ghost" label={t('common.back', 'Voltar')} onPress={handleBackToEmail} />
             </View>
           </View>

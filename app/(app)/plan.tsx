@@ -29,7 +29,7 @@ export default function PlanScreen() {
             </View>
 
             <Text variant="body" className="text-[#9CA3AF] dark:text-fg3 mb-4">
-              {t('plan.currentDescription', 'Voce esta no nosso plano premium com todos os beneficios exclusivos.')}
+              {t('plan.currentDescription', 'Você esta no nosso plano premium com todos os benefícios exclusivos.')}
             </Text>
 
             <View className="rounded-[12px] bg-black/20 px-3 py-2 mb-4">
@@ -43,7 +43,7 @@ export default function PlanScreen() {
 
           {/* Benefits */}
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-            {t('plan.goldBenefits', 'Beneficios do Gold')}
+            {t('plan.goldBenefits', 'Benefícios do Gold')}
           </Text>
 
           <View className="gap-3 mb-6">
@@ -66,7 +66,7 @@ export default function PlanScreen() {
                   {t('features.advancedFilters', 'Filtros avancados')}
                 </Text>
                 <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
-                  {t('plan.advancedFiltersDescription', 'Busque partidas por nivel, horario e localizacao')}
+                  {t('plan.advancedFiltersDescription', 'Busque partidas por nível, horário e localização')}
                 </Text>
               </View>
             </View>
@@ -102,7 +102,7 @@ export default function PlanScreen() {
                   {t('features.noAds', 'Sem anuncios')}
                 </Text>
                 <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
-                  {t('plan.noAdsDescription', 'Aproveite a experiencia sem distracoes')}
+                  {t('plan.noAdsDescription', 'Aproveite a experiência sem distrações')}
                 </Text>
               </View>
             </View>
@@ -123,7 +123,7 @@ export default function PlanScreen() {
                   <Pill tone="default" label={t('plan.active', 'Ativo')} className="px-2" />
                 </View>
                 <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mt-1">
-                  {t('plan.freeDescription', 'Funcionalidades basicas - R$ 0,00/mes')}
+                  {t('plan.freeDescription', 'Funcionalidades básicas - R$ 0,00/mês')}
                 </Text>
               </View>
 
@@ -135,7 +135,7 @@ export default function PlanScreen() {
                   <Pill tone="gold" label={t('plan.yourPlan', 'Seu plano')} className="px-2" />
                 </View>
                 <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mt-1">
-                  {t('plan.goldDescription', 'Plano premium - R$ 19,90/mes')}
+                  {t('plan.goldDescription', 'Plano premium - R$ 19,90/mês')}
                 </Text>
               </View>
 
@@ -152,7 +152,7 @@ export default function PlanScreen() {
                   <Pill tone="sky" label={t('plan.comingSoon', 'Em breve')} className="px-2" />
                 </View>
                 <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mt-1">
-                  {t('plan.eliteDescription', 'Plano exclusivo - R$ 49,90/mes')}
+                  {t('plan.eliteDescription', 'Plano exclusivo - R$ 49,90/mês')}
                 </Text>
               </View>
             </View>
@@ -163,7 +163,7 @@ export default function PlanScreen() {
               {t('plan.questionsTitle', 'Tem duvidas sobre os planos?')}
             </Text>
             <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mb-4">
-              {t('plan.questionsDescription', 'Consulte nossa central de ajuda ou fale com o suporte para mais informacoes.')}
+              {t('plan.questionsDescription', 'Consulte nossa central de ajuda ou fale com o suporte para mais informações.')}
             </Text>
           </View>
         </View>

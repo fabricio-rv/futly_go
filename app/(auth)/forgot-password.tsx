@@ -272,7 +272,7 @@ export default function ForgotPasswordScreen() {
 								<Text variant="label" className="mt-1 mb-4 text-fg2 leading-[20px]">
 									{t(
 										'forgotPassword.emailStepSubtitle',
-										'Vamos enviar um codigo de recuperacao de {{VERIFICATION_CODE_LENGTH}} digitos.',
+										'Vamos enviar um código de recuperacao de {{VERIFICATION_CODE_LENGTH}} dígitos.',
 										{ VERIFICATION_CODE_LENGTH },
 									)}
 								</Text>
@@ -284,18 +284,18 @@ export default function ForgotPasswordScreen() {
 									placeholder={t('placeholders.email', 'seuemail@dominio.com')}
 									autoCapitalize="none"
 									keyboardType="email-address"
-									leftAdornment={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
-									containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+									leftIcon={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+									containerClassName="border-line2 bg-[#0C111E]"
 									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 								/>
 
 								<Button
-									label={t('forgotPassword.sendCode', 'Enviar codigo')}
+									label={t('forgotPassword.sendCode', 'Enviar código')}
 									variant="primary"
 									size="xl"
 									loading={loading}
 									disabled={loading}
-									className="mt-4 rounded-[14px]"
+									className="mt-4"
 									onPress={handleSendCode}
 								/>
 							</View>
@@ -308,12 +308,12 @@ export default function ForgotPasswordScreen() {
 								</View>
 
 								<Text variant="title" className="text-white font-extrabold">
-									{t('forgotPassword.codeStepTitle', 'Digite o codigo')}
+									{t('forgotPassword.codeStepTitle', 'Digite o código')}
 								</Text>
 								<Text variant="label" className="mt-1 text-fg2 leading-[20px]">
 									{t(
 										'forgotPassword.codeStepSubtitle',
-										'Enviamos um codigo de {{VERIFICATION_CODE_LENGTH}} digitos para',
+										'Enviamos um código de {{VERIFICATION_CODE_LENGTH}} dígitos para',
 										{ VERIFICATION_CODE_LENGTH },
 									)}
 								</Text>
@@ -323,34 +323,34 @@ export default function ForgotPasswordScreen() {
 
 								<Pressable className="mt-1 mb-4" onPress={handleSendCode}>
 									<Text variant="micro" className="text-fg3">
-										{t('forgotPassword.didNotReceive', 'Nao chegou?')} <Text className="text-ok font-bold">{t('forgotPassword.resendCode', 'Reenviar codigo')}</Text>
+										{t('forgotPassword.didNotReceive', 'Não chegou?')} <Text className="text-ok font-bold">{t('forgotPassword.resendCode', 'Reenviar código')}</Text>
 									</Text>
 								</Pressable>
 
 								<OtpBoxes value={code} />
 
 								<Input
-									label={t('forgotPassword.verificationCode', 'Codigo de verificacao')}
+									label={t('forgotPassword.verificationCode', 'Código de verificacao')}
 									value={code}
 									onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, VERIFICATION_CODE_LENGTH))}
 									placeholder={t(
 										'forgotPassword.verificationCodePlaceholder',
-										'Digite o codigo de {{VERIFICATION_CODE_LENGTH}} digitos',
+										'Digite o código de {{VERIFICATION_CODE_LENGTH}} dígitos',
 										{ VERIFICATION_CODE_LENGTH },
 									)}
 									keyboardType="number-pad"
 									maxLength={VERIFICATION_CODE_LENGTH}
-									containerClassName="mt-4 h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+									containerClassName="mt-4 border-line2 bg-[#0C111E]"
 									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 								/>
 
 								<Button
-									label={t('forgotPassword.verifyCode', 'Verificar codigo')}
+									label={t('forgotPassword.verifyCode', 'Verificar código')}
 									variant="primary"
 									size="xl"
 									loading={loading}
 									disabled={loading}
-									className="mt-2 rounded-[14px]"
+									className="mt-2"
 									onPress={handleVerifyCode}
 								/>
 								<Button
@@ -358,7 +358,7 @@ export default function ForgotPasswordScreen() {
 									variant="ghost"
 									size="xl"
 									disabled={loading}
-									className="mt-[10px] rounded-[14px]"
+									className="mt-[10px]"
 									onPress={() => setStep(1)}
 								/>
 							</View>
@@ -383,7 +383,7 @@ export default function ForgotPasswordScreen() {
 									onChangeText={setPassword}
 									placeholder={t('forgotPassword.newPasswordPlaceholder', 'Digite a nova senha')}
 									secureTextEntry
-									containerClassName="h-12 rounded-[14px] border-ok bg-[#0C111E]"
+									containerClassName="border-ok bg-[#0C111E]"
 									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 								/>
 
@@ -395,7 +395,7 @@ export default function ForgotPasswordScreen() {
 									onChangeText={setConfirmPassword}
 									placeholder={t('forgotPassword.confirmNewPassword', 'Confirme a nova senha')}
 									secureTextEntry
-									containerClassName="mt-3 h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+									containerClassName="mt-3 border-line2 bg-[#0C111E]"
 									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 								/>
 
@@ -405,7 +405,7 @@ export default function ForgotPasswordScreen() {
 									size="xl"
 									loading={loading}
 									disabled={loading}
-									className="mt-4 rounded-[14px]"
+									className="mt-4"
 									onPress={handleSavePassword}
 								/>
 							</View>

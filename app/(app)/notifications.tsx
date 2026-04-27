@@ -47,10 +47,10 @@ export default function NotificationsScreen() {
   const handleRequestAction = useCallback(async (requestId: string, action: 'accept' | 'reject') => {
     try {
       await processParticipationRequest(requestId, action);
-      Alert.alert(t('common.success', 'Sucesso'), action === 'accept' ? t('requests.accepted', 'Solicitacao aceita!') : t('requests.rejected', 'Solicitacao recusada.'));
+      Alert.alert(t('common.success', 'Sucesso'), action === 'accept' ? t('requests.accepted', 'Solicitação aceita!') : t('requests.rejected', 'Solicitação recusada.'));
       await setAllRead();
     } catch {
-      Alert.alert(t('common.error', 'Erro'), t('requests.processError', 'Nao foi possivel processar a solicitacao.'));
+      Alert.alert(t('common.error', 'Erro'), t('requests.processError', 'Não foi possível processar a solicitação.'));
     }
   }, [processParticipationRequest, setAllRead, t]);
 
@@ -79,10 +79,10 @@ export default function NotificationsScreen() {
         comment: ratingComment.trim() || null,
       });
       setRatingModalVisible(false);
-      Alert.alert(t('common.success', 'Sucesso'), t('rating.sent', 'Avaliacao enviada!'));
+      Alert.alert(t('common.success', 'Sucesso'), t('rating.sent', 'Avaliação enviada!'));
       await setAllRead();
     } catch {
-      Alert.alert(t('common.error', 'Erro'), t('rating.sendError', 'Nao foi possivel enviar a avaliacao.'));
+      Alert.alert(t('common.error', 'Erro'), t('rating.sendError', 'Não foi possível enviar a avaliação.'));
     }
   }, [ratingData, ratingScore, ratingComment, submitMatchRating, setAllRead, t]);
 
@@ -129,11 +129,11 @@ bounces
             <BaseCard className="mt-1">
               <View className="flex-row items-center gap-2 mb-3">
                 <CircleDot size={16} color="#D4A13A" />
-                <Text variant="label" className="font-semibold text-[#111827] dark:text-white">{t('recentActions.title', 'Acoes recentes')}</Text>
+                <Text variant="label" className="font-semibold text-[#111827] dark:text-white">{t('recentActions.title', 'Ações recentes')}</Text>
               </View>
 
               {recentActions.length === 0 ? (
-                <Text variant="caption" className="text-[#4B5563] dark:text-fg3">{t('recentActions.empty', 'Sem acoes recentes.')}</Text>
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3">{t('recentActions.empty', 'Sem ações recentes.')}</Text>
               ) : (
                 <View className="gap-2">
                   {recentActions.map((action) => (
@@ -222,7 +222,7 @@ bounces
             <TextInput
               value={ratingComment}
               onChangeText={setRatingComment}
-              placeholder={t('rating.commentPlaceholder', 'Comentario opcional')}
+              placeholder={t('rating.commentPlaceholder', 'Comentário opcional')}
               placeholderTextColor={matchTheme.colors.fgMuted}
               className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2"
               style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB, color: matchTheme.colors.fgPrimary }}

@@ -178,15 +178,15 @@ export const ptPTMatches = {
     km: '{{distance}} km',
     priceRange: 'Intervalo de Preço',
     date: 'Data',
-    time: 'Horario',
+    time: 'Horário',
     shift: 'Turno',
     selectDate: 'Selecione a data',
-    selectTime: 'Selecione o horario',
+    selectTime: 'Selecione o horário',
     allShifts: 'Todos os turnos',
-    shiftMorning: 'Manha',
+    shiftMorning: 'Manhã',
     shiftAfternoon: 'Tarde',
     shiftNight: 'Noite',
-    maxPrice: 'Preco maximo',
+    maxPrice: 'Preço máximo',
     clear: 'Limpar',
     weekdaySun: 'D',
     weekdayMon: 'S',
@@ -229,7 +229,7 @@ export const ptPTMatches = {
   },
   empty: {
     noMatchesTitle: 'Nenhuma partida encontrada',
-    noMatchesDescription: 'Ninguem marcou jogo com os filtros atuais. Que tal ser o primeiro?'
+    noMatchesDescription: 'Ninguém marcou jogo com os filtros atuais. Que tal ser o primeiro?'
   },
   cta: {
     youAreHost: 'Você é o host desta partida',

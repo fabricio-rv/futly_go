@@ -16,7 +16,7 @@ export const ptBRSupport = {
   validation: {
     required: 'Campo obrigatório',
     fillAll: 'Preencha o assunto e a mensagem',
-    requiredTitle: 'Campo obrigatorio',
+    requiredTitle: 'Campo obrigatório',
     requiredMessage: 'Preencha o assunto e a mensagem'
   },
   success: {
@@ -36,8 +36,8 @@ export const ptBRSupport = {
     subject: 'Assunto',
     subjectPlaceholder: 'Selecione um assunto',
     messageLabel: 'Sua mensagem',
-    messagePlaceholder: 'Descreva seu problema ou sugestao...',
-    replyHint: 'Responderemos o mais breve possivel. Voce recebera a resposta por e-mail.'
+    messagePlaceholder: 'Descreva seu problema ou sugestão...',
+    replyHint: 'Responderemos o mais breve possível. Você receberá a resposta por e-mail.'
   },
   common: {
     error: 'Erro',
@@ -48,7 +48,7 @@ export const ptBRSupport = {
     send: 'Enviar mensagem'
   },
   history: {
-    title: 'Historico de mensagens',
-    empty: 'Voce ainda nao enviou nenhuma mensagem de suporte.'
+    title: 'Histórico de mensagens',
+    empty: 'Você ainda não enviou nenhuma mensagem de suporte.'
   }
 };

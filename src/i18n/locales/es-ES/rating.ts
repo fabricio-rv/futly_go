@@ -6,7 +6,7 @@
   sections: {
     about: 'SOBRE EL ORGANIZADOR',
     comment: 'COMENTARIO (OPCIONAL)',
-    host: 'ANFITRIÃ“N'
+    host: 'ANFITRIÓN'
   },
   ratings: {
     excellent: 'EXCELENTE',
@@ -15,12 +15,12 @@
     regular: 'REGULAR',
     poor: 'A MEJORAR'
   },
-  anonymous: 'ValoraciÃ³n anÃ³nima',
+  anonymous: 'Valoración anónima',
   anonymousDesc: 'Tu nombre no aparece',
   next: 'Siguiente: Valora 4 Atletas',
   continue: 'Continuar a Atletas',
   pending: 'Pendiente',
-  success: 'Â¡ValoraciÃ³n enviada con Ã©xito!',
+  success: '¡Valoración enviada con éxito!',
   host: {
     title: 'Valora al Organizador',
     xp: '+25 XP',
@@ -41,4 +41,3 @@
     savedSubtitle: 'Pedro recibió {{hostStars}} estrellas'
   }
 };
-

@@ -494,61 +494,6 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           </Card>
 
           <View className="mt-[14px]">
-            <SectionTitle title={t('details.availablePositions', 'Available Positions')} />
-            <Card className="p-4 gap-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
-              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                {t('details.toggleSlots', 'Toggle slots')}
-              </Text>
-              {details.slots.map((slot) => {
-                const blockedCount = !slot.open ? 1 : 0;
-                const openCount = !slot.occupied && slot.open ? 1 : 0;
-                const confirmedCount = slot.occupied ? 1 : 0;
-                const isMyPosition = details.myParticipant && (details.myParticipant as any).position_key === slot.key;
-
-                return (
-                  <View
-                    key={`${slot.key}-${slot.index}`}
-                    className="p-3 rounded-[12px] border"
-                    style={{ backgroundColor: matchTheme.colors.bgBase, borderColor: matchTheme.colors.line }}
-                  >
-                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      {details.isHost && isMyPosition ? `${t('details.youHost', 'You (Host)')} - ${slot.label}` : slot.label}
-                    </Text>
-                    <View className="flex-row gap-4 mt-2">
-                      <View>
-                        <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
-                          {t('details.confirmedPlayers', 'Confirmed')}
-                        </Text>
-                        <Text variant="label" style={{ color: matchTheme.colors.ok }}>
-                          {confirmedCount}
-                        </Text>
-                      </View>
-                      <View>
-                        <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
-                          {t('details.openSpots')}
-                        </Text>
-                        <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                          {openCount}
-                        </Text>
-                      </View>
-                      {blockedCount > 0 && (
-                        <View>
-                          <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
-                            {t('details.blockedSlots')}
-                          </Text>
-                          <Text variant="label" style={{ color: matchTheme.colors.fgMuted }}>
-                            {blockedCount}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-            </Card>
-          </View>
-
-          <View className="mt-[14px]">
             <SectionTitle title={t('details.confirmedPlayers', 'Atletas Confirmados')} badge={String(details.participants.length)} />
             <Card className="p-0 overflow-hidden" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
               {details.participants.length === 0 ? (
@@ -564,7 +509,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           </View>
 
           <View className="mt-[14px]">
-            <SectionTitle title={t('details.location', 'Localizacao')} />
+            <SectionTitle title={t('details.location', 'Localização')} />
             <MapPreviewCard
               addressLine={match.address ?? match.venue_name ?? t('details.addressNotInformed')}
               districtLine={[match.district, match.city, match.state].filter(Boolean).join(' - ') || t('details.locationNotInformed', 'Location not provided')}
@@ -634,42 +579,23 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
           <View className="mt-[14px]">
             <SectionTitle title={t('details.matchInfo', 'Informações da Partida')} />
-            <Card className="p-4 gap-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
-              <View className="gap-3">
-                <View className="flex-row gap-2">
-                  <View className="flex-1">
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('details.date')}
+            <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              <View className="flex-row flex-wrap">
+                {[
+                  { label: t('details.date', 'Data'), value: match.match_date },
+                  { label: t('details.time', 'Horário'), value: match.match_time },
+                  { label: t('details.shift', 'Turno'), value: match.turno?.charAt(0).toUpperCase() + match.turno?.slice(1) },
+                  { label: t('details.contactPhone', 'Telefone'), value: match.contact_phone ?? t('details.notInformed', 'Não informado') },
+                ].map((item, i) => (
+                  <View key={i} style={{ width: '25%', paddingBottom: 4, paddingRight: 4 }}>
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted, marginBottom: 2 }}>
+                      {item.label}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      {match.match_date}
+                      {item.value}
                     </Text>
                   </View>
-                  <View className="flex-1">
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('details.time')}
-                    </Text>
-                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      {match.match_time}
-                    </Text>
-                  </View>
-                </View>
-                <View>
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    {t('details.shift', 'Turno')}
-                  </Text>
-                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                    {match.turno?.charAt(0).toUpperCase() + match.turno?.slice(1)}
-                  </Text>
-                </View>
-                <View>
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    {t('details.contactPhone')}
-                  </Text>
-                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                    {match.contact_phone ?? t('details.notInformed')}
-                  </Text>
-                </View>
+                ))}
               </View>
             </Card>
           </View>
@@ -743,60 +669,25 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
           <View className="mt-[14px]">
             <SectionTitle title={t('details.matchSettings')} />
-            <Card className="p-4 gap-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
-              <View className="gap-3">
-                <View className="flex-row gap-2">
-                  <View className="flex-1">
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('details.pricePerPerson', 'Price')}
+            <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              <View className="flex-row flex-wrap" style={{ marginBottom: -12 }}>
+                {[
+                  { label: t('details.pricePerPerson', 'Preço'), value: `R$ ${match.price_per_person}` },
+                  { label: t('details.duration', 'Duração (min)'), value: `${match.duration_minutes} min` },
+                  { label: t('details.ageRestrictions', 'Restrições de idade'), value: `${match.min_age} - ${match.max_age}` },
+                  { label: t('details.hasBreak', 'Tem intervalo'), value: match.rest_break ? t('common.yes', 'Sim') : t('common.no', 'Não') },
+                  { label: t('details.refereeIncluded', 'Árbitro incluído'), value: match.referee_included ? t('common.yes', 'Sim') : t('common.no', 'Não') },
+                  { label: t('details.acceptExternalReserves', 'Reservas externas'), value: match.allow_external_reserves ? t('common.yes', 'Sim') : t('common.no', 'Não') },
+                ].map((item, i) => (
+                  <View key={i} style={{ width: '33.33%', paddingBottom: 12, paddingRight: 4 }}>
+                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted, marginBottom: 2 }}>
+                      {item.label}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      R$ {match.price_per_person}
+                      {item.value}
                     </Text>
                   </View>
-                  <View className="flex-1">
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('details.duration')}
-                    </Text>
-                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      {match.duration_minutes} min
-                    </Text>
-                  </View>
-                </View>
-                <View>
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    {t('details.ageRestrictions')}
-                  </Text>
-                  <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                    {match.min_age} - {match.max_age}
-                  </Text>
-                </View>
-                <View className="flex-row justify-between gap-2">
-                  <View className="flex-1">
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('details.hasBreak')}
-                    </Text>
-                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      {match.rest_break ? t('common.yes', 'Yes') : t('common.no', 'No')}
-                    </Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('details.refereeIncluded')}
-                    </Text>
-                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      {match.referee_included ? t('common.yes') : t('common.no')}
-                    </Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('details.acceptExternalReserves')}
-                    </Text>
-                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      {match.allow_external_reserves ? t('common.yes') : t('common.no')}
-                    </Text>
-                  </View>
-                </View>
+                ))}
               </View>
             </Card>
           </View>
@@ -819,19 +710,19 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               <Button label={t('players.leaveMatch', 'Desmarcar Presença')} variant="destructive" loading={submitting} disabled={submitting} onPress={handleLeave} />
             ) : details.myRequest?.status === 'pending' ? (
               <>
-                <Button label={t('cta.pendingApproval', 'Solicitacao pendente de aprovacao')} disabled onPress={() => undefined} />
-                <Button label={t('cta.cancelRequest', 'Cancelar solicitacao')} variant="destructive" loading={submitting} disabled={submitting} onPress={handleLeave} />
+                <Button label={t('cta.pendingApproval', 'Solicitação pendente de aprovacao')} disabled onPress={() => undefined} />
+                <Button label={t('cta.cancelRequest', 'Cancelar solicitação')} variant="destructive" loading={submitting} disabled={submitting} onPress={handleLeave} />
               </>
             ) : details.myRequest?.status === 'rejected' ? (
               <Button
-                label={availableSlots.length === 0 ? t('cta.noSlots', 'Sem vagas disponiveis') : t('cta.requestAgain', 'Solicitar novamente')}
+                label={availableSlots.length === 0 ? t('cta.noSlots', 'Sem vagas disponíveis') : t('cta.requestAgain', 'Solicitar novamente')}
                 loading={submitting}
                 disabled={submitting || !selectedSlot || availableSlots.length === 0}
                 onPress={handleJoin}
               />
             ) : (
               <Button
-                label={availableSlots.length === 0 ? t('cta.noSlots', 'Sem vagas disponiveis') : t('cta.requestParticipation', 'Solicitar Participacao')}
+                label={availableSlots.length === 0 ? t('cta.noSlots', 'Sem vagas disponíveis') : t('cta.requestParticipation', 'Solicitar Participacao')}
                 loading={submitting}
                 disabled={submitting || !selectedSlot || availableSlots.length === 0}
                 onPress={handleJoin}

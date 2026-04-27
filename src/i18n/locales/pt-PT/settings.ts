@@ -40,7 +40,7 @@ export const ptPTSettings = {
     title: 'Zona Perigosa',
     logoutMessage: 'Você precisará entrar de novo',
     deleteMessage: 'Permanente - Todos dados apagados',
-    confirmLogout: 'Tem a certeza que deseja sair?',
+    confirmLogout: 'Tem a certeza de que deseja sair?',
     confirmDelete: 'Tem a certeza? Todos os seus dados serão apagados para sempre.',
     yes: 'Sim, confirmar',
   },

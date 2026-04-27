@@ -63,7 +63,7 @@ export default function SupportChatScreen() {
 
   async function handleSendMessage() {
     if (!subject || !message.trim()) {
-      Alert.alert(t('validation.requiredTitle', 'Campo obrigatorio'), t('validation.requiredMessage', 'Preencha o assunto e a mensagem'));
+      Alert.alert(t('validation.requiredTitle', 'Campo obrigatório'), t('validation.requiredMessage', 'Preencha o assunto e a mensagem'));
       return;
     }
 
@@ -111,14 +111,14 @@ export default function SupportChatScreen() {
               label={t('send.messageLabel', 'Sua mensagem')}
               value={message}
               onChangeText={setMessage}
-              placeholder={t('send.messagePlaceholder', 'Descreva seu problema ou sugestao...')}
+              placeholder={t('send.messagePlaceholder', 'Descreva seu problema ou sugestão...')}
               multiline
               numberOfLines={6}
             />
           </View>
 
           <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mb-4">
-            {t('send.replyHint', 'Responderemos o mais breve possivel. Voce recebera a resposta por e-mail.')}
+            {t('send.replyHint', 'Responderemos o mais breve possível. Você recebera a resposta por e-mail.')}
           </Text>
 
           <Button
@@ -132,7 +132,7 @@ export default function SupportChatScreen() {
         {!loadingHistory && messages.length > 0 && (
           <View className="mx-[18px] mb-4">
             <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-              {t('history.title', 'Historico de mensagens')}
+              {t('history.title', 'Histórico de mensagens')}
             </Text>
 
             <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] overflow-hidden">
@@ -182,7 +182,7 @@ export default function SupportChatScreen() {
         {!loadingHistory && messages.length === 0 && (
           <View className="mx-[18px] rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px]">
             <Text variant="body" className="text-center text-[#4B5563] dark:text-fg3">
-              {t('history.empty', 'Voce ainda nao enviou nenhuma mensagem de suporte.')}
+              {t('history.empty', 'Você ainda não enviou nenhuma mensagem de suporte.')}
             </Text>
           </View>
         )}

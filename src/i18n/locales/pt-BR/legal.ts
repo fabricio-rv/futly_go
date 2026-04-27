@@ -18,28 +18,28 @@ export const ptBRLegal = {
   },
   terms: {
     serviceText: 'Futly Hub conecta atletas para organizar partidas.',
-    responsibilityText: 'Voce e responsavel por sua conta e suas acoes no app.',
-    conductText: 'Respeite outros usuarios e evite comportamento ofensivo.',
-    cancellationText: 'Voce pode cancelar sua conta a qualquer momento nas configuracoes.',
-    liabilityText: 'A participacao nas partidas e por conta e risco do usuario.',
+    responsibilityText: 'Você e responsavel por sua conta e suas ações no app.',
+    conductText: 'Respeite outros usuários e evite comportamento ofensivo.',
+    cancellationText: 'Você pode cancelar sua conta a qualquer momento nas configurações.',
+    liabilityText: 'A participação nas partidas e por conta e risco do usuário.',
     modificationsText: 'Podemos atualizar estes termos periodicamente.',
-    contactText: 'Em caso de duvidas, contate o suporte.'
+    contactText: 'Em caso de dúvidas, contate o suporte.'
   },
   privacy: {
-    dataCollected: '1. Informacoes que Coletamos',
+    dataCollected: '1. Informações que Coletamos',
     dataCollectedText: 'Coletamos dados de cadastro e uso para operar o app.',
-    usage: '2. Como Usamos Suas Informacoes',
-    usageText: 'Usamos os dados para melhorar o servico e notificacoes.',
-    location: '3. Localizacao e Privacidade',
-    locationText: 'A localizacao e usada para encontrar partidas proximas.',
-    security: '4. Seguranca de Dados',
-    securityText: 'Aplicamos medidas para proteger suas informacoes.',
+    usage: '2. Como Usamos Suas Informações',
+    usageText: 'Usamos os dados para melhorar o serviço e notificações.',
+    location: '3. Localização e Privacidade',
+    locationText: 'A localização e usada para encontrar partidas próximas.',
+    security: '4. Segurança de Dados',
+    securityText: 'Aplicamos medidas para proteger suas informações.',
     sharing: '5. Compartilhamento de Dados',
-    sharingText: 'Nao vendemos dados pessoais para terceiros.',
+    sharingText: 'Não vendemos dados pessoais para terceiros.',
     rights: '6. Seus Direitos',
-    rightsText: 'Voce pode solicitar acesso, correcao ou exclusao de dados.',
+    rightsText: 'Você pode solicitar acesso, correção ou exclusão de dados.',
     contact: '7. Contato',
     contactText: 'Dúvidas sobre privacidade: fale com o suporte.'
   },
-  subtitle: 'POLITICA E TERMOS'
+  subtitle: 'POLÍTICA E TERMOS'
 };

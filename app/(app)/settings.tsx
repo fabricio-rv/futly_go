@@ -24,7 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthFeedbackModal } from '@/src/components/features/auth';
 import { MatchBottomNav } from '@/src/components/features/matches';
 import { HubTopNav, SettingsGroup, type SettingsRow } from '@/src/components/features/store';
-import { ToggleSwitch, Text } from '@/src/components/ui';
+import { ToggleSwitch, Text, TouchableScale } from '@/src/components/ui';
 import { signOut, deleteAccount } from '@/src/features/auth/service';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { useSettings } from '@/src/features/settings/hooks/useSettings';
@@ -123,7 +123,7 @@ export default function SettingsScreen() {
 			id: 'security',
 			icon: <Lock size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: t('settings.security', 'Senha e seguranca'),
+			title: t('settings.security', 'Senha e segurança'),
 			subtitle: t('settings.securitySubtitle', 'Trocar senha com OTP'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/security'),
@@ -143,7 +143,7 @@ export default function SettingsScreen() {
 			icon: <Store size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
 			title: t('settings.plans', 'Planos'),
-			subtitle: t('settings.plansSubtitle', 'Ver pacotes e beneficios dos planos'),
+			subtitle: t('settings.plansSubtitle', 'Ver pacotes e benefícios dos planos'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/store'),
 		},
@@ -167,7 +167,7 @@ export default function SettingsScreen() {
 			id: 'location',
 			icon: <MapPin size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: t('settings.location', 'Localizacao'),
+			title: t('settings.location', 'Localização'),
 			subtitle: t('settings.locationSubtitle', 'Encontrar partidas perto'),
 			rightNode: (
 				<ToggleSwitch value={settings?.locationEnabled ?? true} onValueChange={updateLocation} />
@@ -210,7 +210,7 @@ export default function SettingsScreen() {
 			icon: <MessageCircle size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
 			title: t('settings.support', 'Falar com suporte'),
-			subtitle: t('settings.supportSubtitle', 'Resposta em ate 4h'),
+			subtitle: t('settings.supportSubtitle', 'Resposta em at? 4h'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/support-chat'),
 		},
@@ -231,7 +231,7 @@ export default function SettingsScreen() {
 			icon: <LogOut size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'bad',
 			title: t('settings.logout', 'Sair da conta'),
-			subtitle: t('settings.logoutSubtitle', 'Voce precisara entrar de novo'),
+			subtitle: t('settings.logoutSubtitle', 'Você precisara entrar de novo'),
 			danger: true,
 			onPress: () => setShowLogoutModal(true),
 		},
@@ -280,9 +280,13 @@ export default function SettingsScreen() {
 						</Text>
 					</View>
 
-					<Pressable className="h-9 w-9 rounded-[12px] border items-center justify-center" style={{ borderColor: theme === 'light' ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.10)', backgroundColor: theme === 'light' ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.10)' }}>
+					<TouchableScale
+						onPress={() => router.push('/(app)/edit-profile')}
+						className="h-9 w-9 rounded-[12px] border items-center justify-center"
+						style={{ borderColor: theme === 'light' ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.10)', backgroundColor: theme === 'light' ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.10)' }}
+					>
 						<Text variant="body" className="text-[#1F2937] dark:text-white">&gt;</Text>
-					</Pressable>
+					</TouchableScale>
 				</LinearGradient>
 
 				<SettingsGroup title={t('settings.accountGroup', 'Conta')} rows={accountRows} />
@@ -316,7 +320,7 @@ export default function SettingsScreen() {
 				visible={showDeleteModal}
 				tone="error"
 				title={t('settings.deleteModalTitle', 'Excluir conta permanentemente?')}
-				message={t('settings.deleteModalMessage', 'Tem certeza? Todos os seus dados, mensagens e historico serao apagados para sempre. Esta acao nao pode ser desfeita.')}
+				message={t('settings.deleteModalMessage', 'Tem certeza? Todos os seus dados, mensagens e histórico serao apagados para sempre. Esta ação não pode ser desfeita.')}
 				primaryLabel={deleting ? t('settings.deleting', 'Deletando...') : t('settings.confirmDelete', 'Sim, excluir tudo')}
 				onPrimaryPress={handleConfirmDeleteAccount}
 				secondaryLabel={t('actions.cancel', 'Cancelar')}
@@ -354,7 +358,7 @@ export default function SettingsScreen() {
 						{LANGUAGE_OPTIONS.map((languageOption, index) => {
 							const isActive = selectedLanguage === languageOption.code;
 							return (
-								<Pressable
+								<TouchableScale
 									key={languageOption.code}
 									onPress={() => handleSelectLanguage(languageOption.code)}
 									style={{
@@ -385,7 +389,7 @@ export default function SettingsScreen() {
 									>
 										{languageOption.label}
 									</Text>
-								</Pressable>
+								</TouchableScale>
 							);
 						})}
 					</Pressable>

@@ -30,22 +30,22 @@ export const ptPTNotifications = {
     error: 'Erro'
   },
   requests: {
-    accepted: 'Solicitacao aceita!',
-    rejected: 'Solicitacao recusada.',
-    processError: 'Nao foi possivel processar a solicitacao.'
+    accepted: 'Solicitação aceita!',
+    rejected: 'Solicitação recusada.',
+    processError: 'Não foi possível processar a solicitação.'
   },
   rating: {
-    sent: 'Avaliacao enviada!',
-    sendError: 'Nao foi possivel enviar a avaliacao.',
+    sent: 'Avaliação enviada!',
+    sendError: 'Não foi possível enviar a avaliação.',
     modalTitle: 'Avaliar',
-    commentPlaceholder: 'Comentario opcional'
+    commentPlaceholder: 'Comentário opcional'
   },
   subtitle: 'ATIVIDADE',
   account: {
-    title: 'Notificacoes da conta'
+    title: 'Notificações da conta'
   },
-  loading: 'A carregar notificacoes...',
-  empty: 'Nenhuma notificacao por enquanto.',
+  loading: 'A carregar notificações...',
+  empty: 'Nenhuma notificação por enquanto.',
   actions: {
     accept: 'Aceitar',
     reject: 'Recusar',

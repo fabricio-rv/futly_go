@@ -156,9 +156,9 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             </View>
             <View className={isCompact ? 'w-full' : 'flex-1'}>
               <FieldButton
-                label={t('filters.time', 'Horario')}
+                label={t('filters.time', 'Horário')}
                 value={filters.time ?? ''}
-                placeholder={t('filters.selectTime', 'Selecione o horario')}
+                placeholder={t('filters.selectTime', 'Selecione o horário')}
                 onPress={() => {
                   const time = parseIsoTime(filters.time);
                   setWebHour(time?.hour ?? 19);
@@ -198,7 +198,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             </View>
             <View className={isCompact ? 'w-full gap-2' : 'flex-1 gap-2'}>
               <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
-                {t('filters.maxPrice', 'Preco maximo')}
+                {t('filters.maxPrice', 'Preço máximo')}
               </Text>
               <View
                 className="h-12 rounded-[12px] border px-3 flex-row items-center gap-2"
@@ -312,7 +312,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
           <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
-              {t('filters.selectTime', 'Selecione o horario')}
+              {t('filters.selectTime', 'Selecione o horário')}
             </Text>
             <View className="flex-row items-center justify-center gap-4">
               <Button label="-" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 23) % 24)} />

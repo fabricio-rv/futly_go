@@ -101,7 +101,7 @@ export type MatchDetails = {
 
 async function getCurrentUserId() {
   const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error('Faca login novamente para continuar.');
+  if (error || !data.user) throw new Error('Faça login novamente para continuar.');
   return data.user.id;
 }
 
@@ -128,7 +128,8 @@ function toInitials(name: string | null | undefined) {
 }
 
 function normalizeSlots(modality: MatchModality, formationJson: unknown): MatchSlot[] {
-  const defaults = MATCH_POSITIONS[modality].map((slot, index) => ({
+  const modalitySlots = MATCH_POSITIONS[modality];
+  const defaults = modalitySlots.map((slot, index) => ({
     index,
     key: slot.key,
     label: slot.label,
@@ -145,27 +146,46 @@ function normalizeSlots(modality: MatchModality, formationJson: unknown): MatchS
   const rawSlots = (formationJson as { slots?: unknown[] }).slots;
   if (!Array.isArray(rawSlots)) return defaults;
 
-  const normalized: MatchSlot[] = [];
+  const parsedRawSlots: Array<{ index: number; key: string; open: boolean }> = [];
 
   for (const item of rawSlots) {
     if (!item || typeof item !== 'object') continue;
     const row = item as { index?: unknown; key?: unknown; label?: unknown; open?: unknown };
 
-    if (typeof row.index !== 'number' || typeof row.key !== 'string' || typeof row.label !== 'string') continue;
+    if (typeof row.index !== 'number' || typeof row.key !== 'string') continue;
 
-    normalized.push({
+    parsedRawSlots.push({
       index: row.index,
-      key: row.key,
-      label: row.label,
+      key: row.key.trim().toUpperCase(),
       open: row.open !== false,
-      occupied: false,
-      occupiedByUserId: null,
-      occupiedByName: null,
     });
   }
 
-  if (normalized.length === 0) return defaults;
-  return normalized.sort((a, b) => a.index - b.index);
+  if (parsedRawSlots.length === 0) return defaults;
+
+  const validKeys = new Set(modalitySlots.map((slot) => slot.key.toUpperCase()));
+  const keyMatches = parsedRawSlots.filter((slot) => validKeys.has(slot.key)).length;
+  const canUseIndexMapping = keyMatches === 0 && parsedRawSlots.length === modalitySlots.length;
+
+  const rawByKey = new Map(parsedRawSlots.map((slot) => [slot.key, slot]));
+  const rawByIndex = new Map(parsedRawSlots.map((slot) => [slot.index, slot]));
+
+  return modalitySlots.map((slot, index) => {
+    const slotKey = slot.key.toUpperCase();
+    const rawByMatchedKey = rawByKey.get(slotKey);
+    const rawByMatchedIndex = canUseIndexMapping ? rawByIndex.get(index) : undefined;
+    const rawMatch = rawByMatchedKey ?? rawByMatchedIndex;
+
+    return {
+      index,
+      key: slot.key,
+      label: slot.label,
+      open: rawMatch ? rawMatch.open : true,
+      occupied: false,
+      occupiedByUserId: null,
+      occupiedByName: null,
+    };
+  });
 }
 
 function buildFormationJson(modality: MatchModality, selectedIndexes: number[]) {
@@ -192,7 +212,7 @@ async function getOccupiedSlotsByMatchIds(matchIds: string[]) {
     .in('match_id', matchIds)
     .eq('status', 'confirmado');
 
-  if (error) throw new Error('Nao foi possivel carregar os participantes.');
+  if (error) throw new Error('Não foi possível carregar os participantes.');
 
   const counts = new Map<string, number>();
 
@@ -217,7 +237,7 @@ function getFilledSlotsCount(match: MatchRow, confirmedParticipants: number) {
 
 async function getMatchById(matchId: string) {
   const { data, error } = await supabase.from('matches').select('*').eq('id', matchId).single();
-  if (error || !data) throw new Error('Partida nao encontrada.');
+  if (error || !data) throw new Error('Partida não encontrada.');
   return data;
 }
 
@@ -228,7 +248,7 @@ async function getParticipantsWithProfiles(matchId: string) {
     .eq('match_id', matchId)
     .eq('status', 'confirmado');
 
-  if (error) throw new Error('Nao foi possivel carregar participantes.');
+  if (error) throw new Error('Não foi possível carregar participantes.');
 
   const participants = (data ?? []) as ParticipantRow[];
   const userIds = participants.map((item) => item.user_id);
@@ -240,7 +260,7 @@ async function getParticipantsWithProfiles(matchId: string) {
       .select('*')
       .in('id', userIds);
 
-    if (profileError) throw new Error('Nao foi possivel carregar perfis dos participantes.');
+    if (profileError) throw new Error('Não foi possível carregar perfis dos participantes.');
     profiles = (profileRows ?? []) as ProfileRow[];
   }
 
@@ -261,7 +281,7 @@ async function getPendingRequests(matchId: string) {
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw new Error('Nao foi possivel carregar solicitacoes desta partida.');
+    throw new Error('Não foi possível carregar solicitacoes desta partida.');
   }
 
   return (data ?? []) as ParticipationRequestRow[];
@@ -308,10 +328,10 @@ export async function createMatch(input: CreateMatchInput) {
 
   if (error || !match) {
     if (error?.code === '23505') {
-      throw new Error('Voce ja criou uma partida igual para esse mesmo horario.');
+      throw new Error('Você já criou uma partida igual para esse mesmo horário.');
     }
 
-    throw new Error('Nao foi possivel criar a partida.');
+    throw new Error('Não foi possível criar a partida.');
   }
 
   const hostSlot = MATCH_POSITIONS[input.modality][0];
@@ -326,7 +346,7 @@ export async function createMatch(input: CreateMatchInput) {
 
   if (participantError) {
     await supabase.from('matches').delete().eq('id', match.id);
-    throw new Error('Nao foi possivel registrar o host da partida. Tente novamente.');
+    throw new Error('Não foi possível registrar o host da partida. Tente novamente.');
   }
 
   // Enviar email de confirmação ao host
@@ -362,7 +382,7 @@ export async function fetchAvailableMatches(filters: AvailableMatchesFilters = {
   const { data, error } = await query;
 
   if (error) {
-    throw new Error('Nao foi possivel listar partidas disponiveis.');
+    throw new Error('Não foi possível listar partidas disponíveis.');
   }
 
   const list = (data ?? []).sort(sortByScheduleAsc);
@@ -410,7 +430,7 @@ export async function getMatchDetails(matchId: string): Promise<MatchDetails> {
   let requestProfiles: ProfileRow[] = [];
   if (requestUserIds.length > 0) {
     const { data, error } = await supabase.from('profiles').select('*').in('id', requestUserIds);
-    if (error) throw new Error('Nao foi possivel carregar perfis das solicitacoes.');
+    if (error) throw new Error('Não foi possível carregar perfis das solicitacoes.');
     requestProfiles = (data ?? []) as ProfileRow[];
   }
 
@@ -482,15 +502,15 @@ export async function joinMatch(params: { matchId: string; positionKey: string; 
   const match = await getMatchById(params.matchId);
 
   if (match.created_by === userId) {
-    throw new Error('O host nao pode solicitar a propria partida.');
+    throw new Error('O host não pode solicitar a propria partida.');
   }
 
   if (!match.allow_external_reserves) {
-    throw new Error('Esta partida nao aceita reservas externas.');
+    throw new Error('Esta partida não aceita reservas externas.');
   }
 
   if (match.status !== 'publicada') {
-    throw new Error('Esta partida nao esta com inscricoes abertas.');
+    throw new Error('Esta partida não esta com inscricoes abertas.');
   }
 
   const { data: existingParticipant } = await supabase
@@ -502,7 +522,7 @@ export async function joinMatch(params: { matchId: string; positionKey: string; 
     .maybeSingle();
 
   if (existingParticipant) {
-    throw new Error('Voce ja esta confirmado nesta partida.');
+    throw new Error('Você já esta confirmado nesta partida.');
   }
 
   const { error } = await supabase
@@ -523,7 +543,7 @@ export async function joinMatch(params: { matchId: string; positionKey: string; 
     );
 
   if (error) {
-    throw new Error('Nao foi possivel enviar sua solicitacao para a partida.');
+    throw new Error('Não foi possível enviar sua solicitação para a partida.');
   }
 }
 
@@ -535,7 +555,7 @@ export async function processParticipationRequest(requestId: string, action: 'ac
   });
 
   if (error) {
-    throw new Error(error.message || 'Nao foi possivel processar a solicitacao.');
+    throw new Error(error.message || 'Não foi possível processar a solicitação.');
   }
 }
 
@@ -557,7 +577,7 @@ export async function fetchHostPendingRequests(): Promise<HostPendingRequest[]> 
     .select('id,title')
     .eq('created_by', userId);
 
-  if (createdError) throw new Error('Nao foi possivel carregar as partidas criadas.');
+  if (createdError) throw new Error('Não foi possível carregar as partidas criadas.');
 
   const createdMatchIds = (createdMatches ?? []).map((m) => m.id);
   if (createdMatchIds.length === 0) {
@@ -570,7 +590,7 @@ export async function fetchHostPendingRequests(): Promise<HostPendingRequest[]> 
     .in('match_id', createdMatchIds)
     .eq('status', 'pending');
 
-  if (requestError) throw new Error('Nao foi possivel carregar as solicitacoes.');
+  if (requestError) throw new Error('Não foi possível carregar as solicitacoes.');
 
   if (!requestRows || requestRows.length === 0) {
     return [];
@@ -584,7 +604,7 @@ export async function fetchHostPendingRequests(): Promise<HostPendingRequest[]> 
       .select('id,full_name')
       .in('id', userIds);
 
-    if (profileError) throw new Error('Nao foi possivel carregar perfis dos solicitantes.');
+    if (profileError) throw new Error('Não foi possível carregar perfis dos solicitantes.');
     profiles = (profileData ?? []) as ProfileRow[];
   }
 
@@ -607,7 +627,7 @@ export async function leaveMatch(matchId: string) {
   const match = await getMatchById(matchId);
 
   if (match.created_by === userId) {
-    throw new Error('O host nao pode desmarcar a propria partida.');
+    throw new Error('O host não pode desmarcar a propria partida.');
   }
 
   const { data: existingParticipant } = await supabase
@@ -627,7 +647,7 @@ export async function leaveMatch(matchId: string) {
       .eq('is_host', false);
 
     if (error) {
-      throw new Error('Nao foi possivel desmarcar sua presenca.');
+      throw new Error('Não foi possível desmarcar sua presença.');
     }
 
     return;
@@ -641,7 +661,7 @@ export async function leaveMatch(matchId: string) {
     .eq('status', 'pending');
 
   if (error) {
-    throw new Error('Nao foi possivel cancelar sua solicitacao.');
+    throw new Error('Não foi possível cancelar sua solicitação.');
   }
 }
 
@@ -666,7 +686,7 @@ export async function submitMatchRating(params: {
   });
 
   if (error) {
-    throw new Error(error.message || 'Nao foi possivel salvar a avaliacao.');
+    throw new Error(error.message || 'Não foi possível salvar a avaliação.');
   }
 }
 
@@ -685,10 +705,10 @@ export async function getUserAgenda(): Promise<AgendaResult> {
     supabase.from('match_rating_tasks').select('*').order('match_date', { ascending: false }),
   ]);
 
-  if (createdError) throw new Error('Nao foi possivel carregar partidas criadas.');
-  if (joinedError) throw new Error('Nao foi possivel carregar partidas marcadas.');
-  if (pendingError) throw new Error('Nao foi possivel carregar solicitacoes pendentes.');
-  if (ratingTaskError) throw new Error('Nao foi possivel carregar tarefas de avaliacao.');
+  if (createdError) throw new Error('Não foi possível carregar partidas criadas.');
+  if (joinedError) throw new Error('Não foi possível carregar partidas marcadas.');
+  if (pendingError) throw new Error('Não foi possível carregar solicitacoes pendentes.');
+  if (ratingTaskError) throw new Error('Não foi possível carregar tarefas de avaliação.');
 
   const joinedMatchIds = Array.from(new Set((joinedRows ?? []).map((row) => row.match_id)));
   const pendingMatchIds = Array.from(new Set((pendingRows ?? []).map((row) => row.match_id)));
@@ -697,14 +717,14 @@ export async function getUserAgenda(): Promise<AgendaResult> {
   if (joinedMatchIds.length > 0) {
     const { data, error } = await supabase.from('matches').select('*').in('id', joinedMatchIds).neq('created_by', userId);
 
-    if (error) throw new Error('Nao foi possivel carregar as partidas marcadas.');
+    if (error) throw new Error('Não foi possível carregar as partidas marcadas.');
     joinedData = data ?? [];
   }
 
   let pendingData: MatchRow[] = [];
   if (pendingMatchIds.length > 0) {
     const { data, error } = await supabase.from('matches').select('*').in('id', pendingMatchIds);
-    if (error) throw new Error('Nao foi possivel carregar as partidas pendentes.');
+    if (error) throw new Error('Não foi possível carregar as partidas pendentes.');
     pendingData = data ?? [];
   }
 
@@ -736,7 +756,7 @@ export async function getUserAgenda(): Promise<AgendaResult> {
       return {
         ...partida,
         status: 'confirmed' as const,
-        statusLabel: 'Solicitacao pendente',
+        statusLabel: 'Solicitação pendente',
         isDimmed: true,
       };
     });

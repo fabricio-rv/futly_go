@@ -14,6 +14,13 @@ import Animated, {
 import { Text } from './Text';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
+type InputSize = 'md' | 'lg';
+
+const sizeHeight: Record<InputSize, number> = {
+  md: 48,
+  lg: 56,
+};
+
 type InputProps = TextInputProps & {
   label?: string;
   error?: string;
@@ -25,6 +32,7 @@ type InputProps = TextInputProps & {
   containerClassName?: string;
   inputClassName?: string;
   labelClassName?: string;
+  size?: InputSize;
 };
 
 export const Input = forwardRef<TextInput, InputProps>(function Input(
@@ -39,6 +47,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     containerClassName,
     inputClassName,
     labelClassName,
+    size = 'md',
     onFocus,
     onBlur,
     style,
@@ -50,7 +59,6 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   ref,
 ) {
   const theme = useAppColorScheme();
-  const [focused, setFocused] = useState(false);
   const [isFilled, setIsFilled] = useState(!!rest.value || !!rest.defaultValue);
 
   const borderColorValue = useSharedValue(theme === 'light' ? '#E4E4E7' : '#3F3F46');
@@ -72,7 +80,6 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   const placeholderColor = theme === 'light' ? '#A1A1AA' : '#71717A';
 
   const handleFocus = (e: any) => {
-    setFocused(true);
     borderColorValue.value = withTiming(
       theme === 'light' ? '#10B981' : '#34D399',
       { duration: 200 }
@@ -82,7 +89,6 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   };
 
   const handleBlur = (e: any) => {
-    setFocused(false);
     borderColorValue.value = withTiming(
       theme === 'light' ? '#E4E4E7' : '#3F3F46',
       { duration: 200 }
@@ -101,6 +107,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     onClear?.();
   };
 
+  const fixedHeight = isMultiline ? undefined : sizeHeight[size];
+
   return (
     <View className="w-full">
       {label && (
@@ -118,24 +126,26 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           animatedBorderStyle,
           animatedShadowStyle,
           {
-            borderRadius: 12,
-            borderWidth: 1.5,
+            borderRadius: 28,
+            borderWidth: 0.9,
+            ...(fixedHeight ? { height: fixedHeight } : {}),
           },
         ]}
         className={`bg-white dark:bg-zinc-800 ${
           !editable ? 'opacity-50' : ''
         } ${containerClassName || ''}`.trim()}
       >
-        {/* CONTAINER PRINCIPAL - Flexbox com padding e gap */}
-        <View className="flex-row items-center px-5 py-4 gap-3">
-          {/* ÍCONE ESQUERDO - Flex-shrink para não expandir */}
+        <View
+          className={`flex-row items-center px-4 gap-3 ${
+            isMultiline ? 'py-3' : 'flex-1'
+          }`}
+        >
           {leftIcon && (
             <View className="flex-shrink-0">
               {leftIcon}
             </View>
           )}
 
-          {/* TEXTINPUT - Flex-1 para ocupar espaço restante */}
           <TextInput
             ref={ref}
             testID={testID}
@@ -164,7 +174,6 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             {...rest}
           />
 
-          {/* ÍCONE DIREITO - Flex-shrink para não expandir */}
           {showClearButton && isFilled && onClear ? (
             <Pressable
               onPress={handleClear}
@@ -186,7 +195,6 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         </View>
       </Animated.View>
 
-      {/* MENSAGENS DE ERRO/HINT */}
       {error ? (
         <Text
           variant="caption"

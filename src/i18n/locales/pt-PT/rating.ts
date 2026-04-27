@@ -5,7 +5,7 @@
   xp: '+25 XP',
   sections: {
     about: 'SOBRE O ORGANIZADOR',
-    comment: 'COMENTÃRIO (OPCIONAL)',
+    comment: 'COMENTÁRIO (OPCIONAL)',
     host: 'HOST'
   },
   ratings: {
@@ -15,29 +15,29 @@
     regular: 'REGULAR',
     poor: 'A MELHORAR'
   },
-  anonymous: 'AvaliaÃ§Ã£o anÃ´nima',
-  anonymousDesc: 'Seu nome nÃ£o aparece',
-  next: 'PrÃ³ximo: Avalie 4 Atletas',
+  anonymous: 'Avaliação anónima',
+  anonymousDesc: 'O seu nome não aparece',
+  next: 'Próximo: Avalie 4 Atletas',
   continue: 'Continuar para Atletas',
   pending: 'Pendente',
-  success: 'AvaliaÃ§Ã£o enviada com sucesso!',
+  success: 'Avaliação enviada com sucesso!',
   host: {
     title: 'Avalie o Organizador',
     xp: '+25 XP',
     context: 'Host da partida no Arena Central - Quinta 19h30',
     about: 'SOBRE O ORGANIZADOR',
-    commentOptional: 'COMENTARIO (OPCIONAL)',
-    commentSample: 'Pontual, organizacao perfeita.',
-    anonymousTitle: 'Avaliacao anonima',
-    anonymousSubtitle: 'Seu nome nao aparece'
+    commentOptional: 'COMENTÁRIO (OPCIONAL)',
+    commentSample: 'Pontual, organização perfeita.',
+    anonymousTitle: 'Avaliação anónima',
+    anonymousSubtitle: 'O seu nome não aparece'
   },
   players: {
-    title: 'Proximo: Avalie 4 Atletas',
+    title: 'Próximo: Avalie 4 Atletas',
     pending: 'Pendente',
     continue: 'Continuar para Atletas'
   },
   status: {
-    savedTitle: 'Avaliacao salva',
+    savedTitle: 'Avaliação salva',
     savedSubtitle: 'Pedro recebeu {{hostStars}} estrelas'
   }
 };

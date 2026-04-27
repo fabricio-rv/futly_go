@@ -128,7 +128,7 @@ export const ptPTErrors = {
 
   warnings: {
     unsavedChanges: 'Tem alterações não guardadas',
-    confirmDelete: 'Tem a certeza? Esta acção não pode ser desfeita',
+    confirmDelete: 'Tem a certeza? Está acção não pode ser desfeita',
     sessionExpired: 'A sua sessão expirou, faça login novamente',
     maintenanceMode: 'Estamos em manutenção, tente novamente em poucos minutos',
   },

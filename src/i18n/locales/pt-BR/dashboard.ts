@@ -18,7 +18,7 @@ export const ptBRDashboard = {
     forYou: 'Para Você',
     popular: 'Populares',
     nearby: 'Próximas a Você',
-    thisWeek: 'Esta Semana',
+    thisWeek: 'Está Semana',
     friends: 'Amigos',
     following: 'Seguindo',
   },
@@ -101,7 +101,7 @@ export const ptBRDashboard = {
   filters: {
     today: 'Hoje',
     tomorrow: 'Amanhã',
-    thisWeek: 'Esta Semana',
+    thisWeek: 'Está Semana',
     all: 'Todas',
     free: 'Grátis',
     paid: 'Pagas',

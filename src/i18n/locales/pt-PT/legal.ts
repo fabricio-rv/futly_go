@@ -14,7 +14,7 @@ export const ptPTLegal = {
     cancellation: '5. Cancelamento de Conta',
     liability: '6. Limitação de Responsabilidade',
     modifications: '7. Modificações dos Termos',
-    contact: '8. Contato'
+    contact: '8. Contacto'
   },
   terms: {
     serviceText: 'Futly Hub liga atletas para organizar jogos.',

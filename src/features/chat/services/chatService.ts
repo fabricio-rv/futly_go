@@ -55,7 +55,7 @@ function errorMessage(prefix: string, error: unknown) {
 export async function getCurrentUserId() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
-    throw new Error('Faca login novamente para continuar.');
+    throw new Error('Faça login novamente para continuar.');
   }
 
   return data.user.id;
@@ -70,7 +70,7 @@ export async function fetchChatList() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    throw new Error(errorMessage('Nao foi possivel carregar a lista de conversas.', error));
+    throw new Error(errorMessage('Não foi possível carregar a lista de conversas.', error));
   }
 
   return (data ?? []) as ChatListRow[];
@@ -85,7 +85,7 @@ export async function fetchConversationMessages(conversationId: string, limit = 
     .limit(limit);
 
   if (error) {
-    throw new Error(errorMessage('Nao foi possivel carregar as mensagens.', error));
+    throw new Error(errorMessage('Não foi possível carregar as mensagens.', error));
   }
 
   return (data ?? []) as ConversationMessage[];
@@ -98,7 +98,7 @@ export async function fetchConversationParticipants(conversationId: string) {
     .eq('conversation_id', conversationId);
 
   if (error) {
-    throw new Error(errorMessage('Nao foi possivel carregar os participantes da conversa.', error));
+    throw new Error(errorMessage('Não foi possível carregar os participantes da conversa.', error));
   }
 
   const rows = (data ?? []) as Array<{ user_id: string; role: ConversationRole }>;
@@ -112,7 +112,7 @@ export async function fetchConversationParticipants(conversationId: string) {
       .in('id', ids);
 
     if (profilesError) {
-      throw new Error(errorMessage('Nao foi possivel carregar os perfis dos participantes.', profilesError));
+      throw new Error(errorMessage('Não foi possível carregar os perfis dos participantes.', profilesError));
     }
 
     profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile.full_name]));
@@ -139,7 +139,7 @@ export async function sendMessage(conversationId: string, content: string) {
   });
 
   if (error) {
-    throw new Error(errorMessage('Nao foi possivel enviar a mensagem.', error));
+    throw new Error(errorMessage('Não foi possível enviar a mensagem.', error));
   }
 }
 
@@ -153,7 +153,7 @@ export async function markConversationAsRead(conversationId: string) {
     .eq('user_id', userId);
 
   if (error) {
-    throw new Error(errorMessage('Nao foi possivel atualizar leitura da conversa.', error));
+    throw new Error(errorMessage('Não foi possível atualizar leitura da conversa.', error));
   }
 }
 
@@ -167,7 +167,7 @@ export async function markConversationAsUnread(conversationId: string) {
     .eq('user_id', userId);
 
   if (error) {
-    throw new Error(errorMessage('Nao foi possivel marcar a conversa como nao lida.', error));
+    throw new Error(errorMessage('Não foi possível marcar a conversa como não lida.', error));
   }
 }
 
@@ -182,7 +182,7 @@ export async function setConversationArchived(conversationId: string, archived: 
     .eq('id', conversationId);
 
   if (error) {
-    throw new Error(errorMessage('Nao foi possivel atualizar o status da conversa.', error));
+    throw new Error(errorMessage('Não foi possível atualizar o status da conversa.', error));
   }
 }
 
@@ -190,7 +190,7 @@ export async function getOrCreateMatchConversation(matchId: string) {
   const { data, error } = await supabase.rpc('ensure_match_conversation', { p_match_id: matchId });
 
   if (error || !data) {
-    throw new Error(errorMessage('Nao foi possivel carregar a conversa da partida.', error));
+    throw new Error(errorMessage('Não foi possível carregar a conversa da partida.', error));
   }
 
   return data as string;
@@ -203,7 +203,7 @@ export async function createPrivateConversation(otherUserId: string, initialMess
   });
 
   if (error || !data) {
-    throw new Error(errorMessage('Nao foi possivel iniciar conversa privada.', error));
+    throw new Error(errorMessage('Não foi possível iniciar conversa privada.', error));
   }
 
   return data as string;

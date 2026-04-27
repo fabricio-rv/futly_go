@@ -264,17 +264,10 @@ export default function CreateMatchScreen() {
       <MatchBackground />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 152 }}>
         <View className="px-[18px] pt-4 pb-1">
-            <Text variant="heading" style={{ color: theme === 'light' ? '#111827' : '#FFFFFF' }}>
-              {t('title')}
-            </Text>
+          <SectionTitle title={t('title')} badge="2 / 4" />
         </View>
 
         <StepIndicator total={4} current={3} />
-
-        <View className="px-[18px] flex-row items-center justify-between mb-3">
-          <SectionTitle title={t('title')} badge="2 / 4" />
-          <StatBadge label={t('form.draftBadge')} tone="gold" small />
-        </View>
 
         <View className="px-[18px] gap-[14px]">
           <Card
@@ -369,9 +362,9 @@ export default function CreateMatchScreen() {
                 </View>
                 <View className="flex-1">
                   <DateTimeField
-                    label={t('filters.time', 'Horario')}
+                    label={t('filters.time', 'Horário')}
                     value={formatTimeField(matchTime)}
-                    placeholder={t('filters.selectTime', 'Selecione o horario')}
+                    placeholder={t('filters.selectTime', 'Selecione o horário')}
                     onPress={() => {
                       setWebHour(matchTime.getHours());
                       setWebMinute(matchTime.getMinutes());
@@ -407,28 +400,6 @@ export default function CreateMatchScreen() {
                 keyboardType="phone-pad"
                 placeholder="(00) 00000-0000"
               />
-            </View>
-
-            <Text
-              variant="micro"
-              className="uppercase tracking-[2px] mt-4"
-              style={{ color: matchTheme.colors.fgMuted }}
-            >
-              {t('form.facilities', 'Facilities')}
-            </Text>
-            <View className="flex-row flex-wrap gap-2 mt-2">
-              <View className="w-[48.5%]">
-                <FacilityCheckCard label={t('form.facilityLockerRoom')} selected />
-              </View>
-              <View className="w-[48.5%]">
-                <FacilityCheckCard label={t('form.facilityShower')} selected />
-              </View>
-              <View className="w-[48.5%]">
-                <FacilityCheckCard label={t('form.facilityParking')} selected />
-              </View>
-              <View className="w-[48.5%]">
-                <FacilityCheckCard label={t('form.facilitySnackBar')} selected={false} />
-              </View>
             </View>
           </Card>
 
@@ -599,16 +570,11 @@ export default function CreateMatchScreen() {
           </Card>
 
           <Button
-            label={t('actions.continueToReview', 'Continue to Review')}
+            label={t('form.createMatchButton')}
+            fullWidth
             loading={submitting}
             disabled={submitting}
             onPress={() => handleCreateMatch('publicada')}
-          />
-          <Button
-            label={t('actions.saveDraft', 'Save Draft')}
-            variant="ghost"
-            disabled={submitting}
-            onPress={() => handleCreateMatch('rascunho')}
           />
           <View className="h-2" />
         </View>
@@ -696,7 +662,7 @@ export default function CreateMatchScreen() {
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
           <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
-              {t('filters.selectTime', 'Selecione o horario')}
+              {t('filters.selectTime', 'Selecione o horário')}
             </Text>
             <View className="flex-row items-center justify-center gap-4">
               <Button label="-" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 23) % 24)} />

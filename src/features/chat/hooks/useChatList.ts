@@ -71,8 +71,8 @@ export function useChatList() {
       if (confirmedMatch) {
         const name = confirmedMatch[1]?.trim();
         return name
-          ? `${name} ${t('messages.confirmedPresenceSnippet', 'confirmou presenca')}`
-          : t('messages.confirmedPresenceSnippet', 'confirmou presenca');
+          ? `${name} ${t('messages.confirmedPresenceSnippet', 'confirmou presença')}`
+          : t('messages.confirmedPresenceSnippet', 'confirmou presença');
       }
 
       return text;
@@ -87,7 +87,7 @@ export function useChatList() {
 
       const author = row.last_message_sender_id
         ? row.last_message_sender_id === currentUserId
-          ? t('messages.you', 'Voce')
+          ? t('messages.you', 'Você')
           : (row.last_message_sender_name ?? t('detail.athleteFallback', 'Atleta'))
         : t('roles.system', 'Sistema');
 

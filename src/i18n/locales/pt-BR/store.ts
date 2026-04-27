@@ -63,32 +63,32 @@ export const ptBRStore = {
   },
   plan: {
     title: 'Plano e Pagamento',
-    currentDescription: 'Voce esta no nosso plano premium com todos os beneficios exclusivos.',
+    currentDescription: 'Você está no nosso plano premium com todos os benefícios exclusivos.',
     manage: 'Gerenciar plano',
-    goldBenefits: 'Beneficios do Gold',
+    goldBenefits: 'Benefícios do Gold',
     unlimitedDescription: 'Crie e participe de quantas partidas quiser',
-    advancedFiltersDescription: 'Busque partidas por nivel, horario e localizacao',
+    advancedFiltersDescription: 'Busque partidas por nível, horário e localização',
     priorityDescription: 'Suas mensagens aparecem em destaque',
-    verifiedDescription: 'Seu perfil recebe o badge de verificacao',
-    noAdsDescription: 'Aproveite a experiencia sem distracoes',
+    verifiedDescription: 'Seu perfil recebe o badge de verificação',
+    noAdsDescription: 'Aproveite a experiência sem distrações',
     exploreOtherPlans: 'Explorar outros planos',
     freePlan: 'Plano Gratuito',
     active: 'Ativo',
-    freeDescription: 'Funcionalidades basicas - R$ 0,00/mes',
+    freeDescription: 'Funcionalidades básicas - R$ 0,00/mês',
     yourPlan: 'Seu plano',
-    goldDescription: 'Plano premium - R$ 19,90/mes',
+    goldDescription: 'Plano premium - R$ 19,90/mês',
     comingSoon: 'Em breve',
-    eliteDescription: 'Plano exclusivo - R$ 49,90/mes',
-    questionsTitle: 'Tem duvidas sobre os planos?',
-    questionsDescription: 'Consulte nossa central de ajuda ou fale com o suporte para mais informacoes.'
+    eliteDescription: 'Plano exclusivo - R$ 49,90/mês',
+    questionsTitle: 'Tem dúvidas sobre os planos?',
+    questionsDescription: 'Consulte nossa central de ajuda ou fale com o suporte para mais informações.'
   },
   footer: {
-    title: 'Pague a vontade. Cancele quando quiser.',
-    description: 'PIX, cartao de credito ou Apple/Google Pay. Sem fidelidade. Reembolso integral nos primeiros 7 dias.'
+    title: 'Pague ? vontade. Cancele quando quiser.',
+    description: 'PIX, cartão de crédito ou Apple/Google Pay. Sem fidelidade. Reembolso integral nos primeiros 7 dias.'
   },
   hero: {
     kicker: 'Hub de Partidas - Pro',
     title: 'Mais partidas. Mais visibilidade. Mais futebol.',
-    description: 'Desbloqueie raio de busca ampliado, criacao ilimitada de partidas e prioridade nas vagas concorridas.'
+    description: 'Desbloqueie raio de busca ampliado, criação ilimitada de partidas e prioridade nas vagas concorridas.'
   }
 };

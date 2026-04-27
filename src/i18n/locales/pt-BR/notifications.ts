@@ -30,22 +30,22 @@ export const ptBRNotifications = {
     error: 'Erro'
   },
   requests: {
-    accepted: 'Solicitacao aceita!',
-    rejected: 'Solicitacao recusada.',
-    processError: 'Nao foi possivel processar a solicitacao.'
+    accepted: 'Solicitação aceita!',
+    rejected: 'Solicitação recusada.',
+    processError: 'Não foi possível processar a solicitação.'
   },
   rating: {
-    sent: 'Avaliacao enviada!',
-    sendError: 'Nao foi possivel enviar a avaliacao.',
+    sent: 'Avaliação enviada!',
+    sendError: 'Não foi possível enviar a avaliação.',
     modalTitle: 'Avaliar',
-    commentPlaceholder: 'Comentario opcional'
+    commentPlaceholder: 'Comentário opcional'
   },
   subtitle: 'ATIVIDADE',
   account: {
-    title: 'Notificacoes da conta'
+    title: 'Notificações da conta'
   },
-  loading: 'Carregando notificacoes...',
-  empty: 'Nenhuma notificacao por enquanto.',
+  loading: 'Carregando notificações...',
+  empty: 'Nenhuma notificação por enquanto.',
   actions: {
     accept: 'Aceitar',
     reject: 'Recusar',
@@ -54,8 +54,8 @@ export const ptBRNotifications = {
     send: 'Enviar'
   },
   recentActions: {
-    title: 'Acoes recentes',
-    empty: 'Sem acoes recentes.'
+    title: 'Ações recentes',
+    empty: 'Sem ações recentes.'
   },
   newParticipationRequest: 'Nova solicitação de participação',
   requestedToJoin: 'solicitou participar de',
@@ -63,17 +63,17 @@ export const ptBRNotifications = {
   actionTypes: {
     ratePlayer: 'Avaliar jogador',
     rateHost: 'Avaliar host',
-    ratingSent: 'Avaliacao enviada',
+    ratingSent: 'Avaliação enviada',
     matchCreated: 'Partida criada',
-    participationConfirmed: 'Participacao confirmada',
-    ratingPending: 'Avaliacao pendente'
+    participationConfirmed: 'Participação confirmada',
+    ratingPending: 'Avaliação pendente'
   },
   requestStatus: {
-    sent: 'Solicitacao enviada',
-    approved: 'Solicitacao aprovada',
-    rejected: 'Solicitacao recusada',
-    cancelled: 'Solicitacao cancelada',
-    approvedByYou: 'Solicitacao aprovada por voce',
-    rejectedByYou: 'Solicitacao recusada por voce'
+    sent: 'Solicitação enviada',
+    approved: 'Solicitação aprovada',
+    rejected: 'Solicitação recusada',
+    cancelled: 'Solicitação cancelada',
+    approvedByYou: 'Solicitação aprovada por você',
+    rejectedByYou: 'Solicitação recusada por você'
   }
 };

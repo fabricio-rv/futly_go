@@ -210,8 +210,10 @@ bounces
                     style={{ backgroundColor: matchTheme.colors.ok }}
                     onPress={() => void handleChatPress(item.id)}
                   >
-                    <MessageCircle size={13} stroke="#05070B" />
-                    <Text variant="caption" className="ml-1 font-semibold" style={{ color: '#05070B' }}>{t('actions.chat', 'Chat')}</Text>
+                    <View className="flex-row items-center">
+                      <MessageCircle size={13} stroke="#05070B" />
+                      <Text variant="caption" className="ml-1 font-semibold" style={{ color: '#05070B' }}>{t('actions.chat', 'Chat')}</Text>
+                    </View>
                   </TouchableScale>
                 ) : undefined
               }
@@ -249,7 +251,7 @@ bounces
             <TextInput
               value={ratingComment}
               onChangeText={setRatingComment}
-              placeholder={t('rating.commentPlaceholder', 'Comentario opcional')}
+              placeholder={t('rating.commentPlaceholder', 'Comentário opcional')}
               placeholderTextColor={matchTheme.colors.fgMuted}
               className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2 text-[#111827] dark:text-white"
               style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}

@@ -118,7 +118,7 @@ export default function SignupScreen() {
 				void navigateAfterSocialLogin();
 			}, 300);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : t('errors.socialSignupFailed', 'Nao foi possivel continuar com login social.');
+			const message = error instanceof Error ? error.message : t('errors.socialSignupFailed', 'Não foi possível continuar com login social.');
 			showToast('Falha no login social', 'error');
 			setFeedback({
 				visible: true,
@@ -136,7 +136,7 @@ export default function SignupScreen() {
 	const passwordLevel = useMemo(() => getPasswordStrength(password), [password]);
 	const confirmPasswordError =
 		confirmPassword.length > 0 && confirmPassword !== password
-			? t('errors.passwordMismatch', 'As senhas nao conferem')
+			? t('errors.passwordMismatch', 'As senhas não conferem')
 			: undefined;
 	const availableStateCodes = useMemo(() => getBrazilianStates(), []);
 	const stateOptions = useMemo(
@@ -192,7 +192,7 @@ export default function SignupScreen() {
 
 	async function handleSignup() {
 		if (!fullName.trim() || !email.trim() || !password.trim()) {
-			showToast(t('validation.fillRequiredFields', 'Preencha os campos obrigatorios'), 'error');
+			showToast(t('validation.fillRequiredFields', 'Preencha os campos obrigatórios'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -218,12 +218,12 @@ export default function SignupScreen() {
 		}
 
 		if (confirmPassword !== password) {
-			showToast(t('errors.passwordMismatch', 'As senhas nao conferem'), 'error');
+			showToast(t('errors.passwordMismatch', 'As senhas não conferem'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
 				title: t('errors.passwordMismatchTitle', 'Senhas diferentes'),
-				message: t('errors.passwordMismatch', 'As senhas nao conferem.'),
+				message: t('errors.passwordMismatch', 'As senhas não conferem.'),
 				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
@@ -235,7 +235,7 @@ export default function SignupScreen() {
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: t('errors.requiredTermsTitle', 'Termos obrigatorios'),
+				title: t('errors.requiredTermsTitle', 'Termos obrigatórios'),
 				message: t('errors.requiredTermsMessage', 'Aceite os termos para concluir o cadastro.'),
 				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
@@ -276,10 +276,10 @@ export default function SignupScreen() {
 				return;
 			}
 
-			showToast(t('signup.signupCompleted', 'Cadastro concluido'), 'success');
+			showToast(t('signup.signupCompleted', 'Cadastro concluído'), 'success');
 			setTimeout(() => router.replace('/(app)'), 500);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : t('errors.signupFailed', 'Nao foi possivel concluir o cadastro.');
+			const message = error instanceof Error ? error.message : t('errors.signupFailed', 'Não foi possível concluir o cadastro.');
 			showToast('Falha no cadastro', 'error');
 			setFeedback({
 				visible: true,
@@ -315,7 +315,7 @@ export default function SignupScreen() {
 							{t('signup.welcomeAthlete', 'Bem-vindo, atleta.')}
 						</Text>
 						<Text variant="label" className="mt-1 mb-7 leading-[20px] text-fg2">
-							{t('signup.welcomeSubtitle', 'Crie sua conta para encontrar partidas perto de voce.')}
+							{t('signup.welcomeSubtitle', 'Crie sua conta para encontrar partidas perto de você.')}
 						</Text>
 						<SocialAuthRow
 							onGooglePress={() => void handleSocialSignup('google')}
@@ -337,8 +337,8 @@ export default function SignupScreen() {
 								value={fullName}
 								onChangeText={setFullName}
 								placeholder={t('placeholders.fullName', 'Seu nome completo')}
-								leftAdornment={<UserRound size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
-								containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+								leftIcon={<UserRound size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+								containerClassName="border-line2 bg-[#0C111E]"
 								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 							/>
 
@@ -349,9 +349,9 @@ export default function SignupScreen() {
 								placeholder={t('placeholders.email', 'seuemail@dominio.com')}
 								autoCapitalize="none"
 								keyboardType="email-address"
-								leftAdornment={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
-								rightAdornment={<Check size={14} color="#22B76C" strokeWidth={2.8} />}
-								containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+								leftIcon={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+								rightIcon={<Check size={14} color="#22B76C" strokeWidth={2.8} />}
+								containerClassName="border-line2 bg-[#0C111E]"
 								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 							/>
 
@@ -364,8 +364,8 @@ export default function SignupScreen() {
 										keyboardType="number-pad"
 										maxLength={2}
 										placeholder="51"
-										leftAdornment={<Text variant="caption" className="text-fg3 font-semibold">+55</Text>}
-										containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+										leftIcon={<Text variant="caption" className="text-fg3 font-semibold">+55</Text>}
+										containerClassName="border-line2 bg-[#0C111E]"
 										labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 									/>
 								</View>
@@ -377,7 +377,7 @@ export default function SignupScreen() {
 										keyboardType="phone-pad"
 										maxLength={10}
 										placeholder="99820-1144"
-										containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+										containerClassName="border-line2 bg-[#0C111E]"
 										labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 									/>
 								</View>
@@ -389,8 +389,8 @@ export default function SignupScreen() {
 								onChangeText={setPassword}
 								placeholder={t('placeholders.createPassword', 'Crie uma senha')}
 								secureTextEntry={!showPassword}
-								leftAdornment={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
-								rightAdornment={(
+								leftIcon={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+								rightIcon={(
 									<Pressable
 										accessibilityRole="button"
 										onPress={() => setShowPassword((prev) => !prev)}
@@ -399,7 +399,7 @@ export default function SignupScreen() {
 										<Eye size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />
 									</Pressable>
 								)}
-								containerClassName="h-12 rounded-[14px] border-ok bg-[#0C111E]"
+								containerClassName="border-ok bg-[#0C111E]"
 								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 							/>
 
@@ -412,8 +412,8 @@ export default function SignupScreen() {
 								placeholder={t('placeholders.confirmPassword', 'Repita sua senha')}
 								secureTextEntry={!showConfirmPassword}
 								error={confirmPasswordError}
-								leftAdornment={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
-								rightAdornment={(
+								leftIcon={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+								rightIcon={(
 									<Pressable
 										accessibilityRole="button"
 										onPress={() => setShowConfirmPassword((prev) => !prev)}
@@ -422,7 +422,7 @@ export default function SignupScreen() {
 										<Eye size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />
 									</Pressable>
 								)}
-								containerClassName={`h-12 rounded-[14px] bg-[#0C111E] ${confirmPasswordError ? 'border-danger' : 'border-line2'}`}
+								containerClassName={`bg-[#0C111E] ${confirmPasswordError ? 'border-danger' : 'border-line2'}`}
 								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 							/>
 
@@ -430,14 +430,14 @@ export default function SignupScreen() {
 								<View className="rounded-[14px] border border-[#22B76C40] bg-[#22B76C1A] px-3 py-3">
 									<View className="flex-row items-center justify-between">
 										<Text variant="label" className="font-semibold text-white">
-											{t('signup.location', 'Localizacao')}
+											{t('signup.location', 'Localização')}
 										</Text>
 										<Text variant="micro" className="uppercase tracking-[1.6px] font-bold text-[#86E5B4]">
 											{t('common.optional', 'Opcional')}
 										</Text>
 									</View>
 									<Text variant="caption" className="mt-1 text-fg2 leading-[18px]">
-										{t('signup.locationHint', 'Preencha Estado, Cidade e CEP para indicarmos partidas proximas da sua regiao.')}
+										{t('signup.locationHint', 'Preencha Estado, Cidade e CEP para indicarmos partidas proximas da sua região.')}
 									</Text>
 								</View>
 
@@ -475,7 +475,7 @@ export default function SignupScreen() {
 									keyboardType="number-pad"
 									maxLength={9}
 									placeholder="00000-000"
-									containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+									containerClassName="border-line2 bg-[#0C111E]"
 									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 								/>
 							</View>
@@ -497,7 +497,7 @@ export default function SignupScreen() {
 								</Text>{' '}
 								e{' '}
 								<Text variant="caption" className="text-ok font-semibold">
-									{t('signup.privacyPolicy', 'Politica de Privacidade')}
+									{t('signup.privacyPolicy', 'Política de Privacidade')}
 								</Text>
 								{t('signup.ageRequirement', '. Tenho 16+ anos.')}
 							</Text>
@@ -509,13 +509,13 @@ export default function SignupScreen() {
 							size="xl"
 							loading={loading}
 							disabled={loading || socialLoading !== null}
-							className="mt-2 rounded-[14px]"
+							className="mt-2"
 							onPress={handleSignup}
 						/>
 
 						<View className="mt-6 items-center">
 							<Text variant="label" className="text-fg3">
-								{t('signup.alreadyHave', 'Ja tem conta?')}
+								{t('signup.alreadyHave', 'Já tem conta?')}
 							</Text>
 							<Pressable onPress={() => router.replace('/(auth)')} className="mt-2 px-1 py-0.5">
 								<Text variant="label" className="font-bold" style={{ color: '#22B76C' }}>

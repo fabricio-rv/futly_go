@@ -22,11 +22,11 @@ export const ptPTChat = {
     sendMessage: 'Enviar mensagem',
     typing: 'Digitando...',
     failedSend: 'Falha ao enviar',
-    noPartida: 'Esta conversa não possui partida vinculada',
+    noPartida: 'Está conversa não possui partida vinculada',
     archived: 'Conversa arquivada',
     unarchived: 'Conversa restaurada',
     marked: 'Marcado como não lido',
-    you: 'Voce',
+    you: 'Você',
     noMessagesYet: 'Sem mensagens ainda',
     privateTag: 'PRIVADO',
     readReceiptShort: 'LIDO',
@@ -62,7 +62,7 @@ export const ptPTChat = {
     sendFailedTitle: 'Falha ao enviar',
     sendFailedMessage: 'Não foi possível enviar a mensagem agora.',
     noMatchLinkedTitle: 'Sem jogo vinculado',
-    noMatchLinkedMessage: 'Esta conversa não possui jogo vinculado.',
+    noMatchLinkedMessage: 'Está conversa não possui jogo vinculado.',
     archiveFailedTitle: 'Falha ao arquivar',
     updateFailedTitle: 'Falha ao atualizar',
     conversationNotFound: 'Conversa não encontrada.',
@@ -72,7 +72,7 @@ export const ptPTChat = {
   },
   status: {
     updatedTitle: 'Conversa atualizada',
-    markedUnreadMessage: 'Marcámos esta conversa como não lida.'
+    markedUnreadMessage: 'Marcámos está conversa como não lida.'
   },
   common: {
     error: 'Erro',

@@ -103,7 +103,7 @@ export function useMatches() {
       await joinMatchService(params);
       void actionSuccess();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao confirmar presen�a.';
+      const message = err instanceof Error ? err.message : 'Erro ao confirmar presença.';
       setError(message);
       throw err;
     } finally {
@@ -119,7 +119,7 @@ export function useMatches() {
       await leaveMatchService(matchId);
       void actionSuccess();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao desmarcar presen�a.';
+      const message = err instanceof Error ? err.message : 'Erro ao desmarcar presença.';
       setError(message);
       throw err;
     } finally {
@@ -135,7 +135,7 @@ export function useMatches() {
       await processParticipationRequestService(requestId, action, reason);
       void actionSuccess();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao processar solicitacao.';
+      const message = err instanceof Error ? err.message : 'Erro ao processar solicitação.';
       setError(message);
       throw err;
     } finally {
@@ -157,7 +157,7 @@ export function useMatches() {
       await submitMatchRatingService(params);
       void actionSuccess();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao enviar avaliacao.';
+      const message = err instanceof Error ? err.message : 'Erro ao enviar avaliação.';
       setError(message);
       throw err;
     } finally {

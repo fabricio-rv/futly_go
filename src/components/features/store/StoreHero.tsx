@@ -39,7 +39,7 @@ export function StoreHero() {
         className={`mt-2.5 leading-[18px] ${isLight ? 'text-[#4B5563]' : 'text-fg2'}`}
         style={{ maxWidth: isSmall ? 240 : 260 }}
       >
-        {t('hero.description', 'Desbloqueie raio de busca ampliado, criacao ilimitada de partidas e prioridade nas vagas concorridas.')}
+        {t('hero.description', 'Desbloqueie raio de busca ampliado, criação ilimitada de partidas e prioridade nas vagas concorridas.')}
       </Text>
       <Text className="absolute font-bebas text-[#D4A13A2E]" style={proStyle}>
         PRO

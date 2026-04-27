@@ -117,7 +117,7 @@ export function AuthFeedbackModal({
 						label={primaryLabel}
 						variant="primary"
 						size="lg"
-						className="mt-5 rounded-[14px]"
+						className="mt-5"
 						onPress={onPrimaryPress}
 					/>
 					{secondaryLabel && onSecondaryPress ? (
@@ -125,7 +125,7 @@ export function AuthFeedbackModal({
 							label={secondaryLabel}
 							variant="ghost"
 							size="lg"
-							className="mt-2 rounded-[14px]"
+							className="mt-2"
 							onPress={onSecondaryPress}
 						/>
 					) : null}

@@ -78,8 +78,8 @@ export default function RateScreen() {
 
           <View className="mt-3 rounded-[14px] border px-3 py-3 flex-row items-center justify-between" style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}>
             <View className="pr-3 flex-1">
-              <Text variant="label" className="font-semibold">{t('host.anonymousTitle', 'Avaliacao anonima')}</Text>
-              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{t('host.anonymousSubtitle', 'Seu nome nao aparece')}</Text>
+              <Text variant="label" className="font-semibold">{t('host.anonymousTitle', 'Avaliação anonima')}</Text>
+              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{t('host.anonymousSubtitle', 'Seu nome não aparece')}</Text>
             </View>
             <Switch onValueChange={setAnonymous} value={anonymous} />
           </View>
@@ -108,7 +108,7 @@ export default function RateScreen() {
             <Text variant="caption" style={{ color: matchTheme.colors.okSoft }}>OK</Text>
           </View>
           <View className="ml-3">
-            <Text variant="label" className="font-semibold">{t('status.savedTitle', 'Avaliacao salva')}</Text>
+            <Text variant="label" className="font-semibold">{t('status.savedTitle', 'Avaliação salva')}</Text>
             <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{t('status.savedSubtitle', `Pedro recebeu ${hostStars} estrelas`, { stars: hostStars })}</Text>
           </View>
         </View>

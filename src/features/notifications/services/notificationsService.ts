@@ -16,7 +16,7 @@ type RecentAction = {
 async function getCurrentUserId() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) {
-    throw new Error('Faca login novamente para continuar.');
+    throw new Error('Faça login novamente para continuar.');
   }
 
   return data.user.id;
@@ -28,22 +28,22 @@ async function syncRatingNotifications() {
 
 function requestStatusLabel(status: RequestRow['status'], t?: (key: string, fallback: string) => string) {
   const translate = t || ((_, fallback) => fallback);
-  if (status === 'pending') return translate('requestStatus.sent', 'Solicitacao enviada');
-  if (status === 'accepted') return translate('requestStatus.approved', 'Solicitacao aprovada');
-  if (status === 'rejected') return translate('requestStatus.rejected', 'Solicitacao recusada');
-  return translate('requestStatus.cancelled', 'Solicitacao cancelada');
+  if (status === 'pending') return translate('requestStatus.sent', 'Solicitação enviada');
+  if (status === 'accepted') return translate('requestStatus.approved', 'Solicitação aprovada');
+  if (status === 'rejected') return translate('requestStatus.rejected', 'Solicitação recusada');
+  return translate('requestStatus.cancelled', 'Solicitação cancelada');
 }
 
 function translateNotificationTitle(type: string, fallbackTitle: string, t?: (key: string, fallback: string) => string) {
   const translate = t || ((_, fallback) => fallback);
 
   const titleMap: Record<string, [string, string]> = {
-    'participation_requested': ['newParticipationRequest', 'Nova solicitacao de participacao'],
-    'match_rating_available': ['evaluationAvailable', 'Avaliacao disponivel'],
-    'rating_pending': ['actionTypes.ratingPending', 'Avaliacao pendente'],
+    'participation_requested': ['newParticipationRequest', 'Nova solicitação de participacao'],
+    'match_rating_available': ['evaluationAvailable', 'Avaliação disponível'],
+    'rating_pending': ['actionTypes.ratingPending', 'Avaliação pendente'],
     'match_created': ['actionTypes.matchCreated', 'Partida criada'],
     'participation_confirmed': ['actionTypes.participationConfirmed', 'Participacao confirmada'],
-    'rating_sent': ['actionTypes.ratingSent', 'Avaliacao enviada'],
+    'rating_sent': ['actionTypes.ratingSent', 'Avaliação enviada'],
     'rate_player': ['actionTypes.ratePlayer', 'Avaliar jogador'],
     'rate_host': ['actionTypes.rateHost', 'Avaliar host'],
   };
@@ -62,7 +62,7 @@ export async function fetchNotifications(t?: (key: string, fallback: string) => 
     .limit(200);
 
   if (error) {
-    throw new Error('Nao foi possivel carregar notificacoes.');
+    throw new Error('Não foi possível carregar notificacoes.');
   }
 
   const rows = (data ?? []) as NotificationRow[];
@@ -89,7 +89,7 @@ export async function fetchUnreadNotificationsCount() {
     .eq('is_read', false);
 
   if (error) {
-    throw new Error('Nao foi possivel carregar contador de notificacoes.');
+    throw new Error('Não foi possível carregar contador de notificacoes.');
   }
 
   return count ?? 0;
@@ -102,7 +102,7 @@ export async function markNotificationRead(notificationId: string) {
     .eq('id', notificationId);
 
   if (error) {
-    throw new Error('Nao foi possivel marcar notificacao como lida.');
+    throw new Error('Não foi possível marcar notificacao como lida.');
   }
 }
 
@@ -116,7 +116,7 @@ export async function markAllNotificationsRead() {
     .eq('is_read', false);
 
   if (error) {
-    throw new Error('Nao foi possivel marcar todas notificacoes como lidas.');
+    throw new Error('Não foi possível marcar todas notificacoes como lidas.');
   }
 }
 
@@ -170,12 +170,12 @@ export async function fetchRecentActions(t?: (key: string, fallback: string) => 
       .limit(80),
   ]);
 
-  if (myRequestsError) throw new Error('Nao foi possivel carregar acoes recentes.');
-  if (allRequestsError) throw new Error('Nao foi possivel carregar acoes recentes.');
-  if (ratingError) throw new Error('Nao foi possivel carregar acoes recentes.');
-  if (createdError) throw new Error('Nao foi possivel carregar acoes recentes.');
-  if (joinedError) throw new Error('Nao foi possivel carregar acoes recentes.');
-  if (ratingTasksError) throw new Error('Nao foi possivel carregar acoes recentes.');
+  if (myRequestsError) throw new Error('Não foi possível carregar ações recentes.');
+  if (allRequestsError) throw new Error('Não foi possível carregar ações recentes.');
+  if (ratingError) throw new Error('Não foi possível carregar ações recentes.');
+  if (createdError) throw new Error('Não foi possível carregar ações recentes.');
+  if (joinedError) throw new Error('Não foi possível carregar ações recentes.');
+  if (ratingTasksError) throw new Error('Não foi possível carregar ações recentes.');
 
   const createdMatchIds = new Set((createdMatches ?? []).map((match) => match.id));
 
@@ -210,7 +210,7 @@ export async function fetchRecentActions(t?: (key: string, fallback: string) => 
 
   const hostRequestActions: RecentAction[] = hostDecisionRequests.map((row) => ({
     id: `request:host:${row.id}`,
-    title: row.status === 'accepted' ? translate('requestStatus.approvedByYou', 'Solicitacao aprovada por voce') : translate('requestStatus.rejectedByYou', 'Solicitacao recusada por voce'),
+    title: row.status === 'accepted' ? translate('requestStatus.approvedByYou', 'Solicitação aprovada por você') : translate('requestStatus.rejectedByYou', 'Solicitação recusada por você'),
     body: `${matchById.get(row.match_id)?.title ?? 'Partida'} - ${row.requested_position_label}`,
     createdAt: row.updated_at,
     type: 'request',
@@ -218,7 +218,7 @@ export async function fetchRecentActions(t?: (key: string, fallback: string) => 
 
   const ratingActions: RecentAction[] = (ratingRows ?? []).map((row) => ({
     id: `rating:${row.id}`,
-    title: translate('actionTypes.ratingSent', 'Avaliacao enviada'),
+    title: translate('actionTypes.ratingSent', 'Avaliação enviada'),
     body: `${matchById.get(row.match_id)?.title ?? 'Partida'} - nota ${row.score}/5`,
     createdAt: row.created_at,
     type: 'rating',
@@ -242,7 +242,7 @@ export async function fetchRecentActions(t?: (key: string, fallback: string) => 
 
   const ratingPendingActions: RecentAction[] = (ratingTasks ?? []).map((task) => ({
     id: `rating:pending:${task.task_id ?? `${task.match_id}:${task.target_role}`}`,
-    title: task.action_label ?? translate('actionTypes.ratingPending', 'Avaliacao pendente'),
+    title: task.action_label ?? translate('actionTypes.ratingPending', 'Avaliação pendente'),
     body: `${task.match_title ?? 'Partida'} - ${task.target_user_name ?? 'Atleta'}`,
     createdAt: task.match_date ? `${task.match_date}T23:59:59.000Z` : new Date().toISOString(),
     type: 'rating',

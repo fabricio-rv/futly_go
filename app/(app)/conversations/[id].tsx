@@ -43,9 +43,9 @@ export default function ConversationDetailScreen() {
 
   const quickAttachMessages = useMemo(
     () => [
-      t('detail.quickAttachLocation', 'Compartilhando localizacao agora.'),
+      t('detail.quickAttachLocation', 'Compartilhando localização agora.'),
       t('detail.quickAttachPix', 'Pix enviado no card da partida. Confirmem por favor.'),
-      t('detail.quickAttachPresence', 'Confirmei presenca aqui no chat.'),
+      t('detail.quickAttachPresence', 'Confirmei presença aqui no chat.'),
     ],
     [t]
   );
@@ -68,13 +68,13 @@ export default function ConversationDetailScreen() {
       await send(message);
     } catch {
       setDraft(message);
-      Alert.alert(t('errors.sendFailedTitle', 'Falha ao enviar'), t('errors.sendFailedMessage', 'Nao foi possivel enviar a mensagem agora.'));
+      Alert.alert(t('errors.sendFailedTitle', 'Falha ao enviar'), t('errors.sendFailedMessage', 'Não foi possível enviar a mensagem agora.'));
     }
   }, [draft, send, t]);
 
   const handleBannerPress = useCallback(() => {
     if (!header?.matchId) {
-      Alert.alert(t('errors.noMatchLinkedTitle', 'Sem partida vinculada'), t('errors.noMatchLinkedMessage', 'Esta conversa nao possui partida vinculada.'));
+      Alert.alert(t('errors.noMatchLinkedTitle', 'Sem partida vinculada'), t('errors.noMatchLinkedMessage', 'Esta conversa não possui partida vinculada.'));
       return;
     }
 
@@ -86,7 +86,7 @@ export default function ConversationDetailScreen() {
       await setArchived(!(header?.isArchived ?? false));
       setMenuVisible(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Nao foi possivel atualizar o status da conversa.';
+      const message = err instanceof Error ? err.message : 'Não foi possível atualizar o status da conversa.';
       Alert.alert(t('errors.archiveFailedTitle', 'Falha ao arquivar'), message);
     }
   }, [header?.isArchived, setArchived, t]);
@@ -95,9 +95,9 @@ export default function ConversationDetailScreen() {
     try {
       await markUnread();
       setMenuVisible(false);
-      Alert.alert(t('status.updatedTitle', 'Conversa atualizada'), t('status.markedUnreadMessage', 'Marcamos esta conversa como nao lida.'));
+      Alert.alert(t('status.updatedTitle', 'Conversa atualizada'), t('status.markedUnreadMessage', 'Marcamos esta conversa como não lida.'));
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('errors.markUnreadFailedMessage', 'Nao foi possivel marcar como nao lida.');
+      const message = err instanceof Error ? err.message : t('errors.markUnreadFailedMessage', 'Não foi possível marcar como não lida.');
       Alert.alert(t('errors.updateFailedTitle', 'Falha ao atualizar'), message);
     }
   }, [markUnread, t]);
@@ -107,7 +107,7 @@ export default function ConversationDetailScreen() {
       await send(text);
       setPlusVisible(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('errors.shareItemFailedMessage', 'Nao foi possivel compartilhar o item.');
+      const message = err instanceof Error ? err.message : t('errors.shareItemFailedMessage', 'Não foi possível compartilhar o item.');
       Alert.alert(t('common.error', 'Falha'), message);
     }
   }, [send, t]);
@@ -275,7 +275,7 @@ bounces
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setMenuVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={handleMarkUnread}>
-              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{t('actions.markUnread', 'Marcar como nao lida')}</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{t('actions.markUnread', 'Marcar como não lida')}</Text>
             </Pressable>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => { setParticipantsVisible(true); setMenuVisible(false); }}>
               <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{t('actions.viewParticipants', 'Ver participantes')}</Text>
@@ -293,7 +293,7 @@ bounces
       <Modal visible={plusVisible} transparent animationType="fade" onRequestClose={() => setPlusVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setPlusVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
-            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-1">{t('detail.quickActions', 'Acoes rapidas')}</Text>
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-1">{t('detail.quickActions', 'Ações rapidas')}</Text>
             {quickAttachMessages.map((item) => (
               <Pressable key={item} className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => void handleQuickAttach(item)}>
                 <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item}</Text>

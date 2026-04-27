@@ -67,7 +67,7 @@ export default function LoginScreen() {
 
 	async function handleLogin() {
 		if (!email.trim() || !password.trim()) {
-			showToast(t('validation.fillRequiredFields', 'Preencha os campos obrigatorios'), 'error');
+			showToast(t('validation.fillRequiredFields', 'Preencha os campos obrigatórios'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -87,12 +87,12 @@ export default function LoginScreen() {
 				void navigateAfterLogin();
 			}, 400);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : t('errors.loginGeneric', 'Nao foi possivel fazer login.');
+			const message = error instanceof Error ? error.message : t('errors.loginGeneric', 'Não foi possível fazer login.');
 			showToast(t('errors.loginFailedTitle', 'Falha no login'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: t('errors.loginFailedTitle', 'Nao foi possivel entrar'),
+				title: t('errors.loginFailedTitle', 'Não foi possível entrar'),
 				message,
 				primaryLabel: t('signup.createAccount', 'Ir para cadastro'),
 				onPrimary: () => {
@@ -116,7 +116,7 @@ export default function LoginScreen() {
 				void navigateAfterLogin();
 			}, 300);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : t('errors.socialGeneric', 'Nao foi possivel fazer login social.');
+			const message = error instanceof Error ? error.message : t('errors.socialGeneric', 'Não foi possível fazer login social.');
 			showToast(t('errors.socialLoginFailedTitle', 'Falha no login social'), 'error');
 			setFeedback({
 				visible: true,
@@ -174,7 +174,8 @@ export default function LoginScreen() {
 							autoCorrect={false}
 							keyboardType="email-address"
 							leftIcon={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
-							containerClassName="h-14 px-5 rounded-2xl border-line2 bg-[#0C111E]"
+							size="lg"
+							containerClassName="border-line2 bg-[#0C111E]"
 							labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 						/>
 
@@ -195,7 +196,8 @@ export default function LoginScreen() {
 									<Eye size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />
 								</Pressable>
 							)}
-							containerClassName="h-14 px-5 rounded-2xl border-ok bg-[#0C111E]"
+							size="lg"
+							containerClassName="border-ok bg-[#0C111E]"
 							labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 						/>
 					</View>
@@ -231,7 +233,6 @@ export default function LoginScreen() {
 						size="xl"
 						loading={loading}
 						disabled={loading || socialLoading !== null}
-						className="rounded-[14px]"
 						onPress={handleLogin}
 					/>
 					<View className="my-6 flex-row items-center gap-[10px]">
@@ -251,7 +252,7 @@ export default function LoginScreen() {
 
 					<View className="mt-9 items-center">
 						<Text variant="label" className="text-fg3">
-							{t('login.noAccountYet', 'Ainda nao tem conta?')}
+							{t('login.noAccountYet', 'Ainda não tem conta?')}
 						</Text>
 						<Pressable
 							accessibilityRole="button"

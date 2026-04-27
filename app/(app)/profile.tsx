@@ -123,7 +123,7 @@ export default function ProfileScreen() {
                 {t('personal.location', 'Cidade')}
               </Text>
               <Text variant="label" className="mt-1 font-semibold text-[#111827] dark:text-white">
-                {profile?.city ?? t('messages.notDefined', 'Nao definida')}
+                {profile?.city ?? t('messages.notDefined', 'Não definida')}
               </Text>
             </View>
           </View>
@@ -187,13 +187,13 @@ export default function ProfileScreen() {
 
         <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-            {t('history.byPositionAndModality', 'Historico por posicao e modalidade')}
+            {t('history.byPositionAndModality', 'Histórico por posicao e modalidade')}
           </Text>
 
           {positionStats.length === 0 ? (
             <View className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3">
               <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
-                {t('history.emptyPositionsHistory', 'Ainda nao ha historico de posicoes jogadas.')}
+                {t('history.emptyPositionsHistory', 'Ainda não ha histórico de posicoes jogadas.')}
               </Text>
             </View>
           ) : (

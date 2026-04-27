@@ -67,7 +67,7 @@ export const esESStore = {
     manage: 'Gestionar plan',
     goldBenefits: 'Beneficios del Gold',
     unlimitedDescription: 'Crea y participa en todos los partidos que quieras',
-    advancedFiltersDescription: 'Busca partidos por nivel, horario y ubicacion',
+    advancedFiltersDescription: 'Busca partidos por nivel, horário y ubicacion',
     priorityDescription: 'Tus mensajes aparecen con prioridad',
     verifiedDescription: 'Tu perfil recibe la insignia de verificacion',
     noAdsDescription: 'Disfruta la experiencia sin anuncios',
