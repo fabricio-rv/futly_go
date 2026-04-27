@@ -258,7 +258,7 @@ export default function CreateMatchScreen() {
       <MatchBackground />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 152 }}>
         <View className="px-[18px] pt-4 pb-1">
-          <Text variant="heading">Novo Jogo</Text>
+          <Text variant="heading" className="text-white">Novo Jogo</Text>
         </View>
 
         <StepIndicator total={4} current={3} />

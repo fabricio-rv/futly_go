@@ -69,9 +69,10 @@ export function SelectField<T extends string>({
         accessibilityRole="button"
         disabled={disabled}
         onPress={() => setOpen(true)}
-        className={`h-12 rounded-xl border bg-bg-elev2 px-4 flex-row items-center ${
-          error ? 'border-danger' : 'border-bg-border'
+        className={`h-12 rounded-xl border px-4 flex-row items-center ${
+          error ? 'border-danger' : (theme === 'light' ? 'border-[rgba(0,0,0,0.12)]' : 'border-bg-border')
         } ${disabled ? 'opacity-60' : ''}`}
+        style={{ backgroundColor: theme === 'light' ? '#FAFBFC' : undefined }}
       >
         <View className="flex-1 flex-row items-center">
           {selectedOption ? (
@@ -110,14 +111,19 @@ export function SelectField<T extends string>({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable
-          className="flex-1 bg-ink-0/70 px-4 justify-center"
+          className="flex-1 px-4 justify-center"
+          style={{ backgroundColor: theme === 'light' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.7)' }}
           onPress={() => setOpen(false)}
         >
           <Pressable
-            className="rounded-2xl border border-bg-border bg-bg-base overflow-hidden max-h-[78%]"
+            className="rounded-2xl border overflow-hidden max-h-[78%]"
+            style={{
+              borderColor: theme === 'light' ? 'rgba(0,0,0,0.12)' : '#1F2A44',
+              backgroundColor: theme === 'light' ? '#FFFFFF' : '#0A0E18'
+            }}
             onPress={(event) => event.stopPropagation()}
           >
-            <View className="px-4 py-3 border-b border-bg-border">
+            <View className="px-4 py-3 border-b" style={{ borderColor: theme === 'light' ? 'rgba(0,0,0,0.12)' : '#1F2A44' }}>
               <Text variant="title" tone="primary">
                 {label ?? 'Selecione'}
               </Text>
@@ -125,8 +131,8 @@ export function SelectField<T extends string>({
 
             {searchable ? (
               <View className="px-3 pt-3 pb-2">
-                <View className="h-11 rounded-xl border border-bg-border bg-bg-elev2 px-3 flex-row items-center">
-                  <Search color="#9AA4B2" size={16} />
+                <View className="h-11 rounded-xl border px-3 flex-row items-center" style={{ borderColor: theme === 'light' ? 'rgba(0,0,0,0.12)' : '#1F2A44', backgroundColor: theme === 'light' ? '#FAFBFC' : '#101626' }}>
+                  <Search color={theme === 'light' ? '#9CA3AF' : '#9AA4B2'} size={16} />
                   <TextInput
                     value={search}
                     onChangeText={setSearch}
@@ -157,9 +163,10 @@ export function SelectField<T extends string>({
                       setOpen(false);
                       setSearch('');
                     }}
-                    className={`px-4 py-3 flex-row items-center border-b border-bg-border/40 ${
-                      active ? 'bg-emerald-500/10' : ''
+                    className={`px-4 py-3 flex-row items-center ${
+                      active ? (theme === 'light' ? 'bg-emerald-500/10' : 'bg-emerald-500/10') : ''
                     }`}
+                    style={{ borderBottomColor: theme === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)', borderBottomWidth: 1 }}
                   >
                     {item.iconSource ? (
                       <Image
