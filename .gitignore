@@ -48,3 +48,8 @@ yarn-error.*
 /HubDePartidas-App.html
 
 .vercel
+
+# sensitive auth artifacts
+apple-secret.jwt
+check-apple-jwt.js
+generate-apple-secret.js
