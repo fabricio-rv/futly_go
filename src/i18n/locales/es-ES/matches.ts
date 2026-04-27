@@ -255,6 +255,8 @@ export const esESMatches = {
   pricePerPerson: '/persona',
   statusOpen: 'Lugares disponibles',
   statusFull: 'Completo',
+  statusCreatedByYou: 'Creado por ti',
+  statusFinished: 'Finalizado',
   levelCasual: 'Casual',
   levelIntermediate: 'Intermedio',
   levelAdvanced: 'Avanzado',

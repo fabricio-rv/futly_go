@@ -255,6 +255,8 @@ export const ptPTMatches = {
   pricePerPerson: '/pessoa',
   statusOpen: 'Lugares disponíveis',
   statusFull: 'Completo',
+  statusCreatedByYou: 'Criado por ti',
+  statusFinished: 'Finalizado',
   levelCasual: 'Casual',
   levelIntermediate: 'Intermédio',
   levelAdvanced: 'Avançado',

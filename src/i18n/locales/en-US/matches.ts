@@ -255,6 +255,8 @@ export const enUSMatches = {
   pricePerPerson: '/person',
   statusOpen: 'Open spots',
   statusFull: 'Full',
+  statusCreatedByYou: 'Created by you',
+  statusFinished: 'Finished',
   levelCasual: 'Casual',
   levelIntermediate: 'Intermediate',
   levelAdvanced: 'Advanced',

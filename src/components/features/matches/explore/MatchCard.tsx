@@ -71,8 +71,10 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
   };
 
   const translateStatusLabel = (label: string) => {
-    if (label.includes('abertas') || label.includes('Open') || label.includes('disponibles')) return t('statusOpen', 'Open spots');
-    if (label.includes('Lotada') || label.includes('Full') || label.includes('Completo')) return t('statusFull', 'Full');
+    if (label.includes('abertas') || label.includes('Open') || label.includes('disponibles')) return t('statusOpen', 'Vagas abertas');
+    if (label.includes('Lotada') || label.includes('Full') || label.includes('Completo')) return t('statusFull', 'Lotada');
+    if (label.includes('Criada') || label.includes('Created')) return t('statusCreatedByYou', 'Criada por você');
+    if (label.includes('Finalizada') || label.includes('Finished')) return t('statusFinished', 'Finalizada');
     return label;
   };
 

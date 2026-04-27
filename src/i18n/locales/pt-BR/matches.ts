@@ -247,6 +247,8 @@ export const ptBRMatches = {
   pricePerPerson: '/pessoa',
   statusOpen: 'Vagas abertas',
   statusFull: 'Lotada',
+  statusCreatedByYou: 'Criada por você',
+  statusFinished: 'Finalizada',
   levelCasual: 'Casual',
   levelIntermediate: 'Intermediário',
   levelAdvanced: 'Avançado',
