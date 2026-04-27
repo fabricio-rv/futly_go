@@ -28,7 +28,7 @@ export function XpHeader({ level, xp, xpNext = 3350, name }: XpHeaderProps) {
         </Text>
 
         <View className="flex-row items-center gap-2">
-          <View className="flex-1 h-1.5 rounded-pill bg-ink-3 overflow-hidden">
+          <View className="flex-1 h-1.5 rounded-pill bg-[#DDE3ED] dark:bg-ink-3 overflow-hidden">
             <View
               className="h-full rounded-pill"
               style={{

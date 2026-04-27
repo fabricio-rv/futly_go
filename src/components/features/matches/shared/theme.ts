@@ -2,11 +2,11 @@ import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 const lightTheme = {
   colors: {
-    bgBase: '#F3F6FB',
-    bgSurfaceA: '#FFFFFF',
-    bgSurfaceB: '#F7FAFF',
-    line: '#E3EAF4',
-    lineStrong: '#CED8E7',
+    bgBase: '#F4F6F9',
+    bgSurfaceA: '#FAFBFC',
+    bgSurfaceB: '#F4F6F9',
+    line: 'rgba(0,0,0,0.08)',
+    lineStrong: 'rgba(0,0,0,0.12)',
     fgPrimary: '#1F2937',
     fgSecondary: '#475569',
     fgMuted: '#64748B',

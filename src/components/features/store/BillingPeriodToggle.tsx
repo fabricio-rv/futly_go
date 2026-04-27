@@ -1,5 +1,6 @@
 ﻿import { Pressable, View } from 'react-native';
 
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { Text } from '@/src/components/ui';
 
 import { billingOptions, type BillingPeriod } from './data';
@@ -10,8 +11,11 @@ type BillingPeriodToggleProps = {
 };
 
 export function BillingPeriodToggle({ value, onChange }: BillingPeriodToggleProps) {
+	const theme = useAppColorScheme();
+	const isLight = theme === 'light';
+
 	return (
-		<View className="mx-[18px] mb-[14px] rounded-[14px] border border-line2 bg-[#0C111E] p-1 flex-row gap-1">
+		<View className={`mx-[18px] mb-[14px] rounded-[14px] border p-1 flex-row gap-1 ${isLight ? 'border-[rgba(0,0,0,0.10)] bg-[#F4F6F9]' : 'border-line2 bg-[#0C111E]'}`}>
 			{billingOptions.map((option) => {
 				const active = option.value === value;
 
@@ -21,12 +25,12 @@ export function BillingPeriodToggle({ value, onChange }: BillingPeriodToggleProp
 						accessibilityRole="button"
 						onPress={() => onChange(option.value)}
 						className={`h-10 flex-1 rounded-[10px] flex-row items-center justify-center gap-1 ${
-							active ? 'bg-white/10' : 'bg-transparent'
+							active ? (isLight ? 'bg-black/5' : 'bg-white/10') : 'bg-transparent'
 						}`}
 					>
 						<Text
 							variant="caption"
-							className={`font-semibold ${active ? 'text-white' : 'text-fg2'}`}
+							className={`font-semibold ${active ? (isLight ? 'text-[#111827]' : 'text-white') : (isLight ? 'text-[#4B5563]' : 'text-fg2')}`}
 						>
 							{option.label}
 						</Text>

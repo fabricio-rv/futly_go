@@ -19,7 +19,7 @@ export function ActionCard({ label, subtitle, icon, onPress, style, testID }: Ac
       className="flex-1"
       style={style}
     >
-      <View className="rounded-lg border border-ink-hairline bg-ink-2 p-4 h-[136px] justify-between">
+      <View className="rounded-lg border border-[rgba(0,0,0,0.08)] dark:border-ink-hairline bg-[#FAFBFC] dark:bg-ink-2 p-4 h-[136px] justify-between">
         <View>
           <Text variant="eyebrow" tone="primary" className="font-bold tracking-[2px]">
             {label}

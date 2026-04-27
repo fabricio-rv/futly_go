@@ -70,6 +70,8 @@ export function mapMatchRowToPartida(match: MatchRow, occupiedSlots: number, opt
   return {
     id: match.id,
     title: match.title,
+    matchDate: match.match_date,
+    matchTime: match.match_time,
     dateLabel: formatDateLabel(match.match_date, match.turno),
     timeLabel: formatTimeLabel(match.match_time),
     shiftLabel: match.turno.charAt(0).toUpperCase() + match.turno.slice(1),

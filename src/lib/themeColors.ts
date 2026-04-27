@@ -3,20 +3,20 @@ export type Theme = 'light' | 'dark';
 export const themeColors = {
   light: {
     bg: {
-      primary: '#FFFFFF',
-      secondary: '#F8FAFB',
-      tertiary: '#F3F4F6',
+      primary: '#FAFBFC',
+      secondary: '#F4F6F9',
+      tertiary: '#EEF1F5',
     },
     border: {
-      primary: '#E5E7EB',
-      secondary: '#D1D5DB',
-      light: '#F3F4F6',
+      primary: 'rgba(0,0,0,0.12)',
+      secondary: 'rgba(0,0,0,0.08)',
+      light: 'rgba(0,0,0,0.06)',
     },
     text: {
-      primary: '#1F2937',
-      secondary: '#6B7280',
-      tertiary: '#9CA3AF',
-      muted: '#D1D5DB',
+      primary: '#111827',
+      secondary: '#4B5563',
+      tertiary: '#6B7280',
+      muted: '#9CA3AF',
     },
     icon: {
       primary: '#1F2937',

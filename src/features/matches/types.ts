@@ -46,6 +46,8 @@ export interface InfraItem {
 export interface Partida {
   id: string;
   title: string;
+  matchDate?: string;
+  matchTime?: string;
   dateLabel: string;
   timeLabel: string;
   shiftLabel: string;

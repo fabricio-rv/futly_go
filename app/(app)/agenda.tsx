@@ -17,6 +17,7 @@ type AgendaTab = 'criadas' | 'marcadas' | 'pendentes';
 export default function AgendaScreen() {
   const matchTheme = useMatchTheme();
   const theme = useAppColorScheme();
+  const isLight = theme === 'light';
   const [tab, setTab] = useState<AgendaTab>('criadas');
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<RatingTask | null>(null);
@@ -171,13 +172,13 @@ export default function AgendaScreen() {
                           className="rounded-[10px] border border-[#22B76C66] bg-[#22B76C22] px-3 py-2 flex-1"
                           onPress={() => void processParticipationRequest(request.id, 'accept').then(() => getHostPendingRequests())}
                         >
-                          <Text variant="micro" className="text-[#86E5B4] font-semibold text-center">Aceitar</Text>
+                          <Text variant="micro" className="font-semibold text-center" style={{ color: isLight ? '#1A7A4A' : '#86E5B4' }}>Aceitar</Text>
                         </Pressable>
                         <Pressable
                           className="rounded-[10px] border border-[#EF444466] bg-[#EF444422] px-3 py-2 flex-1"
                           onPress={() => void processParticipationRequest(request.id, 'reject').then(() => getHostPendingRequests())}
                         >
-                          <Text variant="micro" className="text-[#FCA5A5] font-semibold text-center">Recusar</Text>
+                          <Text variant="micro" className="font-semibold text-center" style={{ color: isLight ? '#B91C1C' : '#FCA5A5' }}>Recusar</Text>
                         </Pressable>
                       </View>
                     </View>

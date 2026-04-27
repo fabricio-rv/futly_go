@@ -181,6 +181,14 @@ export default function CreateMatchScreen() {
     );
   };
 
+  const handlePricePerPersonChange = (value: string) => {
+    setPricePerPerson(value.replace(/[^\d]/g, ''));
+  };
+
+  const handleDurationMinutesChange = (value: string) => {
+    setDurationMinutes(value.replace(/[^\d]/g, ''));
+  };
+
   async function handleCreateMatch(status: 'publicada' | 'rascunho') {
     if (creatingRef.current) return;
     creatingRef.current = true;
@@ -412,26 +420,28 @@ export default function CreateMatchScreen() {
               ))}
             </View>
 
-            <View className="flex-row gap-2 mt-4">
-              <View className="flex-1">
-                <Input
-                  label="Valor por pessoa"
-                  value={pricePerPerson}
-                  onChangeText={setPricePerPerson}
-                  keyboardType="number-pad"
-                  placeholder="Ex.: 25"
-                />
+              <View className="flex-row gap-2 mt-4">
+                <View className="flex-1">
+                  <Input
+                    label="Valor por pessoa"
+                    value={pricePerPerson}
+                    onChangeText={handlePricePerPersonChange}
+                    keyboardType="number-pad"
+                    placeholder="25"
+                    leftAdornment={<Text variant="body" tone="muted">R$</Text>}
+                  />
+                </View>
+                <View className="flex-1">
+                  <Input
+                    label="Duracao (min)"
+                    value={durationMinutes}
+                    onChangeText={handleDurationMinutesChange}
+                    keyboardType="number-pad"
+                    placeholder="60"
+                    rightAdornment={<Text variant="body" tone="muted">min</Text>}
+                  />
+                </View>
               </View>
-              <View className="flex-1">
-                <Input
-                  label="Duracao (min)"
-                  value={durationMinutes}
-                  onChangeText={setDurationMinutes}
-                  keyboardType="number-pad"
-                  placeholder="Ex.: 60"
-                />
-              </View>
-            </View>
 
             <View className="mt-4">
               <Text variant="micro" className="uppercase tracking-[2px]" style={{ color: matchTheme.colors.fgMuted }}>
@@ -683,7 +693,6 @@ export default function CreateMatchScreen() {
     </Screen>
   );
 }
-
 
 
 

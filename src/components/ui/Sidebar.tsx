@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { Text } from './Text';
 
 export type SidebarTab = 'matches' | 'search' | 'favourites' | 'profile';
@@ -31,6 +32,8 @@ export function Sidebar({
   onBack,
   showBackItem = false,
 }: Props) {
+  const theme = useAppColorScheme();
+  const isLight = theme === 'light';
   const insets = useSafeAreaInsets();
   const translateX = useRef(new Animated.Value(-260)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -70,10 +73,10 @@ export function Sidebar({
           left: 12,
           bottom: insets.bottom + 12,
           width: 240,
-          backgroundColor: '#0E1420',
+          backgroundColor: isLight ? '#FAFBFC' : '#0E1420',
           borderRadius: 24,
           borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.07)',
+          borderColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)',
           paddingTop: 20,
           paddingBottom: 16,
           transform: [{ translateX }],
@@ -101,7 +104,7 @@ export function Sidebar({
           </Text>
         </View>
 
-        <View style={{ height: 1, backgroundColor: 'rgba(255,255,255,0.06)', marginHorizontal: 18, marginBottom: 10 }} />
+        <View style={{ height: 1, backgroundColor: isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)', marginHorizontal: 18, marginBottom: 10 }} />
 
         {ITEMS.map(({ id, label, Icon }) => {
           const active = activeTab === id;
@@ -120,7 +123,7 @@ export function Sidebar({
                 paddingVertical: 12,
                 borderRadius: 16,
                 marginBottom: 2,
-                backgroundColor: active ? 'rgba(34,197,78,0.09)' : 'transparent',
+                backgroundColor: active ? (isLight ? 'rgba(34,197,78,0.08)' : 'rgba(34,197,78,0.09)') : 'transparent',
               }}
             >
               <View
@@ -131,11 +134,11 @@ export function Sidebar({
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,
-                  backgroundColor: active ? '#22C54D' : 'rgba(255,255,255,0.04)',
+                  backgroundColor: active ? '#22C54D' : (isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)'),
                 }}
               >
                 <Icon
-                  color={active ? '#05070B' : '#5A6478'}
+                  color={active ? '#05070B' : (isLight ? '#6B7280' : '#5A6478')}
                   size={18}
                   strokeWidth={active ? 2.5 : 1.8}
                 />
@@ -143,7 +146,7 @@ export function Sidebar({
               <Text
                 variant="body"
                 style={{
-                  color: active ? '#F5F7FA' : '#7A8699',
+                  color: active ? (isLight ? '#111827' : '#F5F7FA') : (isLight ? '#6B7280' : '#7A8699'),
                   fontWeight: active ? '700' : '400',
                   flex: 1,
                 } as any}
@@ -183,15 +186,15 @@ export function Sidebar({
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginRight: 12,
-                backgroundColor: 'rgba(255,255,255,0.04)',
+                backgroundColor: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.04)',
               }}
             >
-              <ChevronLeft color="#5A6478" size={18} strokeWidth={1.8} />
+              <ChevronLeft color={isLight ? '#6B7280' : '#5A6478'} size={18} strokeWidth={1.8} />
             </View>
             <Text
               variant="body"
               style={{
-                color: '#7A8699',
+                color: isLight ? '#6B7280' : '#7A8699',
                 fontWeight: '400',
                 flex: 1,
               } as any}

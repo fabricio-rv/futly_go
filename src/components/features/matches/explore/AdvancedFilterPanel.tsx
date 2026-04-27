@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ScrollView, View, Pressable, Modal } from 'react-native';
+import { Modal, Pressable, TextInput, useWindowDimensions, View } from 'react-native';
+import { ChevronDown } from 'lucide-react-native';
 
+import { Button, Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
-import { Text, Input, SelectField, Button } from '@/src/components/ui';
 
 export interface AdvancedFilters {
   state?: string;
@@ -14,169 +15,259 @@ export interface AdvancedFilters {
 }
 
 type AdvancedFilterPanelProps = {
-  visible: boolean;
-  onClose: () => void;
   filters: AdvancedFilters;
   onFiltersChange: (filters: AdvancedFilters) => void;
 };
 
-const TURNO_OPTIONS = [
-  { value: 'manha', label: 'Manhã' },
+type FieldButtonProps = {
+  label: string;
+  value?: string;
+  placeholder: string;
+  onPress: () => void;
+};
+
+const TURNO_OPTIONS: Array<{ value: NonNullable<AdvancedFilters['shift']>; label: string }> = [
+  { value: 'manha', label: 'Manha' },
   { value: 'tarde', label: 'Tarde' },
   { value: 'noite', label: 'Noite' },
 ];
 
+function formatDateField(value: Date) {
+  const day = String(value.getDate()).padStart(2, '0');
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const year = value.getFullYear();
+  return `${day}/${month}/${year}`;
+}
 
-export function AdvancedFilterPanel({ visible, onClose, filters, onFiltersChange }: AdvancedFilterPanelProps) {
+function toIsoDate(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function daysInMonth(year: number, monthIndex: number) {
+  return new Date(year, monthIndex + 1, 0).getDate();
+}
+
+function parseIsoDate(value?: string) {
+  if (!value) return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const [y, m, d] = value.split('-').map(Number);
+  const parsed = new Date(y, m - 1, d);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+function parseIsoTime(value?: string) {
+  if (!value) return null;
+  if (!/^\d{2}:\d{2}/.test(value)) return null;
+  const [h, min] = value.split(':').map(Number);
+  if (Number.isNaN(h) || Number.isNaN(min)) return null;
+  return { hour: h, minute: min };
+}
+
+function FieldButton({ label, value, placeholder, onPress }: FieldButtonProps) {
   const matchTheme = useMatchTheme();
-  const [showDateModal, setShowDateModal] = useState(false);
-  const [showTimeModal, setShowTimeModal] = useState(false);
-  const [webDateCursor, setWebDateCursor] = useState(() => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1);
-  });
-  const [webHour, setWebHour] = useState(6);
-  const [webMinute, setWebMinute] = useState(0);
 
+  return (
+    <Pressable onPress={onPress} className="gap-2">
+      <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
+        {label}
+      </Text>
+      <View
+        className="h-12 rounded-[12px] border px-3 flex-row items-center justify-between"
+        style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
+      >
+        <Text variant="body" style={{ color: value ? matchTheme.colors.fgPrimary : matchTheme.colors.fgMuted }}>
+          {value || placeholder}
+        </Text>
+        <ChevronDown size={18} color={matchTheme.colors.fgMuted} />
+      </View>
+    </Pressable>
+  );
+}
 
-  const handleDateChange = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`;
-    onFiltersChange({ ...filters, date: dateString });
-    setShowDateModal(false);
-  };
+export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilterPanelProps) {
+  const matchTheme = useMatchTheme();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
 
-  const handleTimeConfirm = () => {
-    const timeString = `${String(webHour).padStart(2, '0')}:${String(webMinute).padStart(2, '0')}`;
-    onFiltersChange({ ...filters, time: timeString });
-    setShowTimeModal(false);
-  };
+  const selectedDate = parseIsoDate(filters.date) ?? new Date();
+  const parsedTime = parseIsoTime(filters.time);
 
-  const handleShiftChange = (shift: string) => {
-    onFiltersChange({ ...filters, shift: shift as 'manha' | 'tarde' | 'noite' });
+  const [showWebDateModal, setShowWebDateModal] = useState(false);
+  const [showWebTimeModal, setShowWebTimeModal] = useState(false);
+  const [showShiftDropdown, setShowShiftDropdown] = useState(false);
+  const [webDateCursor, setWebDateCursor] = useState(() => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+  const [webHour, setWebHour] = useState(parsedTime?.hour ?? 19);
+  const [webMinute, setWebMinute] = useState(parsedTime?.minute ?? 0);
+
+  const monthYearLabel = webDateCursor.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const currentYear = webDateCursor.getFullYear();
+  const currentMonth = webDateCursor.getMonth();
+  const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
+  const monthDays = daysInMonth(currentYear, currentMonth);
+  const leadingEmpty = Array.from({ length: firstWeekday });
+  const dayNumbers = Array.from({ length: monthDays }, (_, idx) => idx + 1);
+
+  const handleShiftChange = (shift: NonNullable<AdvancedFilters['shift']>) => {
+    const nextShift = filters.shift === shift ? undefined : shift;
+    onFiltersChange({ ...filters, shift: nextShift });
   };
 
   const handlePriceChange = (price: string) => {
-    const numPrice = price ? Number(price) : undefined;
-    onFiltersChange({ ...filters, maxPrice: numPrice });
+    const cleanValue = price.replace(/[^\d]/g, '');
+    const numPrice = cleanValue ? Number(cleanValue) : undefined;
+    onFiltersChange({ ...filters, maxPrice: Number.isFinite(numPrice) ? numPrice : undefined });
   };
 
   const handleClearFilters = () => {
     onFiltersChange({});
   };
 
-  const monthYearLabel = webDateCursor.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  const currentYear = webDateCursor.getFullYear();
-  const currentMonth = webDateCursor.getMonth();
-  const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
-  const monthDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const leadingEmpty = Array.from({ length: firstWeekday });
-  const dayNumbers = Array.from({ length: monthDays }, (_, idx) => idx + 1);
-
   return (
-    <Modal transparent visible={visible} onRequestClose={onClose} animationType="fade">
-      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={onClose}>
-        <View className="flex-1 justify-center items-center px-4">
-          <Pressable
-            className="w-full max-w-[420px] rounded-[18px] border max-h-[85%]"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View className="p-4 gap-4">
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text variant="label" className="font-bold" style={{ color: matchTheme.colors.fgPrimary }}>
-                    Filtros Avançados
+    <>
+      <View className="px-[18px] mb-3">
+        <View
+          className="rounded-[20px] border p-3 gap-2"
+          style={{
+            backgroundColor: matchTheme.colors.bgSurfaceA,
+            borderColor: matchTheme.colors.line,
+            position: 'relative',
+            zIndex: 40,
+            elevation: 40,
+          }}
+        >
+          <View className={isCompact ? 'gap-2' : 'flex-row gap-2'}>
+            <View className={isCompact ? 'w-full' : 'flex-1'}>
+              <FieldButton
+                label="Data"
+                value={filters.date ? formatDateField(parseIsoDate(filters.date) ?? new Date()) : ''}
+                placeholder="Selecione a data"
+                onPress={() => {
+                  const base = parseIsoDate(filters.date) ?? new Date();
+                  setWebDateCursor(new Date(base.getFullYear(), base.getMonth(), 1));
+                  setShowWebDateModal(true);
+                }}
+              />
+            </View>
+            <View className={isCompact ? 'w-full' : 'flex-1'}>
+              <FieldButton
+                label="Horario"
+                value={filters.time ?? ''}
+                placeholder="Selecione o horario"
+                onPress={() => {
+                  const time = parseIsoTime(filters.time);
+                  setWebHour(time?.hour ?? 19);
+                  setWebMinute(time?.minute ?? 0);
+                  setShowWebTimeModal(true);
+                }}
+              />
+            </View>
+          </View>
+
+          <View className={isCompact ? 'gap-2 mt-1' : 'flex-row gap-2 mt-1'}>
+            <View className={isCompact ? 'w-full' : 'flex-1'}>
+              <View className="gap-2 relative">
+                <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
+                  Turno
+                </Text>
+                <Pressable
+                  onPress={() => setShowShiftDropdown((prev) => !prev)}
+                  className="h-12 rounded-[12px] border px-3 flex-row items-center justify-between"
+                  style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
+                >
+                  <Text
+                    variant="body"
+                    style={{
+                      color: matchTheme.colors.fgPrimary,
+                    }}
+                  >
+                    {TURNO_OPTIONS.find((item) => item.value === filters.shift)?.label ?? 'Todos os turnos'}
                   </Text>
-                  <Pressable onPress={onClose}>
-                    <Text variant="label" style={{ color: matchTheme.colors.fgMuted }}>
-                      ✕
-                    </Text>
-                  </Pressable>
-                </View>
+                  <ChevronDown size={18} color={matchTheme.colors.fgMuted} />
+                </Pressable>
 
-                <View className="gap-3">
-
-                  {/* Date */}
-                  <View>
+                {showShiftDropdown ? (
+                  <View
+                    className="absolute left-0 right-0 rounded-[12px] border overflow-hidden"
+                    style={{
+                      top: 70,
+                      zIndex: 60,
+                      elevation: 60,
+                      backgroundColor: matchTheme.colors.bgSurfaceB,
+                      borderColor: matchTheme.colors.lineStrong,
+                    }}
+                  >
                     <Pressable
-                      onPress={() => setShowDateModal(true)}
-                      className="h-10 rounded-[10px] border px-3 justify-center"
-                      style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
+                      className="px-3 py-3 border-b"
+                      style={{ borderColor: matchTheme.colors.line }}
+                      onPress={() => {
+                        onFiltersChange({ ...filters, shift: undefined });
+                        setShowShiftDropdown(false);
+                      }}
                     >
-                      <Text
-                        variant="caption"
-                        className="font-medium"
-                        style={{ color: filters.date ? matchTheme.colors.fgPrimary : matchTheme.colors.fgMuted }}
-                      >
-                        Data: {filters.date ? new Date(filters.date).toLocaleDateString('pt-BR') : 'Selecione'}
+                      <Text variant="body" style={{ color: !filters.shift ? matchTheme.colors.okSoft : matchTheme.colors.fgPrimary }}>
+                        Todos os turnos
                       </Text>
                     </Pressable>
+                    {TURNO_OPTIONS.map((option) => {
+                      const active = filters.shift === option.value;
+                      return (
+                        <Pressable
+                          key={option.value}
+                          className="px-3 py-3 border-b"
+                          style={{ borderColor: matchTheme.colors.line }}
+                          onPress={() => {
+                            handleShiftChange(option.value);
+                            setShowShiftDropdown(false);
+                          }}
+                        >
+                          <Text variant="body" style={{ color: active ? matchTheme.colors.okSoft : matchTheme.colors.fgPrimary }}>
+                            {option.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
-
-                  {/* Time */}
-                  <View>
-                    <Pressable
-                      onPress={() => setShowTimeModal(true)}
-                      className="h-10 rounded-[10px] border px-3 justify-center"
-                      style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
-                    >
-                      <Text
-                        variant="caption"
-                        className="font-medium"
-                        style={{ color: filters.time ? matchTheme.colors.fgPrimary : matchTheme.colors.fgMuted }}
-                      >
-                        Horário: {filters.time || 'Selecione'}
-                      </Text>
-                    </Pressable>
-                  </View>
-
-                  {/* Shift */}
-                  <View>
-                    <SelectField
-                      label="Turno"
-                      value={filters.shift || ''}
-                      options={TURNO_OPTIONS.map((item) => ({ value: item.value, label: item.label }))}
-                      placeholder="Selecione o turno"
-                      onChange={handleShiftChange}
-                    />
-                  </View>
-
-                  {/* Price */}
-                  <View>
-                    <Input
-                      label="Preço Máximo (R$)"
-                      value={filters.maxPrice?.toString() || ''}
-                      onChangeText={handlePriceChange}
-                      keyboardType="number-pad"
-                      placeholder="Ex.: 50"
-                    />
-                  </View>
-                </View>
-
-                <View className="flex-row gap-2 mt-2">
-                  <Button
-                    label="Buscar"
-                    onPress={onClose}
-                    className="flex-1"
-                  />
-                  <Button
-                    label="Limpar"
-                    variant="ghost"
-                    onPress={handleClearFilters}
-                    className="flex-1"
-                  />
-                </View>
+                ) : null}
               </View>
-            </ScrollView>
-          </Pressable>
-        </View>
-      </Pressable>
+            </View>
+            <View className={isCompact ? 'w-full gap-2' : 'flex-1 gap-2'}>
+              <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
+                Preco maximo
+              </Text>
+              <View
+                className="h-12 rounded-[12px] border px-3 flex-row items-center gap-2"
+                style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
+              >
+                <Text variant="body" style={{ color: matchTheme.colors.fgMuted }}>
+                  R$
+                </Text>
+                <TextInput
+                  value={filters.maxPrice?.toString() ?? ''}
+                  onChangeText={handlePriceChange}
+                  placeholder="50"
+                  placeholderTextColor={matchTheme.colors.fgMuted}
+                  keyboardType="number-pad"
+                  style={{ color: matchTheme.colors.fgPrimary, fontSize: 14, flex: 1 }}
+                />
+              </View>
+            </View>
+          </View>
 
-      {/* Date Modal */}
-      <Modal transparent visible={showDateModal} onRequestClose={() => setShowDateModal(false)}>
+          <View className="items-end mt-[2px]">
+            <Pressable onPress={handleClearFilters} className="px-1 py-[2px]">
+              <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgMuted }}>
+                Limpar
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+
+      <Modal transparent visible={showWebDateModal} onRequestClose={() => setShowWebDateModal(false)}>
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
           <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <View className="flex-row items-center justify-between mb-3">
@@ -202,9 +293,7 @@ export function AdvancedFilterPanel({ visible, onClose, filters, onFiltersChange
             <View className="flex-row mb-2">
               {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((weekDay, idx) => (
                 <View key={`weekday-${weekDay}-${idx}`} className="flex-1 items-center">
-                  <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
-                    {weekDay}
-                  </Text>
+                  <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>{weekDay}</Text>
                 </View>
               ))}
             </View>
@@ -214,12 +303,12 @@ export function AdvancedFilterPanel({ visible, onClose, filters, onFiltersChange
                 <View key={`empty-${idx}`} className="w-[14.28%] h-10" />
               ))}
               {dayNumbers.map((day) => {
-                const selectedDate = filters.date ? new Date(filters.date) : null;
+                const currentSelectedDate = parseIsoDate(filters.date);
                 const isSelected =
-                  selectedDate &&
-                  selectedDate.getFullYear() === currentYear &&
-                  selectedDate.getMonth() === currentMonth &&
-                  selectedDate.getDate() === day;
+                  currentSelectedDate &&
+                  currentSelectedDate.getFullYear() === currentYear &&
+                  currentSelectedDate.getMonth() === currentMonth &&
+                  currentSelectedDate.getDate() === day;
 
                 return (
                   <Pressable
@@ -227,7 +316,8 @@ export function AdvancedFilterPanel({ visible, onClose, filters, onFiltersChange
                     className="w-[14.28%] h-10 items-center justify-center"
                     onPress={() => {
                       const selected = new Date(currentYear, currentMonth, day);
-                      handleDateChange(selected);
+                      onFiltersChange({ ...filters, date: toIsoDate(selected) });
+                      setShowWebDateModal(false);
                     }}
                   >
                     <View
@@ -243,17 +333,16 @@ export function AdvancedFilterPanel({ visible, onClose, filters, onFiltersChange
               })}
             </View>
 
-            <Button label="Fechar" variant="ghost" size="md" className="mt-3" onPress={() => setShowDateModal(false)} />
+            <Button label="Fechar" variant="ghost" size="md" className="mt-3" onPress={() => setShowWebDateModal(false)} />
           </View>
         </View>
       </Modal>
 
-      {/* Time Modal */}
-      <Modal transparent visible={showTimeModal} onRequestClose={() => setShowTimeModal(false)}>
+      <Modal transparent visible={showWebTimeModal} onRequestClose={() => setShowWebTimeModal(false)}>
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
           <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
-              Selecione o horário
+              Selecione o horario
             </Text>
             <View className="flex-row items-center justify-center gap-4">
               <Button label="-" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 23) % 24)} />
@@ -276,11 +365,15 @@ export function AdvancedFilterPanel({ visible, onClose, filters, onFiltersChange
               label="Confirmar"
               size="md"
               className="mt-4"
-              onPress={handleTimeConfirm}
+              onPress={() => {
+                const nextTime = `${String(webHour).padStart(2, '0')}:${String(webMinute).padStart(2, '0')}`;
+                onFiltersChange({ ...filters, time: nextTime });
+                setShowWebTimeModal(false);
+              }}
             />
           </View>
         </View>
       </Modal>
-    </Modal>
+    </>
   );
 }

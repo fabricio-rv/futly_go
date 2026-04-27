@@ -14,12 +14,12 @@ export function useThemedClasses(lightClasses: string, darkClasses: string): str
  * Helper to create themed class objects for different components
  */
 export const lightModeClasses = {
-  screenBg: 'bg-white',
-  cardBg: 'bg-gray-50',
-  cardBorder: 'border-gray-200',
-  text: 'text-gray-900',
-  textSecondary: 'text-gray-600',
-  textTertiary: 'text-gray-500',
+  screenBg: 'bg-[#F4F6F9]',
+  cardBg: 'bg-[#FAFBFC]',
+  cardBorder: 'border-[rgba(0,0,0,0.08)]',
+  text: 'text-[#111827]',
+  textSecondary: 'text-[#4B5563]',
+  textTertiary: 'text-[#6B7280]',
 };
 
 export const darkModeClasses = {

@@ -50,7 +50,7 @@ export default function ProfileScreen() {
     .map((part) => part[0]?.toUpperCase())
     .join('');
 
-  const bgColor = theme === 'light' ? '#F3F6FB' : '#0A0E18';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#0A0E18';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
