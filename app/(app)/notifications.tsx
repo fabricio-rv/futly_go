@@ -90,15 +90,14 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
-      <HubTopNav
-        title={title}
-        subtitle="ATIVIDADE"
-        hideBack
-      />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+        <HubTopNav
+          title={title}
+          subtitle="ATIVIDADE"
+          hideBack
+        />
 
-      <View style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-          <View className="px-[18px]">
+        <View className="px-[18px]">
           <View className="rounded-[16px] border p-4" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
             <View className="flex-row items-center gap-2 mb-3">
               <Bell size={16} color="#86E5B4" />
@@ -186,8 +185,7 @@ export default function NotificationsScreen() {
             )}
           </View>
         </View>
-        </ScrollView>
-      </View>
+      </ScrollView>
 
       <MatchBottomNav active="notifications" />
 
