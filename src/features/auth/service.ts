@@ -1,8 +1,12 @@
-﻿import type { AuthError, User } from '@supabase/supabase-js';
+import type { AuthError, User } from '@supabase/supabase-js';
+import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 
-import { supabase } from '@/src/lib/supabase';
 import { sendWelcomeEmail } from '@/src/features/email/resendService';
 import { getApiUrl } from '@/src/lib/api';
+import { supabase } from '@/src/lib/supabase';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export type SignupPayload = {
 	fullName: string;
@@ -14,24 +18,50 @@ export type SignupPayload = {
 	cep: string | null;
 };
 
+export type SocialProvider = 'google' | 'apple';
+
 export function normalizeAuthError(error: AuthError | Error | null) {
 	if (!error) return 'Ocorreu um erro inesperado. Tente novamente.';
 	const message = error.message.toLowerCase();
 
-	if (message.includes('invalid login credentials')) return 'E-mail ou senha inválidos.';
+	if (message.includes('invalid login credentials')) return 'E-mail ou senha invalidos.';
 	if (message.includes('email not confirmed')) return 'Confirme seu e-mail antes de entrar.';
-	if (message.includes('already registered')) return 'Este e-mail já está cadastrado.';
-	if (message.includes('password should be at least')) return 'A senha precisa ter no mínimo 6 caracteres.';
-	if (message.includes('unable to validate email')) return 'Digite um e-mail válido.';
+	if (message.includes('already registered')) return 'Este e-mail ja esta cadastrado.';
+	if (message.includes('password should be at least')) return 'A senha precisa ter no minimo 6 caracteres.';
+	if (message.includes('unable to validate email')) return 'Digite um e-mail valido.';
 	if (message.includes('same_password')) return 'A nova senha deve ser diferente da senha atual.';
-	if (message.includes('expired')) return 'Código expirado. Solicite um novo código.';
-	if (message.includes('token')) return 'Código inválido. Revise e tente novamente.';
+	if (message.includes('expired')) return 'Codigo expirado. Solicite um novo codigo.';
+	if (message.includes('token')) return 'Codigo invalido. Revise e tente novamente.';
 
 	return error.message;
 }
 
 export function sanitizeEmail(value: string) {
 	return value.trim().toLowerCase();
+}
+
+function getOAuthRedirectUri() {
+	return AuthSession.makeRedirectUri({
+		path: 'login-callback',
+	});
+}
+
+function normalizeSocialErrorMessage(message: string) {
+	const normalized = message.toLowerCase();
+
+	if (normalized.includes('access_denied') || normalized.includes('cancel')) {
+		return 'Login cancelado.';
+	}
+
+	return message;
+}
+
+function parseFragmentParams(url: string) {
+	const hashIndex = url.indexOf('#');
+	if (hashIndex < 0) return new URLSearchParams();
+
+	const fragment = url.slice(hashIndex + 1);
+	return new URLSearchParams(fragment);
 }
 
 async function requestEmailAction<T>(path: string, body: unknown) {
@@ -46,7 +76,7 @@ async function requestEmailAction<T>(path: string, body: unknown) {
 	const data = (await response.json().catch(() => null)) as T | { error?: string } | null;
 
 	if (!response.ok) {
-		const message = data && typeof data === 'object' && 'error' in data && data.error ? data.error : 'Não foi possível enviar o e-mail.';
+		const message = data && typeof data === 'object' && 'error' in data && data.error ? data.error : 'Nao foi possivel enviar o e-mail.';
 		throw new Error(message);
 	}
 
@@ -87,8 +117,85 @@ export async function signInWithPassword(email: string, password: string) {
 		throw new Error(normalizeAuthError(error));
 	}
 
-	// Backfill defensivo para contas antigas sem profile.
 	await ensureCurrentUserProfile().catch(() => undefined);
+}
+
+export async function signInWithSocial(provider: SocialProvider) {
+	const redirectTo = getOAuthRedirectUri();
+	const { data, error } = await supabase.auth.signInWithOAuth({
+		provider,
+		options: {
+			redirectTo,
+			skipBrowserRedirect: true,
+			queryParams: provider === 'google' ? { prompt: 'select_account' } : undefined,
+		},
+	});
+
+	if (error || !data?.url) {
+		throw new Error(normalizeAuthError(error));
+	}
+
+	const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+
+	if (result.type !== 'success' || !result.url) {
+		throw new Error('Login cancelado.');
+	}
+
+	const callbackUrl = new URL(result.url);
+	const authCode = callbackUrl.searchParams.get('code');
+	const providerError =
+		callbackUrl.searchParams.get('error_description') ??
+		callbackUrl.searchParams.get('error');
+	const fragmentParams = parseFragmentParams(result.url);
+	const accessToken = fragmentParams.get('access_token');
+	const refreshToken = fragmentParams.get('refresh_token');
+	const fragmentError =
+		fragmentParams.get('error_description') ??
+		fragmentParams.get('error');
+
+	if (providerError || fragmentError) {
+		throw new Error(normalizeSocialErrorMessage(providerError ?? fragmentError ?? 'Erro no login social.'));
+	}
+
+	if (authCode) {
+		const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
+
+		if (exchangeError) {
+			throw new Error(normalizeAuthError(exchangeError));
+		}
+	} else if (accessToken && refreshToken) {
+		const { error: sessionError } = await supabase.auth.setSession({
+			access_token: accessToken,
+			refresh_token: refreshToken,
+		});
+
+		if (sessionError) {
+			throw new Error(normalizeAuthError(sessionError));
+		}
+	} else {
+		throw new Error('Nao foi possivel concluir o login social.');
+	}
+
+	await ensureCurrentUserProfile().catch(() => undefined);
+}
+
+export async function isProfileMissingRequiredData() {
+	const { data, error } = await supabase.auth.getUser();
+	if (error || !data.user) return false;
+
+	const { data: profile } = await supabase
+		.from('profiles')
+		.select('state, city, cep')
+		.eq('id', data.user.id)
+		.maybeSingle();
+
+	if (!profile) return true;
+
+	const hasState = Boolean(profile.state?.trim());
+	const hasCity = Boolean(profile.city?.trim());
+	const hasCep = Boolean(profile.cep?.trim());
+
+	return !(hasState && hasCity && hasCep);
 }
 
 export async function signUpWithProfile(payload: SignupPayload) {
@@ -102,7 +209,6 @@ export async function signUpWithProfile(payload: SignupPayload) {
 		cep: payload.cep,
 	});
 
-	// Enviar email de boas-vindas
 	await sendWelcomeEmail(payload.email, payload.fullName).catch(() => undefined);
 
 	return {
@@ -147,6 +253,6 @@ export async function deleteAccount() {
 	const { error } = await supabase.rpc('delete_my_account');
 
 	if (error) {
-		throw new Error('Não foi possível deletar a conta. Tente novamente.');
+		throw new Error('Nao foi possivel deletar a conta. Tente novamente.');
 	}
 }

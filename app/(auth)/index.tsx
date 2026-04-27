@@ -1,4 +1,4 @@
-﻿import { router } from 'expo-router';
+import { router } from 'expo-router';
 import { ArrowRight, Check, Eye, Lock, Mail } from 'lucide-react-native';
 import { useState } from 'react';
 import { Image, Pressable, ScrollView, View } from 'react-native';
@@ -7,11 +7,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
 	AuthBackground,
 	AuthFeedbackModal,
-	SocialAuthRow,
 	AuthToast,
+	SocialAuthRow,
 } from '@/src/components/features/auth';
 import { Button, Input, Text } from '@/src/components/ui';
-import { signInWithPassword } from '@/src/features/auth/service';
+import {
+	isProfileMissingRequiredData,
+	signInWithPassword,
+	signInWithSocial,
+	type SocialProvider,
+} from '@/src/features/auth/service';
 
 export default function LoginScreen() {
 	const [email, setEmail] = useState('');
@@ -19,6 +24,7 @@ export default function LoginScreen() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [remember, setRemember] = useState(true);
 	const [loading, setLoading] = useState(false);
+	const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null);
 	const [toast, setToast] = useState<{ visible: boolean; message: string; tone: 'success' | 'error' | 'info' }>({
 		visible: false,
 		message: '',
@@ -47,9 +53,19 @@ export default function LoginScreen() {
 		setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 1800);
 	}
 
+	async function navigateAfterLogin() {
+		const needsProfileCompletion = await isProfileMissingRequiredData();
+		if (needsProfileCompletion) {
+			router.replace('/(app)/edit-profile');
+			return;
+		}
+
+		router.replace('/(app)');
+	}
+
 	async function handleLogin() {
 		if (!email.trim() || !password.trim()) {
-			showToast('Preencha os campos obrigatórios', 'error');
+			showToast('Preencha os campos obrigatorios', 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -65,14 +81,16 @@ export default function LoginScreen() {
 			setLoading(true);
 			await signInWithPassword(email, password);
 			showToast('Login realizado com sucesso', 'success');
-			setTimeout(() => router.replace('/(app)'), 500);
+			setTimeout(() => {
+				void navigateAfterLogin();
+			}, 400);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Não foi possível fazer login.';
+			const message = error instanceof Error ? error.message : 'Nao foi possivel fazer login.';
 			showToast('Falha no login', 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Não foi possível entrar',
+				title: 'Nao foi possivel entrar',
 				message,
 				primaryLabel: 'Ir para cadastro',
 				onPrimary: () => {
@@ -84,6 +102,30 @@ export default function LoginScreen() {
 			});
 		} finally {
 			setLoading(false);
+		}
+	}
+
+	async function handleSocialLogin(provider: SocialProvider) {
+		try {
+			setSocialLoading(provider);
+			await signInWithSocial(provider);
+			showToast('Login social realizado com sucesso', 'success');
+			setTimeout(() => {
+				void navigateAfterLogin();
+			}, 300);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Nao foi possivel fazer login social.';
+			showToast('Falha no login social', 'error');
+			setFeedback({
+				visible: true,
+				tone: 'error',
+				title: 'Falha no login social',
+				message,
+				primaryLabel: 'Fechar',
+				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
+			});
+		} finally {
+			setSocialLoading(null);
 		}
 	}
 
@@ -186,7 +228,7 @@ export default function LoginScreen() {
 						variant="primary"
 						size="xl"
 						loading={loading}
-						disabled={loading}
+						disabled={loading || socialLoading !== null}
 						rightAdornment={<ArrowRight size={14} color="#05070B" strokeWidth={2.4} />}
 						className="rounded-[14px]"
 						onPress={handleLogin}
@@ -199,7 +241,12 @@ export default function LoginScreen() {
 						<View className="h-px flex-1 bg-line2" />
 					</View>
 
-					<SocialAuthRow googleDisabled />
+					<SocialAuthRow
+						onGooglePress={() => void handleSocialLogin('google')}
+						onApplePress={() => void handleSocialLogin('apple')}
+						googleDisabled={loading || socialLoading !== null}
+						appleDisabled={loading || socialLoading !== null}
+					/>
 
 					<View className="mt-9 items-center">
 						<Text variant="label" className="text-fg3">
@@ -231,5 +278,3 @@ export default function LoginScreen() {
 		</SafeAreaView>
 	);
 }
-
-

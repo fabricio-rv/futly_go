@@ -1,7 +1,7 @@
 ﻿{
-  "name": "Futly GO",
-  "short_name": "Futly GO",
-  "description": "Futly GO - Marque, Jogue e Avalie partidas.",
+  "name": "Futly Go",
+  "short_name": "Futly Go",
+  "description": "Futly Go - Marque, Jogue e Avalie partidas.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

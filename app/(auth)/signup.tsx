@@ -8,12 +8,18 @@ import { cities as getBrazilianCities, states as getBrazilianStates } from 'esta
 import {
 	AuthBackground,
 	AuthFeedbackModal,
+	SocialAuthRow,
 	PasswordStrengthMeter,
 	AuthToast,
 } from '@/src/components/features/auth';
 import { Button, Input, SelectField, Text } from '@/src/components/ui';
 import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
-import { signUpWithProfile } from '@/src/features/auth/service';
+import {
+	isProfileMissingRequiredData,
+	signInWithSocial,
+	signUpWithProfile,
+	type SocialProvider,
+} from '@/src/features/auth/service';
 import { formatCep } from '@/src/features/location/cep';
 
 function getPasswordStrength(password: string) {
@@ -63,6 +69,7 @@ export default function SignupScreen() {
 	const [cep, setCep] = useState('');
 	const [acceptedTerms, setAcceptedTerms] = useState(true);
 	const [loading, setLoading] = useState(false);
+	const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null);
 	const [toast, setToast] = useState<{ visible: boolean; message: string; tone: 'success' | 'error' | 'info' }>({
 		visible: false,
 		message: '',
@@ -89,6 +96,40 @@ export default function SignupScreen() {
 	function showToast(message: string, tone: 'success' | 'error' | 'info' = 'info') {
 		setToast({ visible: true, message, tone });
 		setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 1800);
+	}
+
+	async function navigateAfterSocialLogin() {
+		const needsProfileCompletion = await isProfileMissingRequiredData();
+		if (needsProfileCompletion) {
+			router.replace('/(app)/edit-profile');
+			return;
+		}
+
+		router.replace('/(app)');
+	}
+
+	async function handleSocialSignup(provider: SocialProvider) {
+		try {
+			setSocialLoading(provider);
+			await signInWithSocial(provider);
+			showToast('Conta social conectada com sucesso', 'success');
+			setTimeout(() => {
+				void navigateAfterSocialLogin();
+			}, 300);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Nao foi possivel continuar com login social.';
+			showToast('Falha no login social', 'error');
+			setFeedback({
+				visible: true,
+				tone: 'error',
+				title: 'Falha no login social',
+				message,
+				primaryLabel: 'Fechar',
+				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
+			});
+		} finally {
+			setSocialLoading(null);
+		}
 	}
 
 	const passwordLevel = useMemo(() => getPasswordStrength(password), [password]);
@@ -275,6 +316,19 @@ export default function SignupScreen() {
 						<Text variant="label" className="mt-1 mb-7 leading-[20px] text-fg2">
 							Crie sua conta para encontrar partidas perto de você.
 						</Text>
+						<SocialAuthRow
+							onGooglePress={() => void handleSocialSignup('google')}
+							onApplePress={() => void handleSocialSignup('apple')}
+							googleDisabled={loading || socialLoading !== null}
+							appleDisabled={loading || socialLoading !== null}
+						/>
+						<View className="my-6 flex-row items-center gap-[10px]">
+							<View className="h-px flex-1 bg-line2" />
+							<Text variant="micro" className="uppercase tracking-[2.4px] font-bold text-fg4">
+								ou preencha os dados abaixo
+							</Text>
+							<View className="h-px flex-1 bg-line2" />
+						</View>
 
 						<View className="gap-[18px]">
 							<Input
@@ -453,7 +507,7 @@ export default function SignupScreen() {
 							variant="primary"
 							size="xl"
 							loading={loading}
-							disabled={loading}
+							disabled={loading || socialLoading !== null}
 							className="mt-2 rounded-[14px]"
 							onPress={handleSignup}
 						/>

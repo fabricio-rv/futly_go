@@ -1,12 +1,14 @@
-﻿import { Pressable, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
 import type { ReactNode } from 'react';
+import { Pressable, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 
 import { Text } from '@/src/components/ui';
 
 type SocialAuthRowProps = {
 	onGooglePress?: () => void;
+	onApplePress?: () => void;
 	googleDisabled?: boolean;
+	appleDisabled?: boolean;
 };
 
 function SocialButton({
@@ -36,7 +38,12 @@ function SocialButton({
 	);
 }
 
-export function SocialAuthRow({ onGooglePress, googleDisabled = false }: SocialAuthRowProps) {
+export function SocialAuthRow({
+	onGooglePress,
+	onApplePress,
+	googleDisabled = false,
+	appleDisabled = false,
+}: SocialAuthRowProps) {
 	return (
 		<View className="flex-row gap-[10px]">
 			<SocialButton
@@ -52,7 +59,23 @@ export function SocialAuthRow({ onGooglePress, googleDisabled = false }: SocialA
 					</Svg>
 				)}
 			/>
+			<SocialButton
+				label="Apple"
+				onPress={onApplePress}
+				disabled={appleDisabled}
+				icon={(
+					<Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+						<Path
+							d="M17.32 12.34c.01-2 1.64-2.96 1.72-3.01-.94-1.37-2.4-1.56-2.9-1.58-1.24-.12-2.42.73-3.05.73-.64 0-1.62-.71-2.67-.69-1.37.02-2.63.8-3.34 2.04-1.43 2.47-.36 6.12 1.03 8.12.68.98 1.49 2.08 2.55 2.04 1.02-.04 1.41-.66 2.65-.66 1.24 0 1.6.66 2.67.64 1.11-.02 1.81-1 2.49-1.98.79-1.14 1.11-2.25 1.13-2.31-.03-.01-2.28-.88-2.27-3.34z"
+							fill="#FFFFFF"
+						/>
+						<Path
+							d="M15.22 5.36c.57-.69.95-1.65.85-2.61-.82.03-1.8.54-2.39 1.22-.53.61-.99 1.58-.87 2.52.91.07 1.84-.46 2.41-1.13z"
+							fill="#FFFFFF"
+						/>
+					</Svg>
+				)}
+			/>
 		</View>
 	);
 }
-
