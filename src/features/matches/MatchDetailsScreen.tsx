@@ -302,27 +302,27 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
                   style={{
-                    backgroundColor: 'rgba(73,180,255,0.16)',
-                    borderColor: 'rgba(73,180,255,0.45)',
+                    backgroundColor: '#E0F2FE',
+                    borderColor: '#0284C7',
                   }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: '#93D9FF' }}>
+                  <Text variant="caption" className="text-[10px]" style={{ color: '#0C4A6E' }}>
                     {card.levelLabel}
                   </Text>
                 </View>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.06)', borderColor: 'rgba(0,0,0,0.12)' }}
+                  style={{ backgroundColor: '#F3F4F6', borderColor: '#9CA3AF' }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: '#1F2937' }}>
+                  <Text variant="caption" className="text-[10px]" style={{ color: '#111827' }}>
                     R$ {card.pricePerPlayer}/pessoa
                   </Text>
                 </View>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.06)', borderColor: 'rgba(0,0,0,0.12)' }}
+                  style={{ backgroundColor: '#F3F4F6', borderColor: '#9CA3AF' }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: '#1F2937' }}>
+                  <Text variant="caption" className="text-[10px]" style={{ color: '#111827' }}>
                     {card.occupiedSlots}/{card.totalSlots} vagas
                   </Text>
                 </View>
