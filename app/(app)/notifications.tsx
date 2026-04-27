@@ -98,7 +98,7 @@ export default function NotificationsScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View className="px-[18px]">
-          <View className="rounded-[16px] border border-line bg-[#FAFBFC] dark:bg-[#0C111E] p-4">
+          <View className="rounded-[16px] border p-4" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
             <View className="flex-row items-center gap-2 mb-3">
               <Bell size={16} color="#86E5B4" />
               <Text variant="label" className="font-semibold text-[#111827] dark:text-white">Notificacoes da conta</Text>
@@ -114,8 +114,11 @@ export default function NotificationsScreen() {
                 {notifications.map((item) => (
                   <View
                     key={item.id}
-                    className="rounded-[12px] border border-line px-3 py-3"
-                    style={{ backgroundColor: item.isRead ? 'rgba(255,255,255,0.01)' : 'rgba(34,183,108,0.08)' }}
+                    className="rounded-[12px] border px-3 py-3"
+                    style={{
+                      borderColor: matchTheme.colors.line,
+                      backgroundColor: item.isRead ? matchTheme.colors.bgSurfaceA : 'rgba(34,183,108,0.08)'
+                    }}
                   >
                     <View className="flex-row items-start justify-between gap-2">
                       <View className="flex-1">
@@ -159,7 +162,7 @@ export default function NotificationsScreen() {
             )}
           </View>
 
-          <View className="rounded-[16px] border border-line bg-[#FAFBFC] dark:bg-[#0C111E] p-4 mt-4">
+          <View className="rounded-[16px] border p-4 mt-4" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
             <View className="flex-row items-center gap-2 mb-3">
               <CircleDot size={16} color="#D4A13A" />
               <Text variant="label" className="font-semibold text-[#111827] dark:text-white">Acoes recentes</Text>
@@ -170,7 +173,7 @@ export default function NotificationsScreen() {
             ) : (
               <View className="gap-2">
                 {recentActions.map((action) => (
-                  <View key={action.id} className="rounded-[12px] border border-line px-3 py-3">
+                  <View key={action.id} className="rounded-[12px] border px-3 py-3" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
                     <View className="flex-row items-center justify-between">
                       <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{action.title}</Text>
                       <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(action.createdAt)}</Text>
@@ -214,8 +217,8 @@ export default function NotificationsScreen() {
               onChangeText={setRatingComment}
               placeholder="Comentario opcional"
               placeholderTextColor={matchTheme.colors.fgMuted}
-              className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2 text-[#111827] dark:text-white"
-              style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
+              className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2"
+              style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB, color: matchTheme.colors.fgPrimary }}
               multiline
               maxLength={280}
             />
