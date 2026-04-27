@@ -19,6 +19,10 @@ export const esESAgenda = {
     cancel: 'Cancelar',
     send: 'Enviar',
   },
+  actionLabels: {
+    ratePlayer: 'Valorar jugador',
+    rateHost: 'Valorar anfitrión',
+  },
   empty: {
     noPendingRatings: 'Sin valoraciones pendientes ahora.',
     noPendingHostRequests: 'Sin solicitudes pendientes como anfitrión.',

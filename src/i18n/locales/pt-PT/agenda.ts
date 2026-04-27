@@ -19,6 +19,10 @@ export const ptPTAgenda = {
     cancel: 'Cancelar',
     send: 'Enviar',
   },
+  actionLabels: {
+    ratePlayer: 'Avaliar jogador',
+    rateHost: 'Avaliar anfitrião',
+  },
   empty: {
     noPendingRatings: 'Sem avaliações pendentes agora.',
     noPendingHostRequests: 'Sem solicitações pendentes como anfitrião.',

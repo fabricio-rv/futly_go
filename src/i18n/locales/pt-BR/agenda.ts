@@ -19,6 +19,10 @@ export const ptBRAgenda = {
     cancel: 'Cancelar',
     send: 'Enviar',
   },
+  actionLabels: {
+    ratePlayer: 'Avaliar jogador',
+    rateHost: 'Avaliar host',
+  },
   empty: {
     noPendingRatings: 'Sem avaliações pendentes agora.',
     noPendingHostRequests: 'Sem solicitações pendentes como host.',

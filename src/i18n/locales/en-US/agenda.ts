@@ -19,6 +19,10 @@ export const enUSAgenda = {
     cancel: 'Cancel',
     send: 'Send',
   },
+  actionLabels: {
+    ratePlayer: 'Rate player',
+    rateHost: 'Rate host',
+  },
   empty: {
     noPendingRatings: 'No pending ratings now.',
     noPendingHostRequests: 'No pending host requests.',
