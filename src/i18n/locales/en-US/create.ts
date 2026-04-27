@@ -27,6 +27,7 @@ export const enUSCreate = {
     descriptionDefault: 'Closed team of Pivot and Goalkeeper - we are looking for 2 wingers and 1 pivot. Yellow jersey. Meet at 7:15 PM at Bar do Carlos.',
     untitledMatch: 'Untitled match',
     gameLevel: 'Game Level',
+    facilities: 'Facilities',
     ageRestrictions: 'Age Restrictions',
     ageRestrictionsHint: 'Only athletes between 16 and 80 years can register',
     minimumLevelsAccepted: 'Minimum Levels Accepted',

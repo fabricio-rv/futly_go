@@ -223,10 +223,10 @@ export default function CreateMatchScreen() {
         selectedPositionIndexes,
         status,
         facilities: [
-          { label: t('createForm.facilityLockerRoom', 'Vestiario'), selected: true },
-          { label: t('createForm.facilityShower', 'Chuveiro'), selected: true },
-          { label: t('createForm.facilityParking', 'Estacionamento'), selected: true },
-          { label: t('createForm.facilitySnackBar', 'Bar / Lanche'), selected: false },
+          { label: t('form.facilityLockerRoom'), selected: true },
+          { label: t('form.facilityShower'), selected: true },
+          { label: t('form.facilityParking'), selected: true },
+          { label: t('form.facilitySnackBar'), selected: false },
         ],
       });
 

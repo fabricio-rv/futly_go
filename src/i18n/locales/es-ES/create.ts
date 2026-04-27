@@ -27,6 +27,7 @@ export const esESCreate = {
     descriptionDefault: 'Equipo cerrado de Pivote y Portero - buscamos 2 alas y 1 pivote. Camiseta amarilla. Encuentro a las 19:15 en Bar do Carlos.',
     untitledMatch: 'Partido sin título',
     gameLevel: 'Nivel del Juego',
+    facilities: 'Facilidades',
     ageRestrictions: 'Restricciones de edad',
     ageRestrictionsHint: 'Solo atletas entre 16 y 80 años pueden inscribirse',
     minimumLevelsAccepted: 'Niveles Mínimos Aceptados',

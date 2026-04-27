@@ -27,6 +27,7 @@ export const ptPTCreate = {
     descriptionDefault: 'Equipa fechada de Pivô e Guarda-redes - procuramos 2 alas e 1 fixo. Camisola amarela. Encontro às 19h15 no Bar do Carlos.',
     untitledMatch: 'Jogo sem título',
     gameLevel: 'Nível do Jogo',
+    facilities: 'Facilidades',
     ageRestrictions: 'Restrições de idade',
     ageRestrictionsHint: 'Apenas atletas entre 16 e 80 anos podem inscrever-se',
     minimumLevelsAccepted: 'Níveis Mínimos Aceites',

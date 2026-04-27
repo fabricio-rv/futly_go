@@ -27,6 +27,7 @@ export const ptBRCreate = {
     descriptionDefault: 'Time fechado de Pivô e Goleiro - buscamos 2 alas e 1 fixo. Camiseta amarela. Encontro 19h15 no Bar do Carlos.',
     untitledMatch: 'Partida sem título',
     gameLevel: 'Nível do Jogo',
+    facilities: 'Facilidades',
     ageRestrictions: 'Restrições de idade',
     ageRestrictionsHint: 'Apenas atletas entre 16 e 80 anos podem se inscrever',
     minimumLevelsAccepted: 'Níveis Mínimos Aceitos',
