@@ -251,7 +251,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
   function formatPositionStats(request: MatchDetails['pendingRequests'][number]) {
     if (request.userPositionStats.length === 0) {
-      return t('noMatchHistory', 'No match history');
+      return t('details.noMatchHistory');
     }
 
     return request.userPositionStats
@@ -259,7 +259,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
       .map((stat) => {
         const ratingText = stat.ratingsCount > 0 && stat.avgRating !== null
           ? `${stat.avgRating.toFixed(1)} (${stat.ratingsCount})`
-          : t('noRatings', 'No ratings');
+          : t('details.noRatings');
 
         return `${stat.modality.toUpperCase()} - ${stat.positionLabel}: ${stat.matchesCount} - ${ratingText}`;
       })
