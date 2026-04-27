@@ -249,6 +249,7 @@ export const ptBRMatches = {
   statusFull: 'Lotada',
   statusCreatedByYou: 'Criada por você',
   statusFinished: 'Finalizada',
+  startsInProgress: 'Em andamento',
   levelCasual: 'Casual',
   levelIntermediate: 'Intermediário',
   levelAdvanced: 'Avançado',

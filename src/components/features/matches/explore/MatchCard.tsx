@@ -78,6 +78,12 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
     return label;
   };
 
+  const translateStartsInLabel = (label: string | null | undefined) => {
+    if (!label) return label;
+    if (label.includes('andamento') || label.includes('progress')) return t('startsInProgress', 'Em andamento');
+    return label;
+  };
+
   const translateLevelLabel = (label: string) => {
     if (label === 'Casual') return t('levelCasual', 'Casual');
     if (label.includes('Intermediário') || label.includes('Intermédio') || label.includes('Intermedio')) return t('levelIntermediate', 'Intermediate');
@@ -197,7 +203,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
             <View className="flex-row items-center gap-1">
               <Clock3 size={12} color={partida.status === 'done' ? matchTheme.colors.warn : matchTheme.colors.ok} />
               <Text variant="caption" className="font-semibold" style={{ color: partida.status === 'done' ? matchTheme.colors.warn : matchTheme.colors.ok }}>
-                {partida.startsIn ?? '--'}
+                {translateStartsInLabel(partida.startsIn) ?? '--'}
               </Text>
             </View>
           )}

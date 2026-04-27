@@ -257,6 +257,7 @@ export const ptPTMatches = {
   statusFull: 'Completo',
   statusCreatedByYou: 'Criado por ti',
   statusFinished: 'Finalizado',
+  startsInProgress: 'Em progresso',
   levelCasual: 'Casual',
   levelIntermediate: 'Intermédio',
   levelAdvanced: 'Avançado',

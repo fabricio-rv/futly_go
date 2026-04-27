@@ -257,6 +257,7 @@ export const enUSMatches = {
   statusFull: 'Full',
   statusCreatedByYou: 'Created by you',
   statusFinished: 'Finished',
+  startsInProgress: 'In progress',
   levelCasual: 'Casual',
   levelIntermediate: 'Intermediate',
   levelAdvanced: 'Advanced',

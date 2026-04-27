@@ -257,6 +257,7 @@ export const esESMatches = {
   statusFull: 'Completo',
   statusCreatedByYou: 'Creado por ti',
   statusFinished: 'Finalizado',
+  startsInProgress: 'En progreso',
   levelCasual: 'Casual',
   levelIntermediate: 'Intermedio',
   levelAdvanced: 'Avanzado',
