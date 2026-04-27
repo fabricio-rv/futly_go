@@ -187,7 +187,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
               >
                 {partida.occupiedSlots}/{partida.totalSlots}
               </Text>{' '}
-              {t('cta.slots', 'vagas')}
+              {t('slots', 'vagas')}
             </Text>
           </View>
 
