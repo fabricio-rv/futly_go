@@ -1,39 +1,47 @@
 import {
   ActivityIndicator,
-  Pressable,
   type PressableProps,
   View,
+  Pressable,
 } from 'react-native';
 import type { ReactNode } from 'react';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 
 import { Text } from './Text';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive' | 'gold';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 type Size = 'sm' | 'md' | 'lg' | 'xl';
 
-const base = 'flex-row items-center justify-center rounded-md';
+const base =
+  'flex-row items-center justify-center rounded-[12px] overflow-hidden active:shadow-none';
 
 const variantClass: Record<Variant, string> = {
-  primary: 'bg-emerald-500 active:opacity-90 shadow-neon',
-  secondary: 'bg-gray-100 dark:bg-ink-2 border border-[rgba(0,0,0,0.08)] dark:border-ink-hairline active:bg-gray-200 dark:active:bg-ink-3',
-  ghost: 'bg-transparent active:bg-gray-100 dark:active:bg-ink-2 border border-[rgba(0,0,0,0.08)] dark:border-ink-hairline/60',
-  destructive: 'bg-danger active:opacity-80',
-  gold: 'bg-gold-500 active:opacity-90 shadow-gold',
+  primary: 'bg-emerald-500 shadow-md',
+  secondary: 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm',
+  ghost: 'bg-zinc-100 dark:bg-zinc-900/50',
+  destructive: 'bg-red-500 shadow-md',
 };
 
 const sizeClass: Record<Size, string> = {
-  sm: 'h-11 px-4',
-  md: 'h-[52px] px-5',
-  lg: 'h-14 px-6',
-  xl: 'h-[54px] px-6',
+  sm: 'h-10 px-4',
+  md: 'h-12 px-6',
+  lg: 'h-[52px] px-7',
+  xl: 'h-14 px-8',
 };
 
-const labelTone: Record<Variant, 'inverse' | 'primary' | 'secondary' | 'primary' | 'inverse'> = {
+const labelTone: Record<Variant, 'inverse' | 'primary' | 'destructive'> = {
   primary: 'inverse',
   secondary: 'primary',
-  ghost: 'secondary',
-  destructive: 'primary',
-  gold: 'inverse',
+  ghost: 'primary',
+  destructive: 'inverse',
+};
+
+const labelColor: Record<Variant, string> = {
+  primary: 'text-white',
+  secondary: 'text-emerald-500 dark:text-emerald-400',
+  ghost: 'text-zinc-900 dark:text-zinc-100',
+  destructive: 'text-white',
 };
 
 type ButtonProps = Omit<PressableProps, 'children'> & {
@@ -62,33 +70,83 @@ export function Button({
   contentClassName,
   disabled,
   onPress,
+  accessibilityLabel,
+  testID,
   ...rest
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const scale = useSharedValue(1);
+  const opacity = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: opacity.value,
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withTiming(0.96, { duration: 100 });
+    opacity.value = withTiming(0.85, { duration: 100 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withTiming(1, { duration: 150 });
+    opacity.value = withTiming(1, { duration: 150 });
+  };
+
+  const handlePress = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress?.();
+  };
+
+  const containerClass = [
+    base,
+    variantClass[variant],
+    sizeClass[size],
+    fullWidth ? 'w-full' : '',
+    isDisabled ? 'opacity-50' : '',
+    className || '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel || label}
+      accessibilityState={{ disabled: isDisabled }}
+      accessibilityHint={disabled ? 'Button is disabled' : undefined}
       disabled={isDisabled}
-      onPress={(e) => {
-        onPress?.(e);
-      }}
-      className={`${base} ${variantClass[variant]} ${sizeClass[size]} ${
-        fullWidth ? 'w-full' : ''
-      } ${isDisabled ? 'opacity-45' : ''} ${className ?? ''}`.trim()}
+      onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      className={containerClass}
       {...rest}
     >
-      {loading ? (
-        <ActivityIndicator color={variant === 'primary' || variant === 'gold' ? '#05070B' : '#22B76C'} />
-      ) : (
-        <View className={`flex-row items-center justify-center gap-2 ${contentClassName ?? ''}`.trim()}>
-          {leftAdornment ? <View>{leftAdornment}</View> : null}
-          <Text variant="bodyLg" tone={labelTone[variant]} className={`font-semibold ${labelClassName ?? ''}`.trim()}>
-            {label}
-          </Text>
-          {rightAdornment ? <View>{rightAdornment}</View> : null}
-        </View>
-      )}
+      <Animated.View style={animatedStyle} className="flex-1">
+        {loading ? (
+          <ActivityIndicator
+            color={variant === 'primary' || variant === 'destructive' ? '#FFFFFF' : '#10B981'}
+            size="small"
+          />
+        ) : (
+          <View
+            className={`flex-row items-center justify-center gap-2 ${contentClassName || ''}`.trim()}
+          >
+            {leftAdornment ? <View className="flex-row">{leftAdornment}</View> : null}
+            <Text
+              variant="bodyLg"
+              tone={labelTone[variant]}
+              className={`font-semibold tracking-[0.3px] ${labelColor[variant]} ${
+                labelClassName || ''
+              }`.trim()}
+            >
+              {label}
+            </Text>
+            {rightAdornment ? <View className="flex-row">{rightAdornment}</View> : null}
+          </View>
+        )}
+      </Animated.View>
     </Pressable>
   );
 }
