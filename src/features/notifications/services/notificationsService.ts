@@ -26,14 +26,33 @@ async function syncRatingNotifications() {
   await supabase.rpc('sync_rating_notifications_for_current_user');
 }
 
-function requestStatusLabel(status: RequestRow['status']) {
-  if (status === 'pending') return 'Solicitacao enviada';
-  if (status === 'accepted') return 'Solicitacao aprovada';
-  if (status === 'rejected') return 'Solicitacao recusada';
-  return 'Solicitacao cancelada';
+function requestStatusLabel(status: RequestRow['status'], t?: (key: string, fallback: string) => string) {
+  const translate = t || ((_, fallback) => fallback);
+  if (status === 'pending') return translate('requestStatus.sent', 'Solicitacao enviada');
+  if (status === 'accepted') return translate('requestStatus.approved', 'Solicitacao aprovada');
+  if (status === 'rejected') return translate('requestStatus.rejected', 'Solicitacao recusada');
+  return translate('requestStatus.cancelled', 'Solicitacao cancelada');
 }
 
-export async function fetchNotifications() {
+function translateNotificationTitle(type: string, fallbackTitle: string, t?: (key: string, fallback: string) => string) {
+  const translate = t || ((_, fallback) => fallback);
+
+  const titleMap: Record<string, [string, string]> = {
+    'participation_requested': ['newParticipationRequest', 'Nova solicitacao de participacao'],
+    'match_rating_available': ['evaluationAvailable', 'Avaliacao disponivel'],
+    'rating_pending': ['actionTypes.ratingPending', 'Avaliacao pendente'],
+    'match_created': ['actionTypes.matchCreated', 'Partida criada'],
+    'participation_confirmed': ['actionTypes.participationConfirmed', 'Participacao confirmada'],
+    'rating_sent': ['actionTypes.ratingSent', 'Avaliacao enviada'],
+    'rate_player': ['actionTypes.ratePlayer', 'Avaliar jogador'],
+    'rate_host': ['actionTypes.rateHost', 'Avaliar host'],
+  };
+
+  const [key, fallback] = titleMap[type] || [type, fallbackTitle];
+  return translate(key, fallback);
+}
+
+export async function fetchNotifications(t?: (key: string, fallback: string) => string) {
   await syncRatingNotifications();
 
   const { data, error } = await supabase
@@ -46,7 +65,16 @@ export async function fetchNotifications() {
     throw new Error('Nao foi possivel carregar notificacoes.');
   }
 
-  return (data ?? []) as NotificationRow[];
+  const rows = (data ?? []) as NotificationRow[];
+
+  if (!t) {
+    return rows;
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    title: translateNotificationTitle(row.type, row.title, t),
+  }));
 }
 
 export async function fetchUnreadNotificationsCount() {
@@ -92,7 +120,8 @@ export async function markAllNotificationsRead() {
   }
 }
 
-export async function fetchRecentActions() {
+export async function fetchRecentActions(t?: (key: string, fallback: string) => string) {
+  const translate = t || ((_, fallback) => fallback);
   const userId = await getCurrentUserId();
 
   const [
@@ -173,7 +202,7 @@ export async function fetchRecentActions() {
     .filter((row) => row.status !== 'cancelled' && row.status !== 'pending')
     .map((row) => ({
       id: `request:self:${row.id}`,
-      title: requestStatusLabel(row.status),
+      title: requestStatusLabel(row.status, translate),
       body: `${matchById.get(row.match_id)?.title ?? 'Partida'} - ${row.requested_position_label}`,
       createdAt: row.updated_at,
       type: 'request',
@@ -181,7 +210,7 @@ export async function fetchRecentActions() {
 
   const hostRequestActions: RecentAction[] = hostDecisionRequests.map((row) => ({
     id: `request:host:${row.id}`,
-    title: row.status === 'accepted' ? 'Solicitacao aprovada por voce' : 'Solicitacao recusada por voce',
+    title: row.status === 'accepted' ? translate('requestStatus.approvedByYou', 'Solicitacao aprovada por voce') : translate('requestStatus.rejectedByYou', 'Solicitacao recusada por voce'),
     body: `${matchById.get(row.match_id)?.title ?? 'Partida'} - ${row.requested_position_label}`,
     createdAt: row.updated_at,
     type: 'request',
@@ -189,7 +218,7 @@ export async function fetchRecentActions() {
 
   const ratingActions: RecentAction[] = (ratingRows ?? []).map((row) => ({
     id: `rating:${row.id}`,
-    title: 'Avaliacao enviada',
+    title: translate('actionTypes.ratingSent', 'Avaliacao enviada'),
     body: `${matchById.get(row.match_id)?.title ?? 'Partida'} - nota ${row.score}/5`,
     createdAt: row.created_at,
     type: 'rating',
@@ -197,7 +226,7 @@ export async function fetchRecentActions() {
 
   const createdMatchActions: RecentAction[] = (createdMatches ?? []).map((match) => ({
     id: `created:${match.id}`,
-    title: 'Partida criada',
+    title: translate('actionTypes.matchCreated', 'Partida criada'),
     body: `${match.title} - ${match.match_date} ${String(match.match_time).slice(0, 5)}`,
     createdAt: match.created_at,
     type: 'match',
@@ -205,7 +234,7 @@ export async function fetchRecentActions() {
 
   const joinedMatchActions: RecentAction[] = (joinedRows ?? []).map((row) => ({
     id: `joined:${row.id}`,
-    title: 'Participacao confirmada',
+    title: translate('actionTypes.participationConfirmed', 'Participacao confirmada'),
     body: `${matchById.get(row.match_id)?.title ?? 'Partida'} - vaga garantida`,
     createdAt: row.joined_at,
     type: 'match',
@@ -213,7 +242,7 @@ export async function fetchRecentActions() {
 
   const ratingPendingActions: RecentAction[] = (ratingTasks ?? []).map((task) => ({
     id: `rating:pending:${task.task_id ?? `${task.match_id}:${task.target_role}`}`,
-    title: task.action_label ?? 'Avaliacao pendente',
+    title: task.action_label ?? translate('actionTypes.ratingPending', 'Avaliacao pendente'),
     body: `${task.match_title ?? 'Partida'} - ${task.target_user_name ?? 'Atleta'}`,
     createdAt: task.match_date ? `${task.match_date}T23:59:59.000Z` : new Date().toISOString(),
     type: 'rating',

@@ -7,8 +7,10 @@ import {
   markNotificationRead,
   subscribeNotifications,
 } from '@/src/features/notifications/services/notificationsService';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 export function useNotifications() {
+  const { t } = useTranslation('notifications');
   const [notifications, setNotifications] = useState<Array<{
     id: string;
     title: string;
@@ -33,7 +35,7 @@ export function useNotifications() {
     setError(null);
 
     try {
-      const [notificationRows, actionRows] = await Promise.all([fetchNotifications(), fetchRecentActions()]);
+      const [notificationRows, actionRows] = await Promise.all([fetchNotifications(t), fetchRecentActions(t)]);
       setNotifications(
         notificationRows.map((row) => ({
           id: row.id,
@@ -52,7 +54,7 @@ export function useNotifications() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
