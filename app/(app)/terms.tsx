@@ -75,7 +75,7 @@ export default function TermsScreen() {
                 <Text variant="body" className="text-[#111827] dark:text-white">
                   Você concorda em não:
                 </Text>
-                <Text variant="body" className="text-[#1F2937] dark:text-white ml-4 mt-1">
+                <Text variant="body" className="text-[#111827] dark:text-white ml-4 mt-1">
                   • Usar linguagem ofensiva ou discriminatória{'\n'}• Danificar ou interferi com a plataforma{'\n'}• Compartilhar
                   informações pessoais de outros usuários{'\n'}• Criar múltiplas contas fraudulentas
                 </Text>
@@ -136,7 +136,7 @@ export default function TermsScreen() {
                 <Text variant="body" className="text-[#111827] dark:text-white">
                   Suas informações são usadas para:
                 </Text>
-                <Text variant="body" className="text-[#1F2937] dark:text-white ml-4 mt-1">
+                <Text variant="body" className="text-[#111827] dark:text-white ml-4 mt-1">
                   • Fornecer e melhorar o serviço{'\n'}• Enviar notificações e atualizações{'\n'}• Processar pagamentos{'\n'}•
                   Combater fraude e abuso
                 </Text>
