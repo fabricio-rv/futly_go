@@ -13,6 +13,7 @@ import {
 } from '@/src/features/chat/services/chatService';
 import { formatRelativeChatTime, formatWeekdayTime, toInitials } from '@/src/features/chat/utils/formatters';
 import type { ChatMessage } from '@/src/components/features/store/data';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type HeaderData = {
   title: string;
@@ -25,6 +26,7 @@ type HeaderData = {
 };
 
 export function useConversationThread(conversationId: string) {
+  const { t, currentLanguage } = useTranslation('chat');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [header, setHeader] = useState<HeaderData | null>(null);
@@ -45,28 +47,39 @@ export function useConversationThread(conversationId: string) {
 
       const current = rows.find((row) => row.conversation_id === conversationId);
       if (!current) {
-        throw new Error('Conversa nao encontrada.');
+        throw new Error(t('errors.conversationNotFound', 'Conversa nao encontrada.'));
       }
 
       const participantById = new Map(participants.map((participant) => [participant.user_id, participant]));
 
-      const formattedMatch = formatWeekdayTime(current.match_date, current.match_time);
+      const formattedMatch = formatWeekdayTime(current.match_date, current.match_time, currentLanguage);
       const title = current.conversation_type === 'private'
-        ? (current.private_partner_name ?? 'Conversa privada')
-        : `${current.match_venue_name ?? current.match_title ?? 'Partida'}${formattedMatch ? ` - ${formattedMatch}` : ''}`;
+        ? (current.private_partner_name ?? t('detail.privateConversationTitle', 'Conversa privada'))
+        : `${current.match_venue_name ?? current.match_title ?? t('detail.matchFallbackTitle', 'Partida')}${formattedMatch ? ` - ${formattedMatch}` : ''}`;
+
+      const onlineLabel = t('detail.onlineLabel', 'online');
+      const athletesLabel = t('detail.athletesLabel', 'atletas');
 
       const host = participants.find((participant) => participant.role === 'host');
       const subtitle = current.conversation_type === 'private'
-        ? `${current.private_partner_name ?? 'Atleta'} - online`
-        : `${host?.full_name ?? 'Host'} + ${Math.max(participants.length - 1, 0)} atletas - online`;
+        ? t('detail.privateSubtitle', '{{name}} - {{online}}', {
+            name: current.private_partner_name ?? t('detail.athleteFallback', 'Atleta'),
+            online: onlineLabel,
+          })
+        : t('detail.groupSubtitle', '{{host}} + {{count}} {{athletes}} - {{online}}', {
+            host: host?.full_name ?? t('roles.host', 'Host'),
+            count: Math.max(participants.length - 1, 0),
+            athletes: athletesLabel,
+            online: onlineLabel,
+          });
 
       const bannerTitle = current.conversation_type === 'private'
-        ? 'Conversa privada'
+        ? t('detail.privateConversationTitle', 'Conversa privada')
         : `${formattedMatch}${current.match_date ? ` - ${current.match_date}` : ''}`;
 
       const bannerSubtitle = current.conversation_type === 'private'
-        ? 'Troca direta entre atletas do Futly Go'
-        : `${current.match_venue_name ?? current.match_title ?? 'Partida marcada'} - auto-arquiva 7 dias apos o jogo`;
+        ? t('detail.privateConversationSubtitle', 'Troca direta entre atletas do Futly Go')
+        : `${current.match_venue_name ?? current.match_title ?? t('detail.matchBannerTitle', 'Partida marcada')} - ${t('detail.autoArchiveShort', 'auto-arquiva 7 dias apos o jogo')}`;
 
       const chatMessages: ChatMessage[] = rawMessages.map((message) => {
         if (message.message_type === 'system' || !message.sender_id) {
@@ -84,9 +97,13 @@ export function useConversationThread(conversationId: string) {
           id: message.id,
           kind: mine ? 'me' : 'them',
           text: message.content,
-          author: participant?.full_name ?? 'Atleta',
-          role: participant?.role === 'host' ? 'Host' : participant?.role === 'player' ? 'Jogador' : undefined,
-          time: formatRelativeChatTime(message.created_at),
+          author: participant?.full_name ?? t('detail.athleteFallback', 'Atleta'),
+          role: participant?.role === 'host'
+            ? t('roles.host', 'Host')
+            : participant?.role === 'player'
+              ? t('roles.player', 'Jogador')
+              : undefined,
+          time: formatRelativeChatTime(message.created_at, currentLanguage),
         };
       });
 
@@ -104,12 +121,12 @@ export function useConversationThread(conversationId: string) {
       setParticipants(participants);
       await markConversationAsRead(conversationId);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao carregar conversa.';
+      const message = err instanceof Error ? err.message : t('errors.loadConversationFailed', 'Erro ao carregar conversa.');
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, [conversationId]);
+  }, [conversationId, currentLanguage, t]);
 
   useEffect(() => {
     void load();

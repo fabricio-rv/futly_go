@@ -25,7 +25,12 @@ export const ptBRChat = {
     noPartida: 'Esta conversa não possui partida vinculada',
     archived: 'Conversa arquivada',
     unarchived: 'Conversa restaurada',
-    marked: 'Marcado como não lido'
+    marked: 'Marcado como não lido',
+    you: 'Voce',
+    noMessagesYet: 'Sem mensagens ainda',
+    privateTag: 'PRIVADO',
+    readReceiptShort: 'OK',
+    confirmedPresenceSnippet: 'confirmou presenca'
   },
   info: {
     description: 'Cada conversa é vinculada a uma partida marcada. Auto-arquiva 7 dias após o jogo.',
@@ -38,45 +43,62 @@ export const ptBRChat = {
     archive: 'Arquivar',
     unarchive: 'Restaurar',
     report: 'Denunciar',
-    markUnread: 'Marcar como nao lida',
+    markUnread: 'Marcar como não lida',
     viewParticipants: 'Ver participantes',
-    unarchiveConversation: 'Desarquivar conversa',
+    unarchiveConversation: 'Restaurar conversa',
     archiveConversation: 'Arquivar conversa',
     openMatchDetails: 'Abrir detalhes da partida'
   },
   list: {
     title: 'Conversas',
-    linkedToMatchHint: 'Cada conversa e vinculada a uma ',
+    linkedToMatchHint: 'Cada conversa é vinculada a uma ',
     scheduledMatch: 'partida marcada',
-    autoArchiveHint: '. Auto-arquiva 7 dias apos o jogo.',
+    autoArchiveHint: '. Arquiva automaticamente 7 dias após o jogo.',
     loading: 'Carregando conversas...',
-    subtitle: '${summary.activeCount} ATIVAS - ${summary.unreadCount} NAO LIDAS'
+    subtitle: '{{activeCount}} ATIVAS - {{unreadCount}} NÃO LIDAS',
+    empty: 'Nenhuma conversa encontrada.'
   },
   errors: {
     sendFailedTitle: 'Falha ao enviar',
-    sendFailedMessage: 'Nao foi possivel enviar a mensagem agora.',
+    sendFailedMessage: 'Não foi possível enviar a mensagem agora.',
     noMatchLinkedTitle: 'Sem partida vinculada',
-    noMatchLinkedMessage: 'Esta conversa nao possui partida vinculada.',
+    noMatchLinkedMessage: 'Esta conversa não possui partida vinculada.',
     archiveFailedTitle: 'Falha ao arquivar',
-    updateFailedTitle: 'Falha ao atualizar'
+    updateFailedTitle: 'Falha ao atualizar',
+    conversationNotFound: 'Conversa não encontrada.',
+    loadConversationFailed: 'Erro ao carregar conversa.',
+    markUnreadFailedMessage: 'Não foi possível marcar como não lida.',
+    shareItemFailedMessage: 'Não foi possível compartilhar o item.'
   },
   status: {
     updatedTitle: 'Conversa atualizada',
-    markedUnreadMessage: 'Marcamos esta conversa como nao lida.'
+    markedUnreadMessage: 'Marcamos esta conversa como não lida.'
   },
   common: {
-    error: 'Falha',
+    error: 'Erro',
     loading: 'Carregando...',
     today: 'Hoje'
   },
   detail: {
     title: 'Conversa',
     matchBannerTitle: 'Partida marcada',
-    matchBannerSubtitle: 'Aguarde enquanto carregamos os detalhes',
+    matchBannerSubtitle: 'Por favor aguarde enquanto carregamos os detalhes',
     loadingMessages: 'Carregando mensagens...',
     messagePlaceholder: 'Mensagem...',
-    quickActions: 'Acoes rapidas',
+    quickActions: 'Ações rápidas',
     chooseEmoji: 'Escolha um emoji',
-    participants: 'Participantes'
+    participants: 'Participantes',
+    privateConversationTitle: 'Conversa privada',
+    privateConversationSubtitle: 'Troca direta entre atletas do Futly Go',
+    matchFallbackTitle: 'Partida',
+    athleteFallback: 'Atleta',
+    onlineLabel: 'online',
+    athletesLabel: 'atletas',
+    privateSubtitle: '{{name}} - {{online}}',
+    groupSubtitle: '{{host}} + {{count}} {{athletes}} - {{online}}',
+    autoArchiveShort: 'auto-arquiva 7 dias após o jogo',
+    quickAttachLocation: 'Compartilhando localização agora.',
+    quickAttachPix: 'Pix enviado no card da partida. Confirmem por favor.',
+    quickAttachPresence: 'Confirmei presença aqui no chat.'
   }
 };

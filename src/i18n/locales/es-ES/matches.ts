@@ -89,9 +89,15 @@ export const esESMatches = {
     contactPhone: 'Teléfono de contacto',
     openSpots: 'Plazas abiertas',
     blockedSlots: 'Plazas bloqueadas',
-    pricePerPerson: '/persona',
+    pricePerPerson: 'Precio',
     slots: 'plazas',
-    shift: 'Turno'
+    shift: 'Turno',
+    duration: 'Duración (min)',
+    ageRestrictions: 'Restricciones de edad',
+    hasBreak: 'Tiene descanso',
+    refereeIncluded: 'Árbitro incluido',
+    acceptExternalReserves: 'Aceptar reservas externas',
+    minimumLevelsAccepted: 'Niveles Mínimos Aceptados'
   },
   modality: {
     title: 'Tipo de Juego',

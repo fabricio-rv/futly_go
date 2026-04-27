@@ -15,19 +15,7 @@ import { useConversationThread } from '@/src/features/chat/hooks/useConversation
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
-const QUICK_ATTACH_MESSAGES = [
-  'Compartilhando localizacao agora.',
-  'Pix enviado no card da partida. Confirmem por favor.',
-  'Confirmei presenca aqui no chat.',
-];
-
 const QUICK_EMOJIS = [':)', ':D', '<3', 'OK', 'GG', 'TMJ', 'GO', 'VAMO'];
-
-function roleLabel(role: 'host' | 'player' | 'system') {
-  if (role === 'host') return 'Host';
-  if (role === 'player') return 'Jogador';
-  return 'Sistema';
-}
 
 export default function ConversationDetailScreen() {
   const { t } = useTranslation('chat');
@@ -53,6 +41,21 @@ export default function ConversationDetailScreen() {
     setArchived,
   } = useConversationThread(conversationId);
 
+  const quickAttachMessages = useMemo(
+    () => [
+      t('detail.quickAttachLocation', 'Compartilhando localizacao agora.'),
+      t('detail.quickAttachPix', 'Pix enviado no card da partida. Confirmem por favor.'),
+      t('detail.quickAttachPresence', 'Confirmei presenca aqui no chat.'),
+    ],
+    [t]
+  );
+
+  const roleLabel = useCallback((role: 'host' | 'player' | 'system') => {
+    if (role === 'host') return t('roles.host', 'Host');
+    if (role === 'player') return t('roles.player', 'Jogador');
+    return t('roles.system', 'Sistema');
+  }, [t]);
+
   const canSubmit = useMemo(() => canSend && draft.trim().length > 0, [canSend, draft]);
 
   const handleSend = useCallback(async () => {
@@ -67,7 +70,7 @@ export default function ConversationDetailScreen() {
       setDraft(message);
       Alert.alert(t('errors.sendFailedTitle', 'Falha ao enviar'), t('errors.sendFailedMessage', 'Nao foi possivel enviar a mensagem agora.'));
     }
-  }, [draft, send]);
+  }, [draft, send, t]);
 
   const handleBannerPress = useCallback(() => {
     if (!header?.matchId) {
@@ -76,7 +79,7 @@ export default function ConversationDetailScreen() {
     }
 
     router.push(`/(app)/${header.matchId}`);
-  }, [header?.matchId]);
+  }, [header?.matchId, t]);
 
   const handleArchiveToggle = useCallback(async () => {
     try {
@@ -86,7 +89,7 @@ export default function ConversationDetailScreen() {
       const message = err instanceof Error ? err.message : 'Nao foi possivel atualizar o status da conversa.';
       Alert.alert(t('errors.archiveFailedTitle', 'Falha ao arquivar'), message);
     }
-  }, [header?.isArchived, setArchived]);
+  }, [header?.isArchived, setArchived, t]);
 
   const handleMarkUnread = useCallback(async () => {
     try {
@@ -94,20 +97,20 @@ export default function ConversationDetailScreen() {
       setMenuVisible(false);
       Alert.alert(t('status.updatedTitle', 'Conversa atualizada'), t('status.markedUnreadMessage', 'Marcamos esta conversa como nao lida.'));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Nao foi possivel marcar como nao lida.';
+      const message = err instanceof Error ? err.message : t('errors.markUnreadFailedMessage', 'Nao foi possivel marcar como nao lida.');
       Alert.alert(t('errors.updateFailedTitle', 'Falha ao atualizar'), message);
     }
-  }, [markUnread]);
+  }, [markUnread, t]);
 
   const handleQuickAttach = useCallback(async (text: string) => {
     try {
       await send(text);
       setPlusVisible(false);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Nao foi possivel compartilhar o item.';
+      const message = err instanceof Error ? err.message : t('errors.shareItemFailedMessage', 'Nao foi possivel compartilhar o item.');
       Alert.alert(t('common.error', 'Falha'), message);
     }
-  }, [send]);
+  }, [send, t]);
 
   const handleEmojiPick = useCallback((emoji: string) => {
     setDraft((previous) => `${previous}${emoji}`);
@@ -138,7 +141,7 @@ export default function ConversationDetailScreen() {
           <View className="flex-1 flex-row items-center gap-2">
             <LinearGradient
               colors={['#0F3A24', '#072314']}
-              className="h-9 w-9 rounded-full border border-ok items-center justify-center"
+              className="h-10 w-10 rounded-full border border-ok items-center justify-center"
             >
               <Text variant="label" className="font-bold text-white dark:text-white">
                 {header?.avatar ?? 'CH'}
@@ -150,7 +153,7 @@ export default function ConversationDetailScreen() {
                 <Text variant="label" className="font-semibold text-[#111827] dark:text-white" numberOfLines={1}>
                   {header?.title ?? t('detail.title', 'Conversa')}
                 </Text>
-                <Star size={11} color="#D4A13A" fill="#D4A13A" strokeWidth={1.6} />
+                <Star size={10} color="#D4A13A" fill="#D4A13A" strokeWidth={1.6} />
               </View>
               <Text variant="micro" className="text-[#1A8F57] dark:text-[#86E5B4] mt-[1px]" numberOfLines={1}>
                 {header?.subtitle ?? t('common.loading', 'Carregando...')}
@@ -291,7 +294,7 @@ bounces
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setPlusVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
             <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-1">{t('detail.quickActions', 'Acoes rapidas')}</Text>
-            {QUICK_ATTACH_MESSAGES.map((item) => (
+            {quickAttachMessages.map((item) => (
               <Pressable key={item} className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => void handleQuickAttach(item)}>
                 <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item}</Text>
               </Pressable>

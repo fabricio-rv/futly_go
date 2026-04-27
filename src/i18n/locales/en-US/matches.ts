@@ -89,9 +89,15 @@ export const enUSMatches = {
     contactPhone: 'Contact phone',
     openSpots: 'Open slots',
     blockedSlots: 'Blocked slots',
-    pricePerPerson: '/person',
+    pricePerPerson: 'Price',
     slots: 'slots',
-    shift: 'Shift'
+    shift: 'Shift',
+    duration: 'Duration (min)',
+    ageRestrictions: 'Age Restrictions',
+    hasBreak: 'Has break',
+    refereeIncluded: 'Referee included',
+    acceptExternalReserves: 'Accept external registrations',
+    minimumLevelsAccepted: 'Minimum Levels Accepted'
   },
   modality: {
     title: 'Game Type',

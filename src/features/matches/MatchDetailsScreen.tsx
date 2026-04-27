@@ -33,6 +33,64 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [mapPreviewUrls, setMapPreviewUrls] = useState<string[]>([]);
 
+  const translateStatusLabel = (label: string) => {
+    if (label.includes('Criada por') || label.includes('Created by')) return t('statusCreatedByYou', 'Criada por você');
+    if (label.includes('Finalizada') || label.includes('Finished')) return t('statusFinished', 'Finalizada');
+    if (label.includes('Vagas abertas') || label.includes('Open')) return t('statusOpen', 'Vagas abertas');
+    if (label.includes('Lotada') || label.includes('Full')) return t('statusFull', 'Lotada');
+    return label;
+  };
+
+  const translateShiftLabel = (shift: string) => {
+    const shifts: Record<string, string> = {
+      'manha': t('shiftMorning'),
+      'tarde': t('shiftAfternoon'),
+      'noite': t('shiftNight'),
+      'Manha': t('shiftMorning'),
+      'Tarde': t('shiftAfternoon'),
+      'Noite': t('shiftNight'),
+    };
+    return shifts[shift] || shift;
+  };
+
+  const translateDayLabel = (dayLabel: string) => {
+    const parts = dayLabel.split(' - ');
+    if (parts.length === 2) {
+      const dayAbbr = parts[0].toUpperCase();
+      const shift = parts[1];
+      const days: Record<string, string> = {
+        'SEG': t('days.mon'),
+        'TER': t('days.tue'),
+        'QUA': t('days.wed'),
+        'QUI': t('days.thu'),
+        'SEX': t('days.fri'),
+        'SAB': t('days.sat'),
+        'SÁB': t('days.sat'),
+        'DOM': t('days.sun'),
+        'HOJE': 'HOJE',
+      };
+      return `${days[dayAbbr] || dayAbbr} - ${translateShiftLabel(shift)}`;
+    }
+    return dayLabel;
+  };
+
+  const translateLevelName = (levelName: string) => {
+    const levelMap: Record<string, string> = {
+      'pereba': 'Pereba',
+      'resenha': 'Resenha',
+      'casual': 'Casual',
+      'avançado': 'Avançado',
+      'intermediario': 'Intermediário',
+      'competitivo': 'Competitivo',
+      'semi-amador': 'Semi-Amador',
+      'semi_amador': 'Semi-Amador',
+      'amador': 'Amador',
+      'ex-profissional': 'Ex-profissional',
+      'ex_profissional': 'Ex-profissional',
+    };
+    return levelMap[levelName.toLowerCase()] || levelName.charAt(0).toUpperCase() + levelName.slice(1);
+  };
+
   const loadDetails = useCallback(async () => {
     try {
       const data = await getMatchDetails(matchId);
@@ -293,7 +351,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               }}
             >
               <View className="absolute top-[14px] right-[14px]">
-                <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={card.statusLabel} />
+                <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={translateStatusLabel(card.statusLabel)} />
               </View>
 
               <Text variant="micro" className="uppercase tracking-[2px] font-bold" style={{ color: '#22B76C' }}>
@@ -307,7 +365,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   {card.timeLabel}
                 </Text>
                 <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: '#4B5563' }}>
-                  - {card.shiftLabel} - {match.duration_minutes}min
+                  - {translateShiftLabel(card.shiftLabel)} - {match.duration_minutes}min
                 </Text>
               </View>
 
@@ -345,17 +403,17 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           ) : (
             <LinearGradient colors={heroGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="rounded-[20px] p-[18px] mb-[14px]">
               <View className="absolute top-[14px] right-[14px]">
-                <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={card.statusLabel} />
+                <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={translateStatusLabel(card.statusLabel)} />
               </View>
 
               <Text variant="micro" className="uppercase tracking-[2px] font-bold" style={{ color: matchTheme.colors.okSoft }}>
                 {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
               </Text>
-              <Text variant="number" className="text-[56px] leading-[50px] mt-1">{card.dateLabel.split(' - ')[0]}</Text>
+              <Text variant="number" className="text-[56px] leading-[50px] mt-1">{translateDayLabel(card.dateLabel).split(' - ')[0]}</Text>
               <View className="flex-row items-end gap-2 mt-1">
                 <Text variant="number" className="text-[30px]" style={{ color: matchTheme.colors.goldA }}>{card.timeLabel}</Text>
                 <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: matchTheme.colors.fgSecondary }}>
-                  - {card.shiftLabel} - {match.duration_minutes}min
+                  - {translateShiftLabel(card.shiftLabel)} - {match.duration_minutes}min
                 </Text>
               </View>
 
@@ -653,7 +711,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
             <SectionTitle title={t('details.playerRequirements')} />
             <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
               <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }} className="mb-3">
-                {t('minLevels')}
+                {t('details.minimumLevelsAccepted')}
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {['pereba', 'casual', 'resenha', 'avançado', 'competitivo', 'semi-amador', 'amador', 'ex-profissional'].map((level) => {
@@ -674,7 +732,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                           fontWeight: isAccepted ? '600' : '400',
                         }}
                       >
-                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                        {translateLevelName(level)}
                       </Text>
                     </View>
                   );
@@ -690,7 +748,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('pricePerPerson')}
+                      {t('details.pricePerPerson', 'Price')}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                       R$ {match.price_per_person}
@@ -698,16 +756,16 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   </View>
                   <View className="flex-1">
                     <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('duration')}
+                      {t('details.duration')}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
-                      {match.duration_minutes}
+                      {match.duration_minutes} min
                     </Text>
                   </View>
                 </View>
                 <View>
                   <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    {t('ageRestrictions')}
+                    {t('details.ageRestrictions')}
                   </Text>
                   <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                     {match.min_age} - {match.max_age}
@@ -716,7 +774,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 <View className="flex-row justify-between gap-2">
                   <View className="flex-1">
                     <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('hasBreak')}
+                      {t('details.hasBreak')}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                       {match.rest_break ? t('common.yes', 'Yes') : t('common.no', 'No')}
@@ -724,7 +782,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   </View>
                   <View className="flex-1">
                     <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('refereeIncluded')}
+                      {t('details.refereeIncluded')}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                       {match.referee_included ? t('common.yes') : t('common.no')}
@@ -732,7 +790,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   </View>
                   <View className="flex-1">
                     <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('acceptExternalReserves')}
+                      {t('details.acceptExternalReserves')}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                       {match.allow_external_reserves ? t('common.yes') : t('common.no')}
@@ -758,7 +816,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
             {details.isHost ? (
               <Button label={t('cta.youAreHost', 'Você é o host desta partida')} disabled onPress={() => undefined} />
             ) : details.myParticipant ? (
-              <Button label={t('cta.leaveMatch', 'Desmarcar Presenca')} variant="destructive" loading={submitting} disabled={submitting} onPress={handleLeave} />
+              <Button label={t('players.leaveMatch', 'Desmarcar Presença')} variant="destructive" loading={submitting} disabled={submitting} onPress={handleLeave} />
             ) : details.myRequest?.status === 'pending' ? (
               <>
                 <Button label={t('cta.pendingApproval', 'Solicitacao pendente de aprovacao')} disabled onPress={() => undefined} />

@@ -89,9 +89,15 @@ export const ptPTMatches = {
     contactPhone: 'Telefone para contacto',
     openSpots: 'Vagas abertas',
     blockedSlots: 'Vagas bloqueadas',
-    pricePerPerson: '/pessoa',
+    pricePerPerson: 'Preço',
     slots: 'vagas',
-    shift: 'Turno'
+    shift: 'Turno',
+    duration: 'Duração (min)',
+    ageRestrictions: 'Restrições de idade',
+    hasBreak: 'Tem intervalo',
+    refereeIncluded: 'Árbitro incluído',
+    acceptExternalReserves: 'Aceitar reservas externas',
+    minimumLevelsAccepted: 'Níveis Mínimos Aceites'
   },
   modality: {
     title: 'Tipo de Jogo',

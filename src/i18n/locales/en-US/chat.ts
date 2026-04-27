@@ -14,9 +14,9 @@ export const enUSChat = {
   filters: {
     asHost: 'As Host',
     asPlayer: 'As Player',
-    all: 'Todas',
-    active: 'Ativas',
-    archived: 'Arquivadas'
+    all: 'All',
+    active: 'Active',
+    archived: 'Archived'
   },
   messages: {
     sendMessage: 'Send Message',
@@ -25,7 +25,12 @@ export const enUSChat = {
     noPartida: 'This conversation has no associated match',
     archived: 'Conversation archived',
     unarchived: 'Conversation restored',
-    marked: 'Marked as unread'
+    marked: 'Marked as unread',
+    you: 'You',
+    noMessagesYet: 'No messages yet',
+    privateTag: 'PRIVATE',
+    readReceiptShort: 'READ',
+    confirmedPresenceSnippet: 'confirmed attendance'
   },
   info: {
     description: 'Each conversation is linked to a scheduled match. Auto-archives 7 days after the game.',
@@ -38,45 +43,62 @@ export const enUSChat = {
     archive: 'Archive',
     unarchive: 'Restore',
     report: 'Report',
-    markUnread: 'Marcar como nao lida',
-    viewParticipants: 'Ver participantes',
-    unarchiveConversation: 'Desarquivar conversa',
-    archiveConversation: 'Arquivar conversa',
-    openMatchDetails: 'Abrir detalhes da partida'
+    markUnread: 'Mark as unread',
+    viewParticipants: 'View participants',
+    unarchiveConversation: 'Restore conversation',
+    archiveConversation: 'Archive conversation',
+    openMatchDetails: 'Open match details'
   },
   list: {
-    title: 'Conversas',
-    linkedToMatchHint: 'Cada conversa e vinculada a uma ',
-    scheduledMatch: 'partida marcada',
-    autoArchiveHint: '. Auto-arquiva 7 dias apos o jogo.',
-    loading: 'Carregando conversas...',
-    subtitle: '${summary.activeCount} ATIVAS - ${summary.unreadCount} NAO LIDAS'
+    title: 'Conversations',
+    linkedToMatchHint: 'Each conversation is linked to a ',
+    scheduledMatch: 'scheduled match',
+    autoArchiveHint: '. Auto-archives 7 days after the game.',
+    loading: 'Loading conversations...',
+    subtitle: '{{activeCount}} ACTIVE - {{unreadCount}} UNREAD',
+    empty: 'No conversations found.'
   },
   errors: {
-    sendFailedTitle: 'Falha ao enviar',
+    sendFailedTitle: 'Failed to send',
     sendFailedMessage: 'Unable to send message right now.',
-    noMatchLinkedTitle: 'Sem partida vinculada',
-    noMatchLinkedMessage: 'Esta conversa nao possui partida vinculada.',
-    archiveFailedTitle: 'Falha ao arquivar',
-    updateFailedTitle: 'Falha ao atualizar'
+    noMatchLinkedTitle: 'No match linked',
+    noMatchLinkedMessage: 'This conversation has no associated match.',
+    archiveFailedTitle: 'Failed to archive',
+    updateFailedTitle: 'Failed to update',
+    conversationNotFound: 'Conversation not found.',
+    loadConversationFailed: 'Error loading conversation.',
+    markUnreadFailedMessage: 'Unable to mark as unread.',
+    shareItemFailedMessage: 'Unable to share this item.'
   },
   status: {
-    updatedTitle: 'Conversa atualizada',
-    markedUnreadMessage: 'Marcamos esta conversa como nao lida.'
+    updatedTitle: 'Conversation updated',
+    markedUnreadMessage: 'We marked this conversation as unread.'
   },
   common: {
-    error: 'Falha',
-    loading: 'Carregando...',
-    today: 'Hoje'
+    error: 'Error',
+    loading: 'Loading...',
+    today: 'Today'
   },
   detail: {
-    title: 'Conversa',
-    matchBannerTitle: 'Partida marcada',
-    matchBannerSubtitle: 'Aguarde enquanto carregamos os detalhes',
-    loadingMessages: 'Carregando mensagens...',
-    messagePlaceholder: 'Mensagem...',
-    quickActions: 'Acoes rapidas',
-    chooseEmoji: 'Escolha um emoji',
-    participants: 'Participantes'
+    title: 'Conversation',
+    matchBannerTitle: 'Scheduled match',
+    matchBannerSubtitle: 'Please wait while we load the details',
+    loadingMessages: 'Loading messages...',
+    messagePlaceholder: 'Message...',
+    quickActions: 'Quick actions',
+    chooseEmoji: 'Choose an emoji',
+    participants: 'Participants',
+    privateConversationTitle: 'Private conversation',
+    privateConversationSubtitle: 'Direct chat between Futly Go players',
+    matchFallbackTitle: 'Match',
+    athleteFallback: 'Player',
+    onlineLabel: 'online',
+    athletesLabel: 'players',
+    privateSubtitle: '{{name}} - {{online}}',
+    groupSubtitle: '{{host}} + {{count}} {{athletes}} - {{online}}',
+    autoArchiveShort: 'auto-archives 7 days after the game',
+    quickAttachLocation: 'Sharing location now.',
+    quickAttachPix: 'PIX sent in the match card. Please confirm.',
+    quickAttachPresence: 'I confirmed attendance here in chat.'
   }
 };

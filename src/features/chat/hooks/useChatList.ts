@@ -9,8 +9,10 @@ import {
 } from '@/src/features/chat/services/chatService';
 import { formatRelativeChatTime, formatWeekdayTime, toInitials } from '@/src/features/chat/utils/formatters';
 import type { ConversationPreview } from '@/src/components/features/store/data';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 export function useChatList() {
+  const { t, currentLanguage } = useTranslation('chat');
   const [filter, setFilter] = useState<ChatListFilter>('todas');
   const [rows, setRows] = useState<ChatListRow[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -64,24 +66,36 @@ export function useChatList() {
   }, [rows]);
 
   const mapped = useMemo(() => {
+    const localizePreviewMessage = (text: string) => {
+      const confirmedMatch = text.match(/^(.*)\sconfirmou\s+presen[cç]a\.?$/i);
+      if (confirmedMatch) {
+        const name = confirmedMatch[1]?.trim();
+        return name
+          ? `${name} ${t('messages.confirmedPresenceSnippet', 'confirmou presenca')}`
+          : t('messages.confirmedPresenceSnippet', 'confirmou presenca');
+      }
+
+      return text;
+    };
+
     return rows.map((row) => {
       const isPrivate = row.conversation_type === 'private';
-      const matchLabel = formatWeekdayTime(row.match_date, row.match_time);
+      const matchLabel = formatWeekdayTime(row.match_date, row.match_time, currentLanguage);
       const title = isPrivate
-        ? (row.private_partner_name ?? 'Conversa privada')
-        : `${row.match_venue_name ?? row.match_title ?? 'Partida'}${matchLabel ? ` - ${matchLabel}` : ''}`;
+        ? (row.private_partner_name ?? t('detail.privateConversationTitle', 'Conversa privada'))
+        : `${row.match_venue_name ?? row.match_title ?? t('detail.matchFallbackTitle', 'Partida')}${matchLabel ? ` - ${matchLabel}` : ''}`;
 
       const author = row.last_message_sender_id
         ? row.last_message_sender_id === currentUserId
-          ? 'Voce'
-          : (row.last_message_sender_name ?? 'Atleta')
-        : 'Sistema';
+          ? t('messages.you', 'Voce')
+          : (row.last_message_sender_name ?? t('detail.athleteFallback', 'Atleta'))
+        : t('roles.system', 'Sistema');
 
       const avatarSource = isPrivate
         ? row.private_partner_name
-        : (row.match_venue_name ?? row.match_title ?? 'Partida');
+        : (row.match_venue_name ?? row.match_title ?? t('detail.matchFallbackTitle', 'Partida'));
 
-      const timeLabel = formatRelativeChatTime(row.last_message_created_at ?? row.last_message_at ?? row.created_at);
+      const timeLabel = formatRelativeChatTime(row.last_message_created_at ?? row.last_message_at ?? row.created_at, currentLanguage);
 
       const unreadCount = Math.max(0, row.unread_count ?? 0);
       const checkStatus = unreadCount > 0
@@ -93,7 +107,7 @@ export function useChatList() {
       const preview: ConversationPreview = {
         id: row.conversation_id,
         title,
-        message: row.last_message_content ?? 'Sem mensagens ainda',
+        message: localizePreviewMessage(row.last_message_content ?? t('messages.noMessagesYet', 'Sem mensagens ainda')),
         author,
         time: timeLabel,
         avatar: toInitials(avatarSource),
@@ -106,7 +120,7 @@ export function useChatList() {
               : 'blue',
         unreadCount: unreadCount > 0 ? unreadCount : undefined,
         unread: unreadCount > 0,
-        privateTag: isPrivate ? 'PRIVADO' : undefined,
+        privateTag: isPrivate ? t('messages.privateTag', 'PRIVADO') : undefined,
         checkStatus,
         archived: row.is_archived,
       };
@@ -116,7 +130,7 @@ export function useChatList() {
         preview,
       };
     });
-  }, [currentUserId, rows]);
+  }, [currentLanguage, currentUserId, rows, t]);
 
   const visibleActive = useMemo(() => {
     return mapped

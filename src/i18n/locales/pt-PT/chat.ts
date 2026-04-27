@@ -25,58 +25,80 @@ export const ptPTChat = {
     noPartida: 'Esta conversa não possui partida vinculada',
     archived: 'Conversa arquivada',
     unarchived: 'Conversa restaurada',
-    marked: 'Marcado como não lido'
+    marked: 'Marcado como não lido',
+    you: 'Voce',
+    noMessagesYet: 'Sem mensagens ainda',
+    privateTag: 'PRIVADO',
+    readReceiptShort: 'LIDO',
+    confirmedPresenceSnippet: 'confirmou presença'
   },
   info: {
     description: 'Cada conversa é vinculada a uma partida marcada. Auto-arquiva 7 dias após o jogo.',
     loading: 'Carregando conversas...'
   },
   actions: {
-    share: 'Compartilhar localização',
+    share: 'Partilhar localização',
     sendPix: 'Enviar PIX',
     confirmPresence: 'Confirmar presença',
     archive: 'Arquivar',
     unarchive: 'Restaurar',
     report: 'Denunciar',
-    markUnread: 'Marcar como nao lida',
+    markUnread: 'Marcar como não lido',
     viewParticipants: 'Ver participantes',
-    unarchiveConversation: 'Desarquivar conversa',
+    unarchiveConversation: 'Restaurar conversa',
     archiveConversation: 'Arquivar conversa',
-    openMatchDetails: 'Abrir detalhes da partida'
+    openMatchDetails: 'Abrir detalhes do jogo'
   },
   list: {
     title: 'Conversas',
-    linkedToMatchHint: 'Cada conversa e vinculada a uma ',
-    scheduledMatch: 'partida marcada',
-    autoArchiveHint: '. Auto-arquiva 7 dias apos o jogo.',
+    linkedToMatchHint: 'Cada conversa é vinculada a um ',
+    scheduledMatch: 'jogo marcado',
+    autoArchiveHint: '. Arquiva automaticamente 7 dias após o jogo.',
     loading: 'Carregando conversas...',
-    subtitle: '${summary.activeCount} ATIVAS - ${summary.unreadCount} NAO LIDAS'
+    subtitle: '{{activeCount}} ATIVAS - {{unreadCount}} NÃO LIDAS',
+    empty: 'Nenhuma conversa encontrada.'
   },
   errors: {
     sendFailedTitle: 'Falha ao enviar',
-    sendFailedMessage: 'Nao foi possivel enviar a mensagem agora.',
-    noMatchLinkedTitle: 'Sem partida vinculada',
-    noMatchLinkedMessage: 'Esta conversa nao possui partida vinculada.',
+    sendFailedMessage: 'Não foi possível enviar a mensagem agora.',
+    noMatchLinkedTitle: 'Sem jogo vinculado',
+    noMatchLinkedMessage: 'Esta conversa não possui jogo vinculado.',
     archiveFailedTitle: 'Falha ao arquivar',
-    updateFailedTitle: 'Falha ao atualizar'
+    updateFailedTitle: 'Falha ao atualizar',
+    conversationNotFound: 'Conversa não encontrada.',
+    loadConversationFailed: 'Erro ao carregar conversa.',
+    markUnreadFailedMessage: 'Não foi possível marcar como não lida.',
+    shareItemFailedMessage: 'Não foi possível partilhar o item.'
   },
   status: {
     updatedTitle: 'Conversa atualizada',
-    markedUnreadMessage: 'Marcamos esta conversa como nao lida.'
+    markedUnreadMessage: 'Marcámos esta conversa como não lida.'
   },
   common: {
-    error: 'Falha',
+    error: 'Erro',
     loading: 'Carregando...',
     today: 'Hoje'
   },
   detail: {
     title: 'Conversa',
-    matchBannerTitle: 'Partida marcada',
-    matchBannerSubtitle: 'Aguarde enquanto carregamos os detalhes',
+    matchBannerTitle: 'Jogo marcado',
+    matchBannerSubtitle: 'Por favor aguarde enquanto carregamos os detalhes',
     loadingMessages: 'Carregando mensagens...',
     messagePlaceholder: 'Mensagem...',
-    quickActions: 'Acoes rapidas',
+    quickActions: 'Ações rápidas',
     chooseEmoji: 'Escolha um emoji',
-    participants: 'Participantes'
+    participants: 'Participantes',
+    privateConversationTitle: 'Conversa privada',
+    privateConversationSubtitle: 'Troca direta entre atletas do Futly Go',
+    matchFallbackTitle: 'Jogo',
+    athleteFallback: 'Atleta',
+    onlineLabel: 'online',
+    athletesLabel: 'atletas',
+    privateSubtitle: '{{name}} - {{online}}',
+    groupSubtitle: '{{host}} + {{count}} {{athletes}} - {{online}}',
+    autoArchiveShort: 'auto-arquiva 7 dias após o jogo',
+    quickAttachLocation: 'A partilhar localização agora.',
+    quickAttachPix: 'PIX enviado no cartão do jogo. Confirmem, por favor.',
+    quickAttachPresence: 'Confirmei presença aqui no chat.'
   }
 };
