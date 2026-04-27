@@ -48,6 +48,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
       'QUI': t('days.thu', 'QUI'),
       'SEX': t('days.fri', 'SEX'),
       'SAB': t('days.sat', 'SAB'),
+      'SÁB': t('days.sat', 'SAB'),
       'DOM': t('days.sun', 'DOM'),
     };
     return days[dayAbbr] || dayAbbr;

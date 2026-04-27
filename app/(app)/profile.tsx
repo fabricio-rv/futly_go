@@ -30,6 +30,7 @@ export default function ProfileScreen() {
       'QUI': matchT('days.thu', 'QUI'),
       'SEX': matchT('days.fri', 'SEX'),
       'SAB': matchT('days.sat', 'SAB'),
+      'SÁB': matchT('days.sat', 'SAB'),
       'DOM': matchT('days.sun', 'DOM'),
     };
     return days[dayAbbr] || dayAbbr;
