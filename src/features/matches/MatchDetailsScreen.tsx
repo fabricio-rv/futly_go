@@ -328,7 +328,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   style={{ backgroundColor: '#F3F4F6', borderColor: '#9CA3AF' }}
                 >
                   <Text variant="caption" className="text-[10px]" style={{ color: '#111827' }}>
-                    R$ {card.pricePerPlayer}/pessoa
+                    R$ {card.pricePerPlayer}{t('details.pricePerPerson')}
                   </Text>
                 </View>
                 <View
@@ -336,7 +336,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   style={{ backgroundColor: '#DBEAFE', borderColor: '#0284C7' }}
                 >
                   <Text variant="caption" className="text-[10px] font-semibold" style={{ color: '#0C4A6E' }}>
-                    {card.occupiedSlots}/{card.totalSlots} vagas
+                    {card.occupiedSlots}/{card.totalSlots} {t('details.slots')}
                   </Text>
                 </View>
                 {details.isHost ? <StatBadge label="HOST" tone="gold" small /> : null}
@@ -376,7 +376,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   style={{ backgroundColor: 'rgba(5,7,11,0.52)', borderColor: 'rgba(255,255,255,0.16)' }}
                 >
                   <Text variant="caption" className="text-[10px]" style={{ color: 'rgba(255,255,255,0.82)' }}>
-                    R$ {card.pricePerPlayer}/pessoa
+                    R$ {card.pricePerPlayer}{t('details.pricePerPerson')}
                   </Text>
                 </View>
                 <View
@@ -384,7 +384,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   style={{ backgroundColor: 'rgba(5,7,11,0.52)', borderColor: 'rgba(255,255,255,0.16)' }}
                 >
                   <Text variant="caption" className="text-[10px]" style={{ color: 'rgba(255,255,255,0.82)' }}>
-                    {card.occupiedSlots}/{card.totalSlots} vagas
+                    {card.occupiedSlots}/{card.totalSlots} {t('details.slots')}
                   </Text>
                 </View>
                 {details.isHost ? <StatBadge label="HOST" tone="gold" small /> : null}
@@ -467,7 +467,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                       </View>
                       <View>
                         <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
-                          {t('openSpots', 'Open Spots')}
+                          {t('details.openSpots')}
                         </Text>
                         <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                           {openCount}
@@ -476,7 +476,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                       {blockedCount > 0 && (
                         <View>
                           <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>
-                            {t('blockedCount', 'Blocked')}
+                            {t('details.blockedSlots')}
                           </Text>
                           <Text variant="label" style={{ color: matchTheme.colors.fgMuted }}>
                             {blockedCount}
@@ -564,7 +564,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 </View>
                 <View>
                   <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    {t('form.address')}
+                    {t('details.address')}
                   </Text>
                   <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                     {match.address ?? t('details.notInformed')}
@@ -581,7 +581,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 <View className="flex-row gap-2">
                   <View className="flex-1">
                     <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('form.date')}
+                      {t('details.date')}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                       {match.match_date}
@@ -589,7 +589,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   </View>
                   <View className="flex-1">
                     <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('form.time')}
+                      {t('details.time')}
                     </Text>
                     <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                       {match.match_time}
@@ -598,7 +598,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 </View>
                 <View>
                   <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    {t('filters.shift')}
+                    {t('details.shift', 'Turno')}
                   </Text>
                   <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                     {match.turno?.charAt(0).toUpperCase() + match.turno?.slice(1)}
@@ -606,7 +606,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 </View>
                 <View>
                   <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    {t('form.contactPhone')}
+                    {t('details.contactPhone')}
                   </Text>
                   <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
                     {match.contact_phone ?? t('details.notInformed')}
@@ -617,7 +617,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           </View>
 
           <View className="mt-[14px]">
-            <SectionTitle title={t('facilities')} />
+            <SectionTitle title={t('details.facilities')} />
             <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
               {Array.isArray(match.facilities) && match.facilities.length > 0 ? (
                 <View className="gap-2 flex-row flex-wrap">

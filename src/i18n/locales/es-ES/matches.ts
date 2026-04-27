@@ -82,7 +82,16 @@ export const esESMatches = {
     noMatchHistory: 'Sin historial de partidos registrado aún',
     noRatings: 'Sin calificaciones aún',
     requesterProfile: 'Perfil del solicitante',
-    viewProfile: 'Ver perfil'
+    viewProfile: 'Ver perfil',
+    address: 'Dirección',
+    date: 'Fecha',
+    time: 'Hora',
+    contactPhone: 'Teléfono de contacto',
+    openSpots: 'Plazas abiertas',
+    blockedSlots: 'Plazas bloqueadas',
+    pricePerPerson: '/persona',
+    slots: 'plazas',
+    shift: 'Turno'
   },
   modality: {
     title: 'Tipo de Juego',

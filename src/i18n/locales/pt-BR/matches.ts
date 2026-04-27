@@ -74,7 +74,16 @@ export const ptBRMatches = {
     noMatchHistory: 'Sem histórico de partidas registradas ainda',
     noRatings: 'Sem avaliações ainda',
     requesterProfile: 'Perfil do solicitante',
-    viewProfile: 'Ver perfil'
+    viewProfile: 'Ver perfil',
+    address: 'Endereço',
+    date: 'Data',
+    time: 'Horário',
+    contactPhone: 'Telefone para contato',
+    openSpots: 'Vagas abertas',
+    blockedSlots: 'Vagas bloqueadas',
+    pricePerPerson: '/pessoa',
+    slots: 'vagas',
+    shift: 'Turno'
   },
   modality: {
     title: 'Tipo de Jogo',

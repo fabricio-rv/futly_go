@@ -82,7 +82,16 @@ export const enUSMatches = {
     noMatchHistory: 'No match history recorded yet',
     noRatings: 'No ratings yet',
     requesterProfile: 'Requester profile',
-    viewProfile: 'View profile'
+    viewProfile: 'View profile',
+    address: 'Address',
+    date: 'Date',
+    time: 'Time',
+    contactPhone: 'Contact phone',
+    openSpots: 'Open slots',
+    blockedSlots: 'Blocked slots',
+    pricePerPerson: '/person',
+    slots: 'slots',
+    shift: 'Shift'
   },
   modality: {
     title: 'Game Type',
