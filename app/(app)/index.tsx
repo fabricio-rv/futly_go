@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { LayoutAnimation, Platform, ScrollView, UIManager, View } from 'react-native';
+import { LayoutAnimation, Platform, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlashList } from '@shopify/flash-list';
 
 import {
   EmptyStateCard,
@@ -11,10 +12,12 @@ import {
   MatchBottomNav,
   SearchInput,
 } from '@/src/components/features/matches';
-import { Text } from '@/src/components/ui';
+import { SkeletonList } from '@/src/components/ui';
 import type { AdvancedFilters } from '@/src/components/features/matches/explore/AdvancedFilterPanel';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
+import { selectionTick } from '@/src/lib/haptics';
 
 function isValidFilterDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -30,6 +33,7 @@ function isValidFilterTime(value: string) {
 }
 
 export default function ExploreMatchesScreen() {
+  const { t } = useTranslation('matches');
   const theme = useAppColorScheme();
   const router = useRouter();
   const { availableMatches, fetchAvailableMatches, loadingAvailable } = useMatches();
@@ -85,60 +89,69 @@ export default function ExploreMatchesScreen() {
     return result;
   }, [availableMatches, query, advancedFilters]);
 
-  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
+  const bgColor = theme === 'light' ? '#F1F5F9' : '#020617';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <View className="absolute inset-0" style={{ backgroundColor: bgColor }} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={2} />
+      <FlashList
+        data={filteredMatches}
+        keyExtractor={(item) => item.id}
+bounces
+        overScrollMode="always"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        ListHeaderComponent={(
+          <>
+            <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={2} />
 
-        <SearchInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Buscar local, time, organizador..."
-          onFilterPress={() => {
-            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-            setShowFilters((prev) => !prev);
-          }}
-          filtersExpanded={showFilters}
-        />
-
-        <View style={{ position: 'relative', zIndex: 50, elevation: 50 }}>
-          {showFilters ? <AdvancedFilterPanel filters={advancedFilters} onFiltersChange={setAdvancedFilters} /> : null}
-        </View>
-
-        <View className="px-[18px]" style={{ zIndex: 1, elevation: 1 }}>
-          {filteredMatches.map((partida, index) => (
-            <MatchCard
-              key={partida.id}
-              partida={partida}
-              bannerPalette={index === 1 ? ['#1A2236', '#0F1828', '#050912'] : index === 2 ? ['#241015', '#170A0F', '#080306'] : undefined}
-              onPress={() => router.push(`/(app)/${partida.id}`)}
+            <SearchInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('search.placeholder', 'Buscar local, time, organizador...')}
+              onFilterPress={() => {
+                void selectionTick();
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setShowFilters((prev) => !prev);
+              }}
+              filtersExpanded={showFilters}
             />
-          ))}
-        </View>
 
-        {loadingAvailable ? (
-          <View className="px-[18px] mt-2">
-            <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
-              Carregando partidas...
-            </Text>
+            <View style={{ position: 'relative', zIndex: 50, elevation: 50 }}>
+              {showFilters ? <AdvancedFilterPanel filters={advancedFilters} onFiltersChange={setAdvancedFilters} /> : null}
+            </View>
+          </>
+        )}
+        ListEmptyComponent={
+          loadingAvailable ? (
+            <View className="px-[18px]">
+              <SkeletonList rows={4} />
+            </View>
+          ) : (
+            <EmptyStateCard
+              title={t('empty.noMatchesTitle', 'Nenhuma partida encontrada')}
+              description={t('empty.noMatchesDescription', 'Ninguem marcou jogo com os filtros atuais. Que tal ser o primeiro?')}
+              actionLabel={t('create.title', '+ Criar Partida')}
+              onAction={() => router.push('/(app)/create')}
+            />
+          )
+        }
+        renderItem={({ item, index }) => (
+          <View className="px-[18px]" style={{ zIndex: 1, elevation: 1 }}>
+            <MatchCard
+              partida={item}
+              bannerPalette={index === 1 ? ['#1A2236', '#0F1828', '#050912'] : index === 2 ? ['#241015', '#170A0F', '#080306'] : undefined}
+              onPress={() => router.push(`/(app)/${item.id}`)}
+            />
           </View>
-        ) : null}
-
-        {filteredMatches.length === 0 ? (
-          <EmptyStateCard
-            title="Nenhuma partida encontrada"
-            description="Ninguem marcou jogo com os filtros atuais. Que tal ser o primeiro?"
-            actionLabel="+ Criar Partida"
-            onAction={() => router.push('/(app)/create')}
-          />
-        ) : null}
-      </ScrollView>
+        )}
+      />
 
       <MatchBottomNav active="buscar" />
     </SafeAreaView>
   );
 }
+
+
+

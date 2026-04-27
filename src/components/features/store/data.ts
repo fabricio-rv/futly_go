@@ -40,19 +40,17 @@ export const billingOptions: Array<{
 
 const sharedFeatures: PlanFeature[] = [
 	{ text: 'Raio de busca ilimitado + filtros avancados' },
-	{ text: 'Partidas ilimitadas como jogador e host' },
-	{ text: 'Prioridade na fila em partidas lotadas' },
-	{ text: 'Card FIFA Gold + selo no perfil' },
-	{ text: 'Estatisticas detalhadas e historico completo' },
+	{ text: 'Participacoes e criacoes ilimitadas' },
+	{ text: 'Prioridade na fila em partidas concorridas' },
+	{ text: 'Selo Atleta Gold no perfil' },
 	{ text: 'Sem anuncios' },
 ];
 
 const sharedEliteFeatures: PlanFeature[] = [
 	{ text: 'Receba pagamentos direto pelo app (taxa 4,9%)' },
-	{ text: 'Multi-quadras - gerencie ate 5 locais' },
+	{ text: 'Gestao de ate 5 locais/quadras' },
 	{ text: 'Selo Host Verificado + destaque no feed' },
 	{ text: 'Lista de espera automatica' },
-	{ text: 'Dashboard financeiro mensal' },
 	{ text: 'Suporte prioritario em ate 1h' },
 ];
 
@@ -64,17 +62,17 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Atual de novos', tone: 'neutral' },
 			name: 'Free - Pelada',
 			title: 'Pelada de Bairro',
-			description: 'Para comecar e marcar suas primeiras partidas no app.',
+			description: 'Para comecar no Futly e entrar nas primeiras partidas.',
 			price: '0',
 			per: '/mes - gratis',
 			features: [
 				{ text: 'Buscar partidas em raio de 5km' },
 				{ text: 'Participar de partidas (ate 3/mes)' },
 				{ text: 'Criar ate 1 partida/mes como host' },
-				{ text: 'Chat basico com host' },
-				{ text: 'Anuncios entre partidas', muted: true },
+				{ text: 'Chat com host e jogadores da partida' },
+				{ text: 'Anuncios no app', muted: true },
 			],
-			ctaLabel: 'Plano gratis',
+			ctaLabel: 'Plano atual',
 			ctaVariant: 'ghost',
 		},
 		{
@@ -83,7 +81,7 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Mais popular', tone: 'gold' },
 			name: 'Gold - Atleta',
 			title: 'Atleta Gold',
-			description: 'Para quem joga toda semana e quer prioridade nas melhores partidas.',
+			description: 'Para quem joga com frequencia e quer prioridade nas melhores vagas.',
 			price: '23,90',
 			per: '/mes',
 			features: [{ text: 'Tudo do Free, e mais:', gold: true }, ...sharedFeatures],
@@ -96,7 +94,7 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Para hosts', tone: 'popular' },
 			name: 'Elite - Anfitriao',
 			title: 'Host Elite',
-			description: 'Para quem organiza partidas e quer monetizar no app.',
+			description: 'Para quem organiza partidas com frequencia e quer operacao profissional.',
 			price: '39,90',
 			per: '/mes',
 			features: [
@@ -114,17 +112,17 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Atual de novos', tone: 'neutral' },
 			name: 'Free - Pelada',
 			title: 'Pelada de Bairro',
-			description: 'Para comecar e marcar suas primeiras partidas no app.',
+			description: 'Para comecar no Futly e entrar nas primeiras partidas.',
 			price: '0',
 			per: '/mes - gratis',
 			features: [
 				{ text: 'Buscar partidas em raio de 5km' },
 				{ text: 'Participar de partidas (ate 3/mes)' },
 				{ text: 'Criar ate 1 partida/mes como host' },
-				{ text: 'Chat basico com host' },
-				{ text: 'Anuncios entre partidas', muted: true },
+				{ text: 'Chat com host e jogadores da partida' },
+				{ text: 'Anuncios no app', muted: true },
 			],
-			ctaLabel: 'Plano gratis',
+			ctaLabel: 'Plano atual',
 			ctaVariant: 'ghost',
 		},
 		{
@@ -133,7 +131,7 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Mais popular', tone: 'gold' },
 			name: 'Gold - Atleta',
 			title: 'Atleta Gold',
-			description: 'Para quem joga toda semana e quer prioridade nas melhores partidas.',
+			description: 'Para quem joga com frequencia e quer prioridade nas melhores vagas.',
 			price: '19,90',
 			per: '/mes',
 			strike: 'R$ 23,90',
@@ -148,7 +146,7 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Para hosts', tone: 'popular' },
 			name: 'Elite - Anfitriao',
 			title: 'Host Elite',
-			description: 'Para quem organiza partidas e quer monetizar no app.',
+			description: 'Para quem organiza partidas com frequencia e quer operacao profissional.',
 			price: '34,90',
 			per: '/mes',
 			strike: 'R$ 39,90',
@@ -168,17 +166,17 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Atual de novos', tone: 'neutral' },
 			name: 'Free - Pelada',
 			title: 'Pelada de Bairro',
-			description: 'Para comecar e marcar suas primeiras partidas no app.',
+			description: 'Para comecar no Futly e entrar nas primeiras partidas.',
 			price: '0',
 			per: '/mes - gratis',
 			features: [
 				{ text: 'Buscar partidas em raio de 5km' },
 				{ text: 'Participar de partidas (ate 3/mes)' },
 				{ text: 'Criar ate 1 partida/mes como host' },
-				{ text: 'Chat basico com host' },
-				{ text: 'Anuncios entre partidas', muted: true },
+				{ text: 'Chat com host e jogadores da partida' },
+				{ text: 'Anuncios no app', muted: true },
 			],
-			ctaLabel: 'Plano gratis',
+			ctaLabel: 'Plano atual',
 			ctaVariant: 'ghost',
 		},
 		{
@@ -187,7 +185,7 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Mais popular', tone: 'gold' },
 			name: 'Gold - Atleta',
 			title: 'Atleta Gold',
-			description: 'Para quem joga toda semana e quer prioridade nas melhores partidas.',
+			description: 'Para quem joga com frequencia e quer prioridade nas melhores vagas.',
 			price: '17,90',
 			per: '/mes',
 			strike: 'R$ 23,90',
@@ -202,7 +200,7 @@ export const plansByPeriod: Record<BillingPeriod, StorePlan[]> = {
 			tag: { label: 'Para hosts', tone: 'popular' },
 			name: 'Elite - Anfitriao',
 			title: 'Host Elite',
-			description: 'Para quem organiza partidas e quer monetizar no app.',
+			description: 'Para quem organiza partidas com frequencia e quer operacao profissional.',
 			price: '29,90',
 			per: '/mes',
 			strike: 'R$ 39,90',
@@ -391,4 +389,3 @@ export const conversationDetails: Record<string, ConversationDetail> = {
 export function getConversationDetail(id: string) {
 	return conversationDetails[id] ?? conversationDetails['arena-central-quinta'];
 }
-

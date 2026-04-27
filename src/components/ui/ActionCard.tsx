@@ -1,6 +1,7 @@
-import { Pressable, View, type ViewStyle } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 
 import { Text } from './Text';
+import { TouchableScale } from './TouchableScale';
 
 type ActionCardProps = {
   label: string;
@@ -13,7 +14,7 @@ type ActionCardProps = {
 
 export function ActionCard({ label, subtitle, icon, onPress, style, testID }: ActionCardProps) {
   return (
-    <Pressable
+    <TouchableScale
       onPress={onPress}
       testID={testID}
       className="flex-1"
@@ -37,6 +38,6 @@ export function ActionCard({ label, subtitle, icon, onPress, style, testID }: Ac
           </View>
         </View>
       </View>
-    </Pressable>
+    </TouchableScale>
   );
 }

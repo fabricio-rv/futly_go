@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { ScrollView, View, Alert } from 'react-native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,22 +9,9 @@ import { HubTopNav } from '@/src/components/features/store';
 import { Button, Input, SelectField, Text } from '@/src/components/ui';
 import { sendSupportMessage, fetchMySupportMessages } from '@/src/features/support/services/supportService';
 import type { SupportMessage } from '@/src/features/support/services/supportService';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type Status = 'pending' | 'in_progress' | 'resolved';
-
-const subjectOptions = [
-  { value: 'bug', label: 'Relatar um problema' },
-  { value: 'feature', label: 'Sugerir uma funcionalidade' },
-  { value: 'payment', label: 'Dúvida sobre pagamento' },
-  { value: 'account', label: 'Problema com conta' },
-  { value: 'other', label: 'Outro' },
-];
-
-const statusLabels: Record<Status, string> = {
-  pending: 'Pendente',
-  in_progress: 'Em andamento',
-  resolved: 'Resolvido',
-};
 
 const statusColors: Record<Status, string> = {
   pending: '#F5A524',
@@ -33,6 +20,21 @@ const statusColors: Record<Status, string> = {
 };
 
 export default function SupportChatScreen() {
+  const { t } = useTranslation('support');
+
+  const subjectOptions = [
+    { value: 'bug', label: t('categories.problem', 'Relatar um problema') },
+    { value: 'feature', label: t('categories.feature', 'Sugerir uma funcionalidade') },
+    { value: 'payment', label: t('categories.payment', 'Duvida sobre pagamento') },
+    { value: 'account', label: t('categories.account', 'Problema com conta') },
+    { value: 'other', label: t('categories.other', 'Outro') },
+  ];
+
+  const statusLabels: Record<Status, string> = {
+    pending: t('status.pending', 'Pendente'),
+    in_progress: t('status.inProgress', 'Em andamento'),
+    resolved: t('status.resolved', 'Resolvido'),
+  };
   const theme = useAppColorScheme();
   const bgColor = theme === 'light' ? '#FFFFFF' : '#05070B';
   const [subject, setSubject] = useState<string | null>(null);
@@ -45,15 +47,15 @@ export default function SupportChatScreen() {
   const [modalData, setModalData] = useState<{ title: string; message: string } | null>(null);
 
   useEffect(() => {
-    loadHistory();
+    void loadHistory();
   }, []);
 
   async function loadHistory() {
     try {
       const data = await fetchMySupportMessages();
       setMessages(data);
-    } catch (error) {
-      console.log('Erro ao carregar histórico:', error);
+    } catch {
+      // silent
     } finally {
       setLoadingHistory(false);
     }
@@ -61,7 +63,7 @@ export default function SupportChatScreen() {
 
   async function handleSendMessage() {
     if (!subject || !message.trim()) {
-      Alert.alert('Campo obrigatório', 'Preencha o assunto e a mensagem');
+      Alert.alert(t('validation.requiredTitle', 'Campo obrigatorio'), t('validation.requiredMessage', 'Preencha o assunto e a mensagem'));
       return;
     }
 
@@ -72,13 +74,13 @@ export default function SupportChatScreen() {
       setMessage('');
       setMessages([newMessage, ...messages]);
       setModalData({
-        title: 'Mensagem enviada',
-        message: 'Obrigado por entrar em contato! Responderemos em breve.',
+        title: t('send.successTitle', 'Mensagem enviada'),
+        message: t('send.successMessage', 'Obrigado por entrar em contato! Responderemos em breve.'),
       });
       setModalVisible(true);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao enviar mensagem';
-      Alert.alert('Erro', errorMessage);
+      const errorMessage = error instanceof Error ? error.message : t('send.errorMessage', 'Erro ao enviar mensagem');
+      Alert.alert(t('common.error', 'Erro'), errorMessage);
     } finally {
       setLoading(false);
     }
@@ -87,61 +89,57 @@ export default function SupportChatScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubTopNav title="Falar com Suporte" subtitle="CENTRAL DE SUPORTE" />
+        <HubTopNav title={t('title', 'Falar com Suporte')} subtitle={t('subtitle', 'CENTRAL DE SUPORTE')} />
 
-        {/* Form */}
         <View className="mx-[18px] mt-6 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-6">
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-4">
-            Enviar mensagem
+            {t('send.title', 'Enviar mensagem')}
           </Text>
 
           <View className="mb-4">
             <SelectField
-              label="Assunto"
+              label={t('send.subject', 'Assunto')}
               value={subject}
               options={subjectOptions}
-              placeholder="Selecione um assunto"
+              placeholder={t('send.subjectPlaceholder', 'Selecione um assunto')}
               onChange={setSubject}
             />
           </View>
 
           <View className="mb-4">
             <Input
-              label="Sua mensagem"
+              label={t('send.messageLabel', 'Sua mensagem')}
               value={message}
               onChangeText={setMessage}
-              placeholder="Descreva seu problema ou sugestão..."
+              placeholder={t('send.messagePlaceholder', 'Descreva seu problema ou sugestao...')}
               multiline
               numberOfLines={6}
             />
           </View>
 
           <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mb-4">
-            Responderemos o mais breve possível. Você receberá a resposta por e-mail.
+            {t('send.replyHint', 'Responderemos o mais breve possivel. Voce recebera a resposta por e-mail.')}
           </Text>
 
           <Button
-            label="Enviar mensagem"
+            label={t('actions.send', 'Enviar mensagem')}
             loading={loading}
             disabled={loading || !subject || !message.trim()}
-            onPress={handleSendMessage}
+            onPress={() => void handleSendMessage()}
           />
         </View>
 
-        {/* History */}
         {!loadingHistory && messages.length > 0 && (
           <View className="mx-[18px] mb-4">
             <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-              Histórico de mensagens
+              {t('history.title', 'Historico de mensagens')}
             </Text>
 
             <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] overflow-hidden">
               {messages.map((msg, index) => (
                 <View
                   key={msg.id}
-                  className={`px-[14px] py-[14px] ${
-                    index < messages.length - 1 ? 'border-b border-gray-100 dark:border-line' : ''
-                  }`}
+                  className={`px-[14px] py-[14px] ${index < messages.length - 1 ? 'border-b border-gray-100 dark:border-line' : ''}`}
                 >
                   <View className="flex-row items-start justify-between gap-3 mb-2">
                     <View className="flex-1">
@@ -184,7 +182,7 @@ export default function SupportChatScreen() {
         {!loadingHistory && messages.length === 0 && (
           <View className="mx-[18px] rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px]">
             <Text variant="body" className="text-center text-[#4B5563] dark:text-fg3">
-              Você ainda não enviou nenhuma mensagem de suporte.
+              {t('history.empty', 'Voce ainda nao enviou nenhuma mensagem de suporte.')}
             </Text>
           </View>
         )}
@@ -197,7 +195,7 @@ export default function SupportChatScreen() {
         tone="success"
         title={modalData?.title ?? ''}
         message={modalData?.message ?? ''}
-        primaryLabel="Fechar"
+        primaryLabel={t('common.close', 'Fechar')}
         onPrimaryPress={() => setModalVisible(false)}
         onClose={() => setModalVisible(false)}
       />

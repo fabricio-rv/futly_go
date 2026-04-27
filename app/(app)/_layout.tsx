@@ -9,7 +9,7 @@ export default function AppLayout() {
       initialRouteName="index"
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: theme === 'light' ? '#F4F6F9' : '#05070B' },
+        contentStyle: { backgroundColor: theme === 'light' ? '#F1F5F9' : '#020617' },
       }}
     />
   );

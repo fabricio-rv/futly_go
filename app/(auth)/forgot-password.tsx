@@ -14,6 +14,7 @@ import {
 	PasswordStrengthMeter,
 } from '@/src/components/features/auth';
 import { Button, Input, Text } from '@/src/components/ui';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import {
 	sendPasswordResetCode,
 	signOut,
@@ -32,11 +33,11 @@ function getPasswordStrength(password: string) {
 	return Math.min(score, 4);
 }
 
-function getStrengthLabel(level: number) {
-	if (level <= 1) return 'Fraca - use mais de 8 caracteres';
-	if (level === 2) return 'Media - adicione maiuscula e numero';
-	if (level === 3) return 'Forte - 9 caracteres - maiuscula + numero';
-	return 'Muito forte - pronta para uso';
+function getStrengthLabel(level: number, t: (key: string, fallback?: string) => string) {
+	if (level <= 1) return t('security.passwordStrength.veryWeak', 'Muito fraca - use mais de 8 caracteres');
+	if (level === 2) return t('security.passwordStrength.weak', 'Fraca - adicione maiuscula e numero');
+	if (level === 3) return t('security.passwordStrength.medium', 'Media - 9 caracteres - maiuscula + numero');
+	return t('security.passwordStrength.strong', 'Forte - pronta para uso');
 }
 
 function maskEmail(email: string) {
@@ -47,6 +48,7 @@ function maskEmail(email: string) {
 }
 
 export default function ForgotPasswordScreen() {
+	const { t } = useTranslation('auth');
 	const [step, setStep] = useState(1);
 	const [email, setEmail] = useState('');
 	const [code, setCode] = useState('');
@@ -72,7 +74,7 @@ export default function ForgotPasswordScreen() {
 		tone: 'info',
 		title: '',
 		message: '',
-		primaryLabel: 'Fechar',
+		primaryLabel: t('common.close', 'Fechar'),
 		onPrimary: () => undefined,
 	});
 
@@ -85,13 +87,13 @@ export default function ForgotPasswordScreen() {
 
 	async function handleSendCode() {
 		if (!email.trim()) {
-			showToast('Informe seu e-mail', 'error');
+			showToast(t('forgotPassword.enterEmailToast', 'Informe seu e-mail'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'E-mail obrigatório',
-				message: 'Informe o e-mail para receber o código.',
-				primaryLabel: 'Ok',
+				title: t('forgotPassword.emailRequired', 'E-mail obrigatório'),
+				message: t('forgotPassword.emailRequiredMessage', 'Informe o e-mail para receber o código.'),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
@@ -100,22 +102,22 @@ export default function ForgotPasswordScreen() {
 		try {
 			setLoading(true);
 			await sendPasswordResetCode(email);
-			showToast('Código enviado com sucesso', 'success');
+			showToast(t('forgotPassword.codeSentSuccess', 'Código enviado com sucesso'), 'success');
 			setStep(2);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Não foi possível enviar o código.';
-			showToast('Erro ao enviar código', 'error');
+			const message = error instanceof Error ? error.message : t('forgotPassword.sendCodeError', 'Não foi possível enviar o código.');
+			showToast(t('forgotPassword.sendCodeErrorToast', 'Erro ao enviar código'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Erro ao enviar código',
+				title: t('forgotPassword.sendCodeErrorTitle', 'Erro ao enviar código'),
 				message,
-				primaryLabel: 'Voltar para login',
+				primaryLabel: t('forgotPassword.backToLogin', 'Voltar para login'),
 				onPrimary: () => {
 					setFeedback((prev) => ({ ...prev, visible: false }));
 					router.replace('/(auth)');
 				},
-				secondaryLabel: 'Tentar novamente',
+				secondaryLabel: t('common.tryAgain', 'Tentar novamente'),
 				onSecondary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 		} finally {
@@ -125,13 +127,13 @@ export default function ForgotPasswordScreen() {
 
 	async function handleVerifyCode() {
 		if (code.length !== VERIFICATION_CODE_LENGTH) {
-			showToast('Código incompleto', 'error');
+			showToast(t('forgotPassword.incompleteCode', 'Código incompleto'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Código incompleto',
-				message: `Digite os ${VERIFICATION_CODE_LENGTH} dígitos do código.`,
-				primaryLabel: 'Ok',
+				title: t('forgotPassword.incompleteCodeTitle', 'Código incompleto'),
+				message: t('forgotPassword.incompleteCodeMessage', `Digite os {{length}} dígitos do código.`, { length: VERIFICATION_CODE_LENGTH }),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
@@ -140,22 +142,22 @@ export default function ForgotPasswordScreen() {
 		try {
 			setLoading(true);
 			await verifyPasswordResetCode(email, code);
-			showToast('Código validado', 'success');
+			showToast(t('forgotPassword.codeValidated', 'Código validado'), 'success');
 			setStep(3);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Não foi possível validar o código.';
-			showToast('Código inválido', 'error');
+			const message = error instanceof Error ? error.message : t('forgotPassword.validateCodeError', 'Não foi possível validar o código.');
+			showToast(t('forgotPassword.invalidCode', 'Código inválido'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Código inválido',
+				title: t('forgotPassword.invalidCodeTitle', 'Código inválido'),
 				message,
-				primaryLabel: 'Solicitar novo código',
+				primaryLabel: t('forgotPassword.requestNewCode', 'Solicitar novo código'),
 				onPrimary: () => {
 					setFeedback((prev) => ({ ...prev, visible: false }));
 					setStep(1);
 				},
-				secondaryLabel: 'Tentar novamente',
+				secondaryLabel: t('common.tryAgain', 'Tentar novamente'),
 				onSecondary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 		} finally {
@@ -165,26 +167,26 @@ export default function ForgotPasswordScreen() {
 
 	async function handleSavePassword() {
 		if (password.length < 6) {
-			showToast('Senha muito curta', 'error');
+			showToast(t('forgotPassword.passwordTooShort', 'Senha muito curta'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Senha inválida',
-				message: 'A senha deve ter pelo menos 6 caracteres.',
-				primaryLabel: 'Ok',
+				title: t('forgotPassword.invalidPassword', 'Senha inválida'),
+				message: t('forgotPassword.minimumPasswordLength', 'A senha deve ter pelo menos 6 caracteres.'),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
 		}
 
 		if (confirmPassword !== password) {
-			showToast('As senhas não conferem', 'error');
+			showToast(t('forgotPassword.passwordMismatchToast', 'As senhas não conferem'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Senhas diferentes',
-				message: 'As senhas não conferem.',
-				primaryLabel: 'Ok',
+				title: t('forgotPassword.passwordMismatchTitle', 'Senhas diferentes'),
+				message: t('forgotPassword.passwordMismatchMessage', 'As senhas não conferem.'),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
@@ -194,37 +196,37 @@ export default function ForgotPasswordScreen() {
 			setLoading(true);
 			await updatePassword(password);
 			await signOut();
-			showToast('Senha atualizada', 'success');
+			showToast(t('forgotPassword.passwordUpdated', 'Senha atualizada'), 'success');
 			setFeedback({
 				visible: true,
 				tone: 'success',
-				title: 'Senha atualizada',
-				message: 'Sua senha foi redefinida com sucesso. Faça login com a nova senha.',
-				primaryLabel: 'Ir para login',
+				title: t('forgotPassword.passwordUpdatedTitle', 'Senha atualizada'),
+				message: t('forgotPassword.passwordUpdatedMessage', 'Sua senha foi redefinida com sucesso. Faça login com a nova senha.'),
+				primaryLabel: t('forgotPassword.goToLogin', 'Ir para login'),
 				onPrimary: () => {
 					setFeedback((prev) => ({ ...prev, visible: false }));
 					router.replace('/(auth)');
 				},
-				secondaryLabel: 'Ir para cadastro',
+				secondaryLabel: t('forgotPassword.goToSignup', 'Ir para cadastro'),
 				onSecondary: () => {
 					setFeedback((prev) => ({ ...prev, visible: false }));
 					router.replace('/(auth)/signup');
 				},
 			});
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Não foi possível atualizar a senha.';
-			showToast('Erro ao atualizar senha', 'error');
+			const message = error instanceof Error ? error.message : t('forgotPassword.updatePasswordError', 'Não foi possível atualizar a senha.');
+			showToast(t('forgotPassword.updatePasswordErrorToast', 'Erro ao atualizar senha'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Erro ao atualizar senha',
+				title: t('forgotPassword.updatePasswordErrorTitle', 'Erro ao atualizar senha'),
 				message,
-				primaryLabel: 'Ir para login',
+				primaryLabel: t('forgotPassword.goToLogin', 'Ir para login'),
 				onPrimary: () => {
 					setFeedback((prev) => ({ ...prev, visible: false }));
 					router.replace('/(auth)');
 				},
-				secondaryLabel: 'Tentar novamente',
+				secondaryLabel: t('common.tryAgain', 'Tentar novamente'),
 				onSecondary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 		} finally {
@@ -244,8 +246,8 @@ export default function ForgotPasswordScreen() {
 			>
 				<View className="relative pb-6">
 					<AuthTopNav
-						title="Recuperar Senha"
-						subtitle={`ETAPA ${step} DE 3`}
+						title={t('forgotPassword.title', 'Recuperar Senha')}
+						subtitle={t('forgotPassword.stepCounter', 'ETAPA {{step}} DE 3', { step })}
 						onBackPress={() => {
 							if (step > 1) {
 								setStep((prev) => prev - 1);
@@ -265,17 +267,21 @@ export default function ForgotPasswordScreen() {
 								</View>
 
 								<Text variant="title" className="text-white font-extrabold">
-									Informe seu e-mail
+									{t('forgotPassword.emailStepTitle', 'Informe seu e-mail')}
 								</Text>
 								<Text variant="label" className="mt-1 mb-4 text-fg2 leading-[20px]">
-									Vamos enviar um codigo de recuperacao de {VERIFICATION_CODE_LENGTH} digitos.
+									{t(
+										'forgotPassword.emailStepSubtitle',
+										'Vamos enviar um codigo de recuperacao de {{VERIFICATION_CODE_LENGTH}} digitos.',
+										{ VERIFICATION_CODE_LENGTH },
+									)}
 								</Text>
 
 								<Input
-									label="E-mail"
+									label={t('signup.email', 'E-mail')}
 									value={email}
 									onChangeText={setEmail}
-									placeholder="seuemail@dominio.com"
+									placeholder={t('placeholders.email', 'seuemail@dominio.com')}
 									autoCapitalize="none"
 									keyboardType="email-address"
 									leftAdornment={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
@@ -284,7 +290,7 @@ export default function ForgotPasswordScreen() {
 								/>
 
 								<Button
-									label="Enviar codigo"
+									label={t('forgotPassword.sendCode', 'Enviar codigo')}
 									variant="primary"
 									size="xl"
 									loading={loading}
@@ -302,10 +308,14 @@ export default function ForgotPasswordScreen() {
 								</View>
 
 								<Text variant="title" className="text-white font-extrabold">
-									Digite o codigo
+									{t('forgotPassword.codeStepTitle', 'Digite o codigo')}
 								</Text>
 								<Text variant="label" className="mt-1 text-fg2 leading-[20px]">
-									Enviamos um codigo de {VERIFICATION_CODE_LENGTH} digitos para
+									{t(
+										'forgotPassword.codeStepSubtitle',
+										'Enviamos um codigo de {{VERIFICATION_CODE_LENGTH}} digitos para',
+										{ VERIFICATION_CODE_LENGTH },
+									)}
 								</Text>
 								<Text variant="label" className="text-white font-semibold mt-1">
 									{maskEmail(email)}
@@ -313,17 +323,21 @@ export default function ForgotPasswordScreen() {
 
 								<Pressable className="mt-1 mb-4" onPress={handleSendCode}>
 									<Text variant="micro" className="text-fg3">
-										Nao chegou? <Text className="text-ok font-bold">Reenviar codigo</Text>
+										{t('forgotPassword.didNotReceive', 'Nao chegou?')} <Text className="text-ok font-bold">{t('forgotPassword.resendCode', 'Reenviar codigo')}</Text>
 									</Text>
 								</Pressable>
 
 								<OtpBoxes value={code} />
 
 								<Input
-									label="Codigo de verificacao"
+									label={t('forgotPassword.verificationCode', 'Codigo de verificacao')}
 									value={code}
 									onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, VERIFICATION_CODE_LENGTH))}
-									placeholder={`Digite o codigo de ${VERIFICATION_CODE_LENGTH} digitos`}
+									placeholder={t(
+										'forgotPassword.verificationCodePlaceholder',
+										'Digite o codigo de {{VERIFICATION_CODE_LENGTH}} digitos',
+										{ VERIFICATION_CODE_LENGTH },
+									)}
 									keyboardType="number-pad"
 									maxLength={VERIFICATION_CODE_LENGTH}
 									containerClassName="mt-4 h-12 rounded-[14px] border-line2 bg-[#0C111E]"
@@ -331,7 +345,7 @@ export default function ForgotPasswordScreen() {
 								/>
 
 								<Button
-									label="Verificar codigo"
+									label={t('forgotPassword.verifyCode', 'Verificar codigo')}
 									variant="primary"
 									size="xl"
 									loading={loading}
@@ -340,7 +354,7 @@ export default function ForgotPasswordScreen() {
 									onPress={handleVerifyCode}
 								/>
 								<Button
-									label="Voltar e mudar email"
+									label={t('forgotPassword.backAndChangeEmail', 'Voltar e mudar email')}
 									variant="ghost"
 									size="xl"
 									disabled={loading}
@@ -357,36 +371,36 @@ export default function ForgotPasswordScreen() {
 								</View>
 
 								<Text variant="title" className="text-white font-extrabold">
-									Defina sua nova senha
+									{t('forgotPassword.newPasswordStepTitle', 'Defina sua nova senha')}
 								</Text>
 								<Text variant="label" className="mt-1 mb-4 text-fg2 leading-[20px]">
-									Crie uma senha forte para proteger sua conta.
+									{t('forgotPassword.newPasswordStepSubtitle', 'Crie uma senha forte para proteger sua conta.')}
 								</Text>
 
 								<Input
-									label="Nova senha"
+									label={t('forgotPassword.newPassword', 'Nova senha')}
 									value={password}
 									onChangeText={setPassword}
-									placeholder="Digite a nova senha"
+									placeholder={t('forgotPassword.newPasswordPlaceholder', 'Digite a nova senha')}
 									secureTextEntry
 									containerClassName="h-12 rounded-[14px] border-ok bg-[#0C111E]"
 									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 								/>
 
-								<PasswordStrengthMeter level={passwordLevel} label={getStrengthLabel(passwordLevel)} />
+								<PasswordStrengthMeter level={passwordLevel} label={getStrengthLabel(passwordLevel, t)} />
 
 								<Input
-									label="Confirmar senha"
+									label={t('signup.confirmPassword', 'Confirmar senha')}
 									value={confirmPassword}
 									onChangeText={setConfirmPassword}
-									placeholder="Confirme a nova senha"
+									placeholder={t('forgotPassword.confirmNewPassword', 'Confirme a nova senha')}
 									secureTextEntry
 									containerClassName="mt-3 h-12 rounded-[14px] border-line2 bg-[#0C111E]"
 									labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 								/>
 
 								<Button
-									label="Salvar nova senha"
+									label={t('security.changePassword', 'Salvar nova senha')}
 									variant="primary"
 									size="xl"
 									loading={loading}
@@ -414,5 +428,3 @@ export default function ForgotPasswordScreen() {
 		</SafeAreaView>
 	);
 }
-
-

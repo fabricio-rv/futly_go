@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Bell, CalendarDays, Plus, Search, UserRound } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
@@ -10,6 +10,8 @@ import {
   fetchUnreadNotificationsCount,
   subscribeNotifications,
 } from '@/src/features/notifications/services/notificationsService';
+import { selectionTick } from '@/src/lib/haptics';
+import { TouchableScale } from '@/src/components/ui/TouchableScale';
 
 type BottomNavProps = {
   active: 'buscar' | 'agenda' | 'new' | 'notifications' | 'profile' | 'none';
@@ -25,10 +27,11 @@ function NavItem({
   onPress?: () => void;
 }) {
   return (
-    <Pressable
+    <TouchableScale
       className="flex-1 items-center justify-center"
       onPress={onPress}
       hitSlop={10}
+      pressedScale={0.95}
     >
       <View
         className={`h-11 w-11 items-center justify-center rounded-full ${
@@ -37,7 +40,7 @@ function NavItem({
       >
         {icon}
       </View>
-    </Pressable>
+    </TouchableScale>
   );
 }
 
@@ -93,17 +96,27 @@ export function MatchBottomNav({ active }: BottomNavProps) {
         <NavItem
           active={active === 'buscar'}
           icon={<Search color={active === 'buscar' ? '#22B76C' : iconMuted} size={21} />}
-          onPress={() => router.replace('/(app)')}
+          onPress={() => {
+            void selectionTick();
+            router.replace('/(app)');
+          }}
         />
         <NavItem
           active={active === 'agenda'}
           icon={<CalendarDays color={active === 'agenda' ? '#22B76C' : iconMuted} size={21} />}
-          onPress={() => router.replace('/(app)/agenda')}
+          onPress={() => {
+            void selectionTick();
+            router.replace('/(app)/agenda');
+          }}
         />
-        <Pressable
+        <TouchableScale
           className="-mt-1 flex-1 items-center justify-center"
-          onPress={() => router.push('/(app)/create')}
+          onPress={() => {
+            void selectionTick();
+            router.push('/(app)/create');
+          }}
           hitSlop={10}
+          pressedScale={0.95}
         >
           <View
             className={`h-14 w-14 items-center justify-center rounded-full border ${active === 'new' ? 'bg-ok border-[#9BF0C5]' : ''}`}
@@ -111,7 +124,7 @@ export function MatchBottomNav({ active }: BottomNavProps) {
           >
             <Plus size={30} color="#05070B" strokeWidth={2.6} />
           </View>
-        </Pressable>
+        </TouchableScale>
         <NavItem
           active={active === 'notifications'}
           icon={(
@@ -126,12 +139,18 @@ export function MatchBottomNav({ active }: BottomNavProps) {
               ) : null}
             </View>
           )}
-          onPress={() => router.replace('/(app)/notifications')}
+          onPress={() => {
+            void selectionTick();
+            router.replace('/(app)/notifications');
+          }}
         />
         <NavItem
           active={active === 'profile'}
           icon={<UserRound color={active === 'profile' ? '#22B76C' : iconMuted} size={21} />}
-          onPress={() => router.replace('/(app)/profile')}
+          onPress={() => {
+            void selectionTick();
+            router.replace('/(app)/profile');
+          }}
         />
       </View>
     </View>

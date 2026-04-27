@@ -1,6 +1,7 @@
-ï»¿import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { Partida } from '@/src/features/matches/types';
+import { actionSuccess } from '@/src/lib/haptics';
 import {
   createMatch as createMatchService,
   fetchAvailableMatches as fetchAvailableMatchesService,
@@ -82,7 +83,9 @@ export function useMatches() {
     setError(null);
 
     try {
-      return await createMatchService(payload);
+      const result = await createMatchService(payload);
+      void actionSuccess();
+      return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao criar partida.';
       setError(message);
@@ -98,8 +101,9 @@ export function useMatches() {
 
     try {
       await joinMatchService(params);
+      void actionSuccess();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao confirmar presenÃ§a.';
+      const message = err instanceof Error ? err.message : 'Erro ao confirmar presença.';
       setError(message);
       throw err;
     } finally {
@@ -113,8 +117,9 @@ export function useMatches() {
 
     try {
       await leaveMatchService(matchId);
+      void actionSuccess();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao desmarcar presenÃ§a.';
+      const message = err instanceof Error ? err.message : 'Erro ao desmarcar presença.';
       setError(message);
       throw err;
     } finally {
@@ -128,6 +133,7 @@ export function useMatches() {
 
     try {
       await processParticipationRequestService(requestId, action, reason);
+      void actionSuccess();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao processar solicitacao.';
       setError(message);
@@ -149,6 +155,7 @@ export function useMatches() {
 
     try {
       await submitMatchRatingService(params);
+      void actionSuccess();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao enviar avaliacao.';
       setError(message);

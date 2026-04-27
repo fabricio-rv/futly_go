@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react-native';
+﻿import { ChevronRight } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Switch, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,16 +16,10 @@ import {
 import { Text } from '@/src/components/ui';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { ratePlayers, rateTags } from '@/src/features/matches/mockData';
-
-function gradeLabel(stars: number) {
-  if (stars >= 5) return 'EXCELENTE';
-  if (stars >= 4) return 'MUITO BOM';
-  if (stars >= 3) return 'BOM';
-  if (stars >= 2) return 'REGULAR';
-  return 'A MELHORAR';
-}
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 export default function RateScreen() {
+  const { t } = useTranslation('rating');
   const matchTheme = useMatchTheme();
   const theme = useAppColorScheme();
   const [hostStars, setHostStars] = useState(4);
@@ -41,28 +35,34 @@ export default function RateScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 140 }}>
         <View className="flex-row items-center justify-between mb-3">
-          <SectionTitle title="Avalie o Organizador" />
-          <StatBadge label="+25 XP" tone="warn" small />
+          <SectionTitle title={t('host.title', 'Avalie o Organizador')} />
+          <StatBadge label={t('host.xp', '+25 XP')} tone="warn" small />
         </View>
 
         <RatingCard
           initials="PK"
           name="Pedro K."
-          context="Host da partida no Arena Central - Quinta 19h30"
+          context={t('host.context', 'Host da partida no Arena Central - Quinta 19h30')}
           stars={hostStars}
           onChangeStars={setHostStars}
-          gradeLabel={gradeLabel(hostStars)}
+          gradeLabel={
+            hostStars >= 5 ? t('ratings.excellent', 'EXCELENTE')
+            : hostStars >= 4 ? t('ratings.veryGood', 'MUITO BOM')
+            : hostStars >= 3 ? t('ratings.good', 'BOM')
+            : hostStars >= 2 ? t('ratings.regular', 'REGULAR')
+            : t('ratings.poor', 'A MELHORAR')
+          }
         />
 
         <View className="rounded-[20px] border p-4 mt-3 mb-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
-          <Text variant="micro" className="mb-2" style={{ color: matchTheme.colors.fgMuted }}>SOBRE O ORGANIZADOR</Text>
+          <Text variant="micro" className="mb-2" style={{ color: matchTheme.colors.fgMuted }}>{t('host.about', 'SOBRE O ORGANIZADOR')}</Text>
           <View className="flex-row flex-wrap gap-2 mb-4">
             {rateTags.map((tag) => (
               <StatBadge key={tag.id} label={tag.label} tone={tag.active ? 'active' : 'neutral'} />
             ))}
           </View>
 
-          <Text variant="micro" className="mb-2" style={{ color: matchTheme.colors.fgMuted }}>COMENTARIO (OPCIONAL)</Text>
+          <Text variant="micro" className="mb-2" style={{ color: matchTheme.colors.fgMuted }}>{t('host.commentOptional', 'COMENTARIO (OPCIONAL)')}</Text>
           <TextInput
             multiline
             textAlignVertical="top"
@@ -72,32 +72,32 @@ export default function RateScreen() {
               backgroundColor: matchTheme.colors.bgSurfaceB,
               borderColor: matchTheme.colors.lineStrong,
             }}
-            defaultValue="Pontual, organizacao perfeita. Quadra um pouco apertada para o nivel, mas no geral foi top."
+            defaultValue={t('host.commentSample', 'Pontual, organizacao perfeita.')}
             placeholderTextColor={matchTheme.colors.fgMuted}
           />
 
           <View className="mt-3 rounded-[14px] border px-3 py-3 flex-row items-center justify-between" style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}>
             <View className="pr-3 flex-1">
-              <Text variant="label" className="font-semibold">Avaliacao anonima</Text>
-              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>Seu nome nao aparece</Text>
+              <Text variant="label" className="font-semibold">{t('host.anonymousTitle', 'Avaliacao anonima')}</Text>
+              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{t('host.anonymousSubtitle', 'Seu nome nao aparece')}</Text>
             </View>
             <Switch onValueChange={setAnonymous} value={anonymous} />
           </View>
         </View>
 
         <View className="flex-row items-center justify-between mb-2">
-          <SectionTitle title="Proximo: Avalie 4 Atletas" />
+          <SectionTitle title={t('players.title', 'Proximo: Avalie 4 Atletas')} />
           <StatBadge label="HOST" tone="gold" small />
         </View>
 
         <View className="rounded-[20px] border overflow-hidden mb-3" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
           {ratePlayers.map((player, index) => (
-            <PlayerRow key={player.id} player={{ id: player.id, name: player.name, initials: player.initials, rating: player.rating, position: player.position, gradient: [player.gradient[0], player.gradient[1]] }} showStars={index < 2 ? (index === 0 ? 5 : 4) : undefined} pendingLabel={index > 1 ? 'Pendente' : undefined} />
+            <PlayerRow key={player.id} player={{ id: player.id, name: player.name, initials: player.initials, rating: player.rating, position: player.position, gradient: [player.gradient[0], player.gradient[1]] }} showStars={index < 2 ? (index === 0 ? 5 : 4) : undefined} pendingLabel={index > 1 ? t('players.pending', 'Pendente') : undefined} />
           ))}
         </View>
 
         <Pressable className="h-14 rounded-[14px] items-center justify-center flex-row" style={{ backgroundColor: matchTheme.colors.ok }}>
-          <Text variant="label" style={{ color: '#05070B' }}>Continuar para Atletas</Text>
+          <Text variant="label" style={{ color: '#05070B' }}>{t('players.continue', 'Continuar para Atletas')}</Text>
           <ChevronRight size={14} stroke="#05070B" />
         </Pressable>
       </ScrollView>
@@ -108,8 +108,8 @@ export default function RateScreen() {
             <Text variant="caption" style={{ color: matchTheme.colors.okSoft }}>OK</Text>
           </View>
           <View className="ml-3">
-            <Text variant="label" className="font-semibold">Avaliacao salva</Text>
-            <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>Pedro recebeu {hostStars} estrelas</Text>
+            <Text variant="label" className="font-semibold">{t('status.savedTitle', 'Avaliacao salva')}</Text>
+            <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{t('status.savedSubtitle', `Pedro recebeu ${hostStars} estrelas`, { stars: hostStars })}</Text>
           </View>
         </View>
       ) : null}

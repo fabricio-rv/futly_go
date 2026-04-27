@@ -1,6 +1,6 @@
-﻿import { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { router } from 'expo-router';
-import { ScrollView, Pressable, View, Modal, Alert } from 'react-native';
+import { ScrollView, Pressable, View, Modal, Alert, useWindowDimensions } from 'react-native';
 
 import {
   DateTimeField,
@@ -21,6 +21,7 @@ import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
 import { fetchAddressByCep, formatCep } from '@/src/features/location/cep';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type MinLevelValue =
   | 'pereba'
@@ -33,22 +34,22 @@ type MinLevelValue =
   | 'amador'
   | 'ex_profissional';
 
-const MIN_LEVEL_OPTIONS: Array<{ value: MinLevelValue; label: string }> = [
-  { value: 'pereba', label: 'Pereba' },
-  { value: 'resenha', label: 'Resenha' },
-  { value: 'casual', label: 'Casual' },
-  { value: 'intermediario', label: 'Intermediário' },
-  { value: 'avancado', label: 'Avançado' },
-  { value: 'competitivo', label: 'Competitivo' },
-  { value: 'semi_amador', label: 'Semi-Amador' },
-  { value: 'amador', label: 'Amador' },
-  { value: 'ex_profissional', label: 'Ex-profissional' },
+const MIN_LEVEL_OPTIONS: Array<{ value: MinLevelValue }> = [
+  { value: 'pereba' },
+  { value: 'resenha' },
+  { value: 'casual' },
+  { value: 'intermediario' },
+  { value: 'avancado' },
+  { value: 'competitivo' },
+  { value: 'semi_amador' },
+  { value: 'amador' },
+  { value: 'ex_profissional' },
 ];
 
 const TURNO_OPTIONS = [
-  { value: 'manha', label: 'Manha' },
-  { value: 'tarde', label: 'Tarde' },
-  { value: 'noite', label: 'Noite' },
+  { value: 'manha' },
+  { value: 'tarde' },
+  { value: 'noite' },
 ] as const;
 
 function formatDateField(value: Date) {
@@ -116,8 +117,10 @@ function MinLevelCheckbox({
 }
 
 export default function CreateMatchScreen() {
+  const { t, currentLanguage } = useTranslation('create');
   const theme = useAppColorScheme();
   const matchTheme = useMatchTheme();
+  const { width: screenWidth } = useWindowDimensions();
   const { createMatch, submitting } = useMatches();
   const creatingRef = useRef(false);
 
@@ -125,10 +128,10 @@ export default function CreateMatchScreen() {
   const [restBreak, setRestBreak] = useState(true);
   const [referee, setReferee] = useState(false);
   const [externalReserves, setExternalReserves] = useState(true);
-  const [description, setDescription] = useState(
-    'Time fechado de Pivo e Goleiro - buscamos 2 alas e 1 fixo. Camiseta amarela. Encontro 19h15 no Bar do Carlos.',
+  const [description, setDescription] = useState(() =>
+    t('form.descriptionDefault'),
   );
-  const [selectedPositionIndexes, setSelectedPositionIndexes] = useState<number[]>([0, 1, 2, 3]);
+  const [selectedPositionIndexes, setSelectedPositionIndexes] = useState<number[]>([]);
 
   const [stateCode, setStateCode] = useState('RS');
   const [city, setCity] = useState('Porto Alegre');
@@ -196,7 +199,7 @@ export default function CreateMatchScreen() {
 
     try {
       await createMatch({
-        title: venueName.trim() || 'Partida sem título',
+        title: venueName.trim() || t('form.untitledMatch'),
         description: description.trim(),
         modality: mode,
         matchDate: toIsoDate(matchDate),
@@ -220,53 +223,57 @@ export default function CreateMatchScreen() {
         selectedPositionIndexes,
         status,
         facilities: [
-          { label: 'Vestiario', selected: true },
-          { label: 'Chuveiro', selected: true },
-          { label: 'Estacionamento', selected: true },
-          { label: 'Bar / Lanche', selected: false },
+          { label: t('createForm.facilityLockerRoom', 'Vestiario'), selected: true },
+          { label: t('createForm.facilityShower', 'Chuveiro'), selected: true },
+          { label: t('createForm.facilityParking', 'Estacionamento'), selected: true },
+          { label: t('createForm.facilitySnackBar', 'Bar / Lanche'), selected: false },
         ],
       });
 
       const successMessage =
         status === 'rascunho'
-          ? 'Seu rascunho foi salvo e aparece na sua Agenda.'
-          : 'Sua partida já está disponível em Encontrar Jogo e na Agenda.';
+          ? t('form.draftSavedMessage')
+          : t('form.matchPublishedMessage');
 
-      Alert.alert('Partida criada', successMessage, [
+      Alert.alert(t('form.matchCreatedTitle'), successMessage, [
         {
-          text: 'OK',
+          text: t('common.confirm', 'Confirm'),
           onPress: () => router.replace('/(app)'),
         },
       ]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Não foi possível criar a partida.';
-      Alert.alert('Falha ao criar partida', message);
+      const message = error instanceof Error ? error.message : t('form.createFailedMessage');
+      Alert.alert(t('form.createFailedTitle'), message);
     } finally {
       creatingRef.current = false;
     }
   }
 
-  const monthYearLabel = webDateCursor.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const monthYearLabel = webDateCursor.toLocaleDateString(currentLanguage, { month: 'long', year: 'numeric' });
   const currentYear = webDateCursor.getFullYear();
   const currentMonth = webDateCursor.getMonth();
   const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
   const monthDays = daysInMonth(currentYear, currentMonth);
   const leadingEmpty = Array.from({ length: firstWeekday });
   const dayNumbers = Array.from({ length: monthDays }, (_, idx) => idx + 1);
+  const pitchWidth = Math.min(300, Math.max(248, screenWidth - 120));
+  const pitchOffsetTop = 0;
 
   return (
     <Screen padded={false} showBackground={false}>
       <MatchBackground />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 152 }}>
         <View className="px-[18px] pt-4 pb-1">
-          <Text variant="heading" style={{ color: theme === 'light' ? '#111827' : '#FFFFFF' }}>Novo Jogo</Text>
+            <Text variant="heading" style={{ color: theme === 'light' ? '#111827' : '#FFFFFF' }}>
+              {t('title')}
+            </Text>
         </View>
 
         <StepIndicator total={4} current={3} />
 
         <View className="px-[18px] flex-row items-center justify-between mb-3">
-          <SectionTitle title="Configuracao da Partida" badge="2 / 4" />
-          <StatBadge label="RASCUNHO" tone="gold" small />
+          <SectionTitle title={t('title')} badge="2 / 4" />
+          <StatBadge label={t('form.draftBadge')} tone="gold" small />
         </View>
 
         <View className="px-[18px] gap-[14px]">
@@ -274,10 +281,10 @@ export default function CreateMatchScreen() {
             className="p-4"
             style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
           >
-            <SectionTitle title="Detalhes da Partida" />
+            <SectionTitle title={t('title')} />
             <View className="gap-3 mt-2">
               <Input
-                label="CEP"
+                label={t('form.cep')}
                 value={cep}
                 onChangeText={async (value) => {
                   const formatted = formatCep(value);
@@ -298,32 +305,47 @@ export default function CreateMatchScreen() {
                 placeholder="00000-000"
               />
 
-              <Input label="Bairro" value={district} onChangeText={setDistrict} placeholder="Seu bairro" />
+              <Input
+                label={t('form.district')}
+                value={district}
+                onChangeText={setDistrict}
+                placeholder={t('form.districtPlaceholder')}
+              />
 
               <Input
-                label="Nome do Campo / Quadra"
+                label={t('form.venueName')}
                 value={venueName}
                 onChangeText={setVenueName}
-                placeholder="Ex.: Arena Central - Quadra B"
+                placeholder={t('form.venueNamePlaceholder')}
               />
 
               <View className="flex-row gap-2">
                 <View className="flex-1">
                   <SelectField
-                    label="Estado"
+                    label={t('form.state')}
                     value={stateCode}
                     options={stateOptions}
                     searchable
-                    placeholder="Selecione o estado"
+                    placeholder={t('form.selectState')}
                     onChange={setStateCode}
                   />
                 </View>
                 <View className="flex-1">
-                  <Input label="Cidade" value={city} onChangeText={setCity} placeholder="Sua cidade" />
+                  <Input
+                    label={t('form.city')}
+                    value={city}
+                    onChangeText={setCity}
+                    placeholder={t('form.cityPlaceholder')}
+                  />
                 </View>
               </View>
 
-              <Input label="Endereco" value={address} onChangeText={setAddress} placeholder="Rua e numero" />
+              <Input
+                label={t('form.address')}
+                value={address}
+                onChangeText={setAddress}
+                placeholder={t('form.addressPlaceholder')}
+              />
             </View>
           </Card>
 
@@ -331,14 +353,14 @@ export default function CreateMatchScreen() {
             className="p-4"
             style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
           >
-            <SectionTitle title="Informacoes da Partida" />
+            <SectionTitle title={t('title')} />
             <View className="gap-3 mt-2">
               <View className="flex-row gap-2">
                 <View className="flex-1">
                   <DateTimeField
-                    label="Data"
+                    label={t('filters.date', 'Data')}
                     value={formatDateField(matchDate)}
-                    placeholder="Selecione a data"
+                    placeholder={t('filters.selectDate', 'Selecione a data')}
                     onPress={() => {
                       setWebDateCursor(new Date(matchDate.getFullYear(), matchDate.getMonth(), 1));
                       setShowWebDateModal(true);
@@ -347,9 +369,9 @@ export default function CreateMatchScreen() {
                 </View>
                 <View className="flex-1">
                   <DateTimeField
-                    label="Horario"
+                    label={t('filters.time', 'Horario')}
                     value={formatTimeField(matchTime)}
-                    placeholder="Selecione o horario"
+                    placeholder={t('filters.selectTime', 'Selecione o horario')}
                     onPress={() => {
                       setWebHour(matchTime.getHours());
                       setWebMinute(matchTime.getMinutes());
@@ -359,10 +381,18 @@ export default function CreateMatchScreen() {
                 </View>
                 <View className="flex-1">
                   <SelectField
-                    label="Turno"
+                    label={t('filters.shift', 'Turno')}
                     value={turno}
-                    options={TURNO_OPTIONS.map((item) => ({ value: item.value, label: item.label }))}
-                    placeholder="Selecione o turno"
+                    options={TURNO_OPTIONS.map((item) => ({
+                      value: item.value,
+                      label:
+                        item.value === 'manha'
+                          ? t('filters.shiftMorning', 'Manha')
+                          : item.value === 'tarde'
+                            ? t('filters.shiftAfternoon', 'Tarde')
+                            : t('filters.shiftNight', 'Noite'),
+                    }))}
+                    placeholder={t('filters.shift', 'Turno')}
                     onChange={(value) =>
                       setTurno(value as (typeof TURNO_OPTIONS)[number]['value'])
                     }
@@ -371,7 +401,7 @@ export default function CreateMatchScreen() {
               </View>
 
               <Input
-                label="Telefone para contato"
+                label={t('form.contactPhone')}
                 value={contactPhone}
                 onChangeText={setContactPhone}
                 keyboardType="phone-pad"
@@ -384,20 +414,20 @@ export default function CreateMatchScreen() {
               className="uppercase tracking-[2px] mt-4"
               style={{ color: matchTheme.colors.fgMuted }}
             >
-              Facilidades
+              {t('form.facilities', 'Facilities')}
             </Text>
             <View className="flex-row flex-wrap gap-2 mt-2">
               <View className="w-[48.5%]">
-                <FacilityCheckCard label="Vestiario" selected />
+                <FacilityCheckCard label={t('form.facilityLockerRoom')} selected />
               </View>
               <View className="w-[48.5%]">
-                <FacilityCheckCard label="Chuveiro" selected />
+                <FacilityCheckCard label={t('form.facilityShower')} selected />
               </View>
               <View className="w-[48.5%]">
-                <FacilityCheckCard label="Estacionamento" selected />
+                <FacilityCheckCard label={t('form.facilityParking')} selected />
               </View>
               <View className="w-[48.5%]">
-                <FacilityCheckCard label="Bar / Lanche" selected={false} />
+                <FacilityCheckCard label={t('form.facilitySnackBar')} selected={false} />
               </View>
             </View>
           </Card>
@@ -406,16 +436,16 @@ export default function CreateMatchScreen() {
             className="p-4 border"
             style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: 'rgba(34,183,108,0.35)' }}
           >
-            <SectionTitle title="Configuracoes da Partida" />
+            <SectionTitle title={t('title')} />
 
             <Text variant="micro" className="uppercase tracking-[2px] mt-2" style={{ color: matchTheme.colors.fgMuted }}>
-              Nivel do Jogo
+              {t('form.gameLevel')}
             </Text>
             <View className="flex-row flex-wrap gap-2 mt-2">
               {MIN_LEVEL_OPTIONS.map((level) => (
                 <StatBadge
                   key={`game-level-${level.value}`}
-                  label={level.label}
+                  label={t(`form.levelOptions.${level.value}`)}
                   tone={acceptedLevels.includes(level.value) ? 'active' : 'neutral'}
                 />
               ))}
@@ -424,7 +454,7 @@ export default function CreateMatchScreen() {
               <View className="flex-row gap-2 mt-4">
                 <View className="flex-1">
                   <Input
-                    label="Valor por pessoa"
+                    label={t('form.pricePerPerson')}
                     value={pricePerPerson}
                     onChangeText={handlePricePerPersonChange}
                     keyboardType="number-pad"
@@ -434,7 +464,7 @@ export default function CreateMatchScreen() {
                 </View>
                 <View className="flex-1">
                   <Input
-                    label="Duracao (min)"
+                    label={t('form.durationMinutes')}
                     value={durationMinutes}
                     onChangeText={handleDurationMinutesChange}
                     keyboardType="number-pad"
@@ -446,30 +476,30 @@ export default function CreateMatchScreen() {
 
             <View className="mt-4">
               <Text variant="micro" className="uppercase tracking-[2px]" style={{ color: matchTheme.colors.fgMuted }}>
-                Restricoes de idade
+                {t('form.ageRestrictions')}
               </Text>
               <RangeSelector min={16} max={80} minPercent={8} maxPercent={72} />
               <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                Apenas atletas entre 16 e 80 anos podem se inscrever
+                {t('form.ageRestrictionsHint')}
               </Text>
             </View>
 
             <View className="gap-2 mt-4">
               <ToggleRow
-                title="Tem intervalo"
-                subtitle="2x 5min entre tempos"
+                title={t('form.restBreakTitle')}
+                subtitle={t('form.restBreakSubtitle')}
                 value={restBreak}
                 onToggle={() => setRestBreak((v) => !v)}
               />
               <ToggleRow
-                title="Arbitro incluso"
-                subtitle="+R$ 8/pessoa - Federacao RS"
+                title={t('form.refereeTitle')}
+                subtitle={t('form.refereeSubtitle')}
                 value={referee}
                 onToggle={() => setReferee((v) => !v)}
               />
               <ToggleRow
-                title="Aceitar reservas externas"
-                subtitle="Outros usuarios podem se inscrever"
+                title={t('form.externalReservesTitle')}
+                subtitle={t('form.externalReservesSubtitle')}
                 value={externalReserves}
                 onToggle={() => setExternalReserves((v) => !v)}
               />
@@ -481,16 +511,16 @@ export default function CreateMatchScreen() {
             style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
           >
             <View className="flex-row items-center justify-between">
-              <SectionTitle title="Requisitos dos Jogadores" />
+              <SectionTitle title={t('title')} />
             </View>
             <Text variant="caption" className="mt-1" style={{ color: matchTheme.colors.fgMuted }}>
-              Niveis Minimos Aceitos
+              {t('form.minimumLevelsAccepted')}
             </Text>
             <View className="flex-row flex-wrap gap-2 mt-3">
               {MIN_LEVEL_OPTIONS.map((level) => (
                 <MinLevelCheckbox
                   key={level.value}
-                  label={level.label}
+                  label={t(`form.levelOptions.${level.value}`)}
                   selected={acceptedLevels.includes(level.value)}
                   onPress={() => toggleLevel(level.value)}
                   theme={matchTheme}
@@ -505,31 +535,31 @@ export default function CreateMatchScreen() {
           >
             <View className="flex-row items-start justify-between mb-3">
               <View>
-                <SectionTitle title="Posicoes Disponiveis" />
+                <SectionTitle title={t('title')} />
                 <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                  Toque para abrir / bloquear vagas
+                  {t('form.positionsHint')}
                 </Text>
                 <View className="gap-1 mt-2">
                   <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                    Voce (Host) - Goleiro
+                    {t('form.hostPosition')}
                   </Text>
                   <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                    2 confirmados
+                    {t('form.confirmedCount')}
                   </Text>
                   <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                    2 vagas abertas
+                    {t('form.openSlotsCount')}
                   </Text>
                   <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                    1 bloqueada (Pivo)
+                    {t('form.blockedSlotCount')}
                   </Text>
                 </View>
               </View>
               <View className="w-[194px]">
                 <SegmentedControl
                   options={[
-                    { id: 'futsal', label: 'Futsal' },
-                    { id: 'society', label: 'Society' },
-                    { id: 'campo', label: 'Campo' },
+                    { id: 'futsal', label: t('form.modalityFutsal') },
+                    { id: 'society', label: t('form.modalitySociety') },
+                    { id: 'campo', label: t('form.modalityCampo') },
                   ]}
                   activeId={mode}
                   onChange={(value) => setMode(value as PitchMode)}
@@ -538,13 +568,13 @@ export default function CreateMatchScreen() {
               </View>
             </View>
 
-            <View className="items-center" style={{ marginTop: -130 }} pointerEvents="box-none">
+            <View className="items-center" style={{ marginTop: pitchOffsetTop, marginBottom: 4 }} pointerEvents="box-none">
               <View pointerEvents="auto">
                 <TacticalPitch
                   mode={mode}
                   selectedIndexes={selectedPositionIndexes}
                   onToggleIndex={togglePosition}
-                  width={300}
+                  width={pitchWidth}
                 />
               </View>
             </View>
@@ -554,7 +584,7 @@ export default function CreateMatchScreen() {
             className="p-4"
             style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
           >
-            <SectionTitle title="Descricao" />
+            <SectionTitle title={t('title')} />
             <View className="mt-2">
               <Input
                 multiline
@@ -569,13 +599,13 @@ export default function CreateMatchScreen() {
           </Card>
 
           <Button
-            label="Continuar para Revisao"
+            label={t('actions.continueToReview', 'Continue to Review')}
             loading={submitting}
             disabled={submitting}
             onPress={() => handleCreateMatch('publicada')}
           />
           <Button
-            label="Salvar Rascunho"
+            label={t('actions.saveDraft', 'Save Draft')}
             variant="ghost"
             disabled={submitting}
             onPress={() => handleCreateMatch('rascunho')}
@@ -609,7 +639,15 @@ export default function CreateMatchScreen() {
             </View>
 
             <View className="flex-row mb-2">
-              {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((weekDay, idx) => (
+              {[
+                t('filters.weekdaySun', 'D'),
+                t('filters.weekdayMon', 'S'),
+                t('filters.weekdayTue', 'T'),
+                t('filters.weekdayWed', 'Q'),
+                t('filters.weekdayThu', 'Q'),
+                t('filters.weekdayFri', 'S'),
+                t('filters.weekdaySat', 'S'),
+              ].map((weekDay, idx) => (
                 <View key={`weekday-${weekDay}-${idx}`} className="flex-1 items-center">
                   <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>{weekDay}</Text>
                 </View>
@@ -649,7 +687,7 @@ export default function CreateMatchScreen() {
               })}
             </View>
 
-            <Button label="Fechar" variant="ghost" size="md" className="mt-3" onPress={() => setShowWebDateModal(false)} />
+            <Button label={t('common.close', 'Fechar')} variant="ghost" size="md" className="mt-3" onPress={() => setShowWebDateModal(false)} />
           </View>
         </View>
       </Modal>
@@ -658,7 +696,7 @@ export default function CreateMatchScreen() {
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
           <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
-              Selecione o horario
+              {t('filters.selectTime', 'Selecione o horario')}
             </Text>
             <View className="flex-row items-center justify-center gap-4">
               <Button label="-" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 23) % 24)} />
@@ -678,7 +716,7 @@ export default function CreateMatchScreen() {
               <Button label="+ min" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 5) % 60)} />
             </View>
             <Button
-              label="Confirmar"
+              label={t('common.confirm', 'Confirmar')}
               size="md"
               className="mt-4"
               onPress={() => {
@@ -694,6 +732,11 @@ export default function CreateMatchScreen() {
     </Screen>
   );
 }
+
+
+
+
+
 
 
 

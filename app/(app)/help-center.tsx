@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+﻿import { router } from 'expo-router';
 import { ChevronDown, BookOpen, HelpCircle, MessageCircle } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MatchBottomNav } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
 import { Button, Text } from '@/src/components/ui';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type FAQItem = {
   id: string;
@@ -22,110 +23,74 @@ type TutorialItem = {
   icon: React.ReactNode;
 };
 
-const faqItems: FAQItem[] = [
+// Generate FAQ items from translations with fallbacks
+const getFAQItems = (t: any): FAQItem[] => [
   {
     id: '1',
-    question: 'Como crio uma partida?',
-    answer:
-      'Clique no botão "+" na tela inicial, preencha os dados da partida (data, horário, local, nível) e confirme. A partida será publicada e outros jogadores poderão se inscrever.',
+    question: t('faq.items.1.question', 'How do I create a match?'),
+    answer: t('faq.items.1.answer', 'Click the "+" button on the home screen, fill in the match details and confirm.'),
   },
   {
     id: '2',
-    question: 'Como me inscrevo em uma partida?',
-    answer:
-      'Visualize as partidas disponíveis, escolha uma que te interesse e clique em "Participar". O criador da partida precisará aprovar sua inscrição.',
+    question: t('faq.items.2.question', 'How do I join a match?'),
+    answer: t('faq.items.2.answer', 'Choose an available match and click on Join.'),
   },
   {
     id: '3',
-    question: 'Como funciona o sistema de avaliações?',
-    answer:
-      'Após o término de uma partida, você pode avaliar outros jogadores. As avaliações ajudam a comunidade a identificar os melhores atletas e criar partidas de melhor qualidade.',
+    question: t('faq.items.3.question', 'How does the rating system work?'),
+    answer: t('faq.items.3.answer', 'After the match, you can rate other players and the host.'),
   },
   {
     id: '4',
-    question: 'Qual é a diferença entre os planos?',
-    answer:
-      'O plano Gratuito oferece funcionalidades básicas. O Gold inclui filtros avançados, prioridade no chat e perfil verificado. O Elite (em breve) terá recursos exclusivos adicionais.',
+    question: t('faq.items.4.question', 'What\'s the difference between plans?'),
+    answer: t('faq.items.4.answer', 'Each plan unlocks different creation, search and priority features.'),
   },
   {
     id: '5',
-    question: 'Como cancelo uma partida?',
-    answer:
-      'Se você criou a partida, acesse-a e clique em "Cancelar". Se for participante, vá em "Minhas partidas" e cancele sua inscrição.',
-  },
-  {
-    id: '6',
-    question: 'Como funciona a localização?',
-    answer:
-      'Você pode ativar a localização nas configurações para encontrar partidas perto de você. Sua localização exata não é compartilhada, apenas usada para filtros.',
-  },
-  {
-    id: '7',
-    question: 'Como recebo notificações?',
-    answer:
-      'Ative as notificações nas configurações. Você receberá alertas sobre inscrições, convites, avaliações e mensagens de chat.',
-  },
-  {
-    id: '8',
-    question: 'Posso mudar minha posição em uma partida?',
-    answer:
-      'Sim, você pode informar sua posição ao se inscrever. O criador da partida pode ajustar as posições conforme necessário.',
-  },
-  {
-    id: '9',
-    question: 'Como funciona o chat de partida?',
-    answer:
-      'Cada partida tem um chat exclusivo onde os participantes podem se comunicar, tirar dúvidas e organizar detalhes da partida.',
-  },
-  {
-    id: '10',
-    question: 'Posso recuperar minha senha?',
-    answer:
-      'Sim, na tela de login clique em "Esqueceu a senha". Digite seu e-mail e você receberá um código para resetar sua senha.',
+    question: t('faq.items.5.question', 'How do I cancel a match?'),
+    answer: t('faq.items.5.answer', 'If you created the match, open details and click cancel.'),
   },
 ];
 
-const tutorials: TutorialItem[] = [
+// Generate tutorial items from translations with fallbacks
+const getTutorialItems = (t: any): TutorialItem[] => [
   {
     id: '1',
-    title: 'Como criar sua primeira partida',
-    description: 'Aprenda o passo a passo para criar uma partida e atrair jogadores',
+    title: t('tutorials.items.1.title', 'How to create your first match'),
+    description: t('tutorials.items.1.description', 'Step by step to create a match and attract players'),
     icon: <HelpCircle size={24} color="#22B76C" />,
   },
   {
     id: '2',
-    title: 'Dicas para gerenciar sua partida',
-    description: 'Organize confirmações, comunicação e substitutos eficientemente',
+    title: t('tutorials.items.2.title', 'Tips for managing your match'),
+    description: t('tutorials.items.2.description', 'Confirm athletes and organize everything in advance'),
     icon: <BookOpen size={24} color="#5AB1FF" />,
   },
   {
     id: '3',
-    title: 'Como construir uma boa reputação',
-    description: 'Entenda o sistema de avaliações e como manter um perfil exemplar',
+    title: t('tutorials.items.3.title', 'How to build a good reputation'),
+    description: t('tutorials.items.3.description', 'Best practices to maintain profile and positive ratings'),
     icon: <HelpCircle size={24} color="#D4A13A" />,
-  },
-  {
-    id: '4',
-    title: 'Aproveitando os filtros avançados',
-    description: 'Encontre partidas perfeitas usando todos os critérios de filtro',
-    icon: <BookOpen size={24} color="#86E5B4" />,
   },
 ];
 
 export default function HelpCenterScreen() {
+  const { t } = useTranslation('help');
   const theme = useAppColorScheme();
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
   const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
+  const faqItems = getFAQItems(t);
+  const tutorials = getTutorialItems(t);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubTopNav title="Central de Ajuda" subtitle="FAQ E TUTORIAIS" />
+        <HubTopNav title={t('title', 'Help Center')} subtitle={t('subtitle', 'FAQ AND TUTORIALS')} />
 
-        {/* FAQ Section */}
         <View className="mx-[18px] mt-6">
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-            Perguntas Frequentes
+            {t('faq.title', 'Frequently Asked Questions')}
           </Text>
 
           <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] overflow-hidden mb-6">
@@ -133,9 +98,7 @@ export default function HelpCenterScreen() {
               <Pressable
                 key={item.id}
                 onPress={() => setExpandedFAQ(expandedFAQ === item.id ? null : item.id)}
-                className={`px-[14px] py-[14px] flex-row items-center gap-3 ${
-                  index < faqItems.length - 1 ? 'border-b border-gray-100 dark:border-line' : ''
-                }`}
+                className={`px-[14px] py-[14px] flex-row items-center gap-3 ${index < faqItems.length - 1 ? 'border-b border-gray-100 dark:border-line' : ''}`}
               >
                 <View className="flex-1">
                   <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
@@ -158,9 +121,8 @@ export default function HelpCenterScreen() {
             ))}
           </View>
 
-          {/* Tutorials Section */}
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-            Tutoriais
+            {t('tutorials.title', 'Tutorials')}
           </Text>
 
           <View className="gap-3 mb-6">
@@ -182,21 +144,20 @@ export default function HelpCenterScreen() {
             ))}
           </View>
 
-          {/* Support Section */}
           <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
             <View className="flex-row items-center gap-2 mb-2">
               <MessageCircle size={20} color="#5AB1FF" strokeWidth={2} />
               <Text variant="label" className="font-bold text-[#111827] dark:text-white">
-                Ainda com dúvidas?
+                {t('support.title', 'Still have questions?')}
               </Text>
             </View>
 
             <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
-              Nosso time de suporte está pronto para ajudar. Entre em contato conosco.
+              {t('support.description', 'Our support team is ready to help. Contact us.')}
             </Text>
 
             <Button
-              label="Falar com suporte"
+              label={t('support.cta', 'Talk to support')}
               onPress={() => router.push('/(app)/support-chat')}
             />
           </View>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Pressable, type PressableProps, type PressableStateCallbackType, type StyleProp, type ViewStyle } from 'react-native';
+import type { PressableProps, PressableStateCallbackType, StyleProp, ViewStyle } from 'react-native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { TouchableScale } from './TouchableScale';
 
 type IconButtonProps = Omit<PressableProps, 'children'> & {
   icon: ReactNode;
@@ -24,13 +25,13 @@ export function IconButton({ icon, size = 40, className, style, ...rest }: IconB
   };
 
   return (
-    <Pressable
+    <TouchableScale
       accessibilityRole="button"
       className={`items-center justify-center rounded-[14px] border ${className ?? ''}`.trim()}
-      style={mergedStyle}
+      style={mergedStyle({ pressed: false })}
       {...rest}
     >
       {icon}
-    </Pressable>
+    </TouchableScale>
   );
 }

@@ -13,6 +13,7 @@ import {
 	AuthToast,
 } from '@/src/components/features/auth';
 import { Button, Input, SelectField, Text } from '@/src/components/ui';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
 import {
 	isProfileMissingRequiredData,
@@ -33,12 +34,11 @@ function getPasswordStrength(password: string) {
 	return Math.min(score, 4);
 }
 
-function getStrengthLabel(level: number) {
-	if (level <= 0) return 'Muito fraca';
-	if (level === 1) return 'Fraca';
-	if (level === 2) return 'Média';
-	if (level === 3) return 'Forte';
-	return 'Muito forte';
+function getStrengthLabel(level: number, t: (key: string, fallback?: string) => string) {
+	if (level <= 0) return t('security.passwordStrength.veryWeak', 'Muito fraca - use mais de 8 caracteres');
+	if (level === 1) return t('security.passwordStrength.weak', 'Fraca - adicione maiuscula e numero');
+	if (level === 2) return t('security.passwordStrength.medium', 'Media - 9 caracteres - maiuscula + numero');
+	return t('security.passwordStrength.strong', 'Forte - pronta para uso');
 }
 
 function formatDdd(value: string) {
@@ -56,6 +56,7 @@ function formatPhone(value: string) {
 }
 
 export default function SignupScreen() {
+	const { t } = useTranslation('auth');
 	const [fullName, setFullName] = useState('');
 	const [email, setEmail] = useState('');
 	const [ddd, setDdd] = useState('');
@@ -89,7 +90,7 @@ export default function SignupScreen() {
 		tone: 'info',
 		title: '',
 		message: '',
-		primaryLabel: 'Fechar',
+		primaryLabel: t('common.close', 'Fechar'),
 		onPrimary: () => undefined,
 	});
 
@@ -117,14 +118,14 @@ export default function SignupScreen() {
 				void navigateAfterSocialLogin();
 			}, 300);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Nao foi possivel continuar com login social.';
+			const message = error instanceof Error ? error.message : t('errors.socialSignupFailed', 'Nao foi possivel continuar com login social.');
 			showToast('Falha no login social', 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Falha no login social',
+				title: t('errors.socialLoginFailedTitle', 'Falha no login social'),
 				message,
-				primaryLabel: 'Fechar',
+				primaryLabel: t('common.close', 'Fechar'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 		} finally {
@@ -135,7 +136,7 @@ export default function SignupScreen() {
 	const passwordLevel = useMemo(() => getPasswordStrength(password), [password]);
 	const confirmPasswordError =
 		confirmPassword.length > 0 && confirmPassword !== password
-			? 'As senhas não conferem'
+			? t('errors.passwordMismatch', 'As senhas nao conferem')
 			: undefined;
 	const availableStateCodes = useMemo(() => getBrazilianStates(), []);
 	const stateOptions = useMemo(
@@ -191,39 +192,39 @@ export default function SignupScreen() {
 
 	async function handleSignup() {
 		if (!fullName.trim() || !email.trim() || !password.trim()) {
-			showToast('Preencha os campos obrigatórios', 'error');
+			showToast(t('validation.fillRequiredFields', 'Preencha os campos obrigatorios'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Dados incompletos',
-				message: 'Preencha nome, e-mail e senha para criar a conta.',
-				primaryLabel: 'Ok',
+				title: t('errors.incompleteDataTitle', 'Dados incompletos'),
+				message: t('errors.incompleteSignupDataMessage', 'Preencha nome, e-mail e senha para criar a conta.'),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
 		}
 
 		if (password.length < 6) {
-			showToast('Senha muito curta', 'error');
+			showToast(t('validation.passwordTooShort', 'Senha muito curta'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Senha inválida',
-				message: 'A senha precisa ter pelo menos 6 caracteres.',
-				primaryLabel: 'Ok',
+				title: t('errors.invalidPassword', 'Senha invalida'),
+				message: t('errors.passwordMinLength', 'A senha precisa ter pelo menos 6 caracteres.'),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
 		}
 
 		if (confirmPassword !== password) {
-			showToast('As senhas não conferem', 'error');
+			showToast(t('errors.passwordMismatch', 'As senhas nao conferem'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Senhas diferentes',
-				message: 'As senhas não conferem.',
-				primaryLabel: 'Ok',
+				title: t('errors.passwordMismatchTitle', 'Senhas diferentes'),
+				message: t('errors.passwordMismatch', 'As senhas nao conferem.'),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
@@ -234,9 +235,9 @@ export default function SignupScreen() {
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Termos obrigatórios',
-				message: 'Aceite os termos para concluir o cadastro.',
-				primaryLabel: 'Ok',
+				title: t('errors.requiredTermsTitle', 'Termos obrigatorios'),
+				message: t('errors.requiredTermsMessage', 'Aceite os termos para concluir o cadastro.'),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
@@ -275,22 +276,22 @@ export default function SignupScreen() {
 				return;
 			}
 
-			showToast('Cadastro concluído', 'success');
+			showToast(t('signup.signupCompleted', 'Cadastro concluido'), 'success');
 			setTimeout(() => router.replace('/(app)'), 500);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Não foi possível concluir o cadastro.';
+			const message = error instanceof Error ? error.message : t('errors.signupFailed', 'Nao foi possivel concluir o cadastro.');
 			showToast('Falha no cadastro', 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Falha no cadastro',
+				title: t('errors.signupFailedTitle', 'Falha no cadastro'),
 				message,
-				primaryLabel: 'Ir para login',
+				primaryLabel: t('signup.login', 'Ir para login'),
 				onPrimary: () => {
 					setFeedback((prev) => ({ ...prev, visible: false }));
 					router.replace('/(auth)');
 				},
-				secondaryLabel: 'Tentar novamente',
+				secondaryLabel: t('common.retry', 'Tentar novamente'),
 				onSecondary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 		} finally {
@@ -311,10 +312,10 @@ export default function SignupScreen() {
 				<View className="relative pt-5 pb-10">
 					<View className="px-6 pt-2">
 						<Text variant="heading" className="font-extrabold text-white tracking-[-0.5px]">
-							Bem-vindo, atleta.
+							{t('signup.welcomeAthlete', 'Bem-vindo, atleta.')}
 						</Text>
 						<Text variant="label" className="mt-1 mb-7 leading-[20px] text-fg2">
-							Crie sua conta para encontrar partidas perto de você.
+							{t('signup.welcomeSubtitle', 'Crie sua conta para encontrar partidas perto de voce.')}
 						</Text>
 						<SocialAuthRow
 							onGooglePress={() => void handleSocialSignup('google')}
@@ -325,27 +326,27 @@ export default function SignupScreen() {
 						<View className="my-6 flex-row items-center gap-[10px]">
 							<View className="h-px flex-1 bg-line2" />
 							<Text variant="micro" className="uppercase tracking-[2.4px] font-bold text-fg4">
-								ou preencha os dados abaixo
+								{t('signup.orFillData', 'ou preencha os dados abaixo')}
 							</Text>
 							<View className="h-px flex-1 bg-line2" />
 						</View>
 
 						<View className="gap-[18px]">
 							<Input
-								label="Nome completo"
+								label={t('signup.name', 'Nome completo')}
 								value={fullName}
 								onChangeText={setFullName}
-								placeholder="Seu nome completo"
+								placeholder={t('placeholders.fullName', 'Seu nome completo')}
 								leftAdornment={<UserRound size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
 								containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
 								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 							/>
 
 							<Input
-								label="E-mail"
+								label={t('signup.email', 'E-mail')}
 								value={email}
 								onChangeText={setEmail}
-								placeholder="seuemail@dominio.com"
+								placeholder={t('placeholders.email', 'seuemail@dominio.com')}
 								autoCapitalize="none"
 								keyboardType="email-address"
 								leftAdornment={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
@@ -357,7 +358,7 @@ export default function SignupScreen() {
 							<View className="flex-row gap-[10px]">
 								<View className="flex-1">
 									<Input
-										label="DDD"
+										label={t('signup.ddd', 'DDD')}
 										value={ddd}
 										onChangeText={(value) => setDdd(formatDdd(value))}
 										keyboardType="number-pad"
@@ -370,7 +371,7 @@ export default function SignupScreen() {
 								</View>
 								<View className="flex-1">
 									<Input
-										label="Telefone"
+										label={t('signup.phone', 'Telefone')}
 										value={phone}
 										onChangeText={(value) => setPhone(formatPhone(value))}
 										keyboardType="phone-pad"
@@ -383,10 +384,10 @@ export default function SignupScreen() {
 							</View>
 
 							<Input
-								label="Senha"
+								label={t('signup.password', 'Senha')}
 								value={password}
 								onChangeText={setPassword}
-								placeholder="Crie uma senha"
+								placeholder={t('placeholders.createPassword', 'Crie uma senha')}
 								secureTextEntry={!showPassword}
 								leftAdornment={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
 								rightAdornment={(
@@ -402,13 +403,13 @@ export default function SignupScreen() {
 								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 							/>
 
-							<PasswordStrengthMeter level={passwordLevel} label={getStrengthLabel(passwordLevel)} />
+							<PasswordStrengthMeter level={passwordLevel} label={getStrengthLabel(passwordLevel, t)} />
 
 							<Input
-								label="Confirmar senha"
+								label={t('signup.confirmPassword', 'Confirmar senha')}
 								value={confirmPassword}
 								onChangeText={setConfirmPassword}
-								placeholder="Repita sua senha"
+								placeholder={t('placeholders.confirmPassword', 'Repita sua senha')}
 								secureTextEntry={!showConfirmPassword}
 								error={confirmPasswordError}
 								leftAdornment={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
@@ -429,19 +430,19 @@ export default function SignupScreen() {
 								<View className="rounded-[14px] border border-[#22B76C40] bg-[#22B76C1A] px-3 py-3">
 									<View className="flex-row items-center justify-between">
 										<Text variant="label" className="font-semibold text-white">
-											Localização
+											{t('signup.location', 'Localizacao')}
 										</Text>
 										<Text variant="micro" className="uppercase tracking-[1.6px] font-bold text-[#86E5B4]">
-											Opcional
+											{t('common.optional', 'Opcional')}
 										</Text>
 									</View>
 									<Text variant="caption" className="mt-1 text-fg2 leading-[18px]">
-										Preencha Estado, Cidade e CEP para indicarmos partidas próximas da sua região.
+										{t('signup.locationHint', 'Preencha Estado, Cidade e CEP para indicarmos partidas proximas da sua regiao.')}
 									</Text>
 								</View>
 
 								<SelectField
-									label="Estado"
+									label={t('signup.state', 'Estado')}
 									value={selectedState}
 									options={stateOptions}
 									onChange={(value) => {
@@ -449,26 +450,26 @@ export default function SignupScreen() {
 										setSelectedCity(null);
 									}}
 									searchable
-									placeholder="Selecione o estado"
+									placeholder={t('placeholders.selectState', 'Selecione o estado')}
 									disabled={stateOptions.length === 0}
 								/>
 
 								<SelectField
-									label="Cidade"
+									label={t('signup.city', 'Cidade')}
 									value={selectedCity}
 									options={cityOptions}
 									onChange={setSelectedCity}
 									searchable
 									placeholder={
 										!selectedState
-											? 'Selecione o estado primeiro'
-											: 'Selecione a cidade'
+											? t('placeholders.selectStateFirst', 'Selecione o estado primeiro')
+											: t('placeholders.selectCity', 'Selecione a cidade')
 									}
 									disabled={!selectedState || cityOptions.length === 0}
 								/>
 
 								<Input
-									label="CEP"
+									label={t('signup.cep', 'CEP')}
 									value={cep}
 									onChangeText={(value) => setCep(formatCep(value))}
 									keyboardType="number-pad"
@@ -492,18 +493,18 @@ export default function SignupScreen() {
 							<Text variant="caption" className="flex-1 text-fg3 leading-[18px]">
 								Concordo com os{' '}
 								<Text variant="caption" className="text-ok font-semibold">
-									Termos de Uso
+									{t('signup.termsOfUse', 'Termos de Uso')}
 								</Text>{' '}
 								e{' '}
 								<Text variant="caption" className="text-ok font-semibold">
-									Política de Privacidade
+									{t('signup.privacyPolicy', 'Politica de Privacidade')}
 								</Text>
-								. Tenho 16+ anos.
+								{t('signup.ageRequirement', '. Tenho 16+ anos.')}
 							</Text>
 						</Pressable>
 
 						<Button
-							label="Criar conta grátis"
+							label={t('signup.createAccount', 'Criar conta gratis')}
 							variant="primary"
 							size="xl"
 							loading={loading}
@@ -514,11 +515,11 @@ export default function SignupScreen() {
 
 						<View className="mt-6 items-center">
 							<Text variant="label" className="text-fg3">
-								Já tem conta?
+								{t('signup.alreadyHave', 'Ja tem conta?')}
 							</Text>
 							<Pressable onPress={() => router.replace('/(auth)')} className="mt-2 px-1 py-0.5">
 								<Text variant="label" className="font-bold" style={{ color: '#22B76C' }}>
-									Entrar
+									{t('signup.login', 'Entrar')}
 								</Text>
 							</Pressable>
 						</View>
@@ -539,5 +540,3 @@ export default function SignupScreen() {
 		</SafeAreaView>
 	);
 }
-
-

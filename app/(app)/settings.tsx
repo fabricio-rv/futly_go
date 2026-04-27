@@ -2,6 +2,7 @@ import {
 	Bell,
 	CircleHelp,
 	FileText,
+	Languages,
 	Lock,
 	LogOut,
 	MapPin,
@@ -15,7 +16,8 @@ import {
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,21 +29,59 @@ import { signOut, deleteAccount } from '@/src/features/auth/service';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { useSettings } from '@/src/features/settings/hooks/useSettings';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import type { Locale } from '@/src/i18n';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
+
+const LANGUAGE_STORAGE_KEY = 'futly_go_language';
+
+const LANGUAGE_OPTIONS: Array<{ code: Locale; label: string }> = [
+	{ code: 'pt-BR', label: 'Portugues (Brasil)' },
+	{ code: 'pt-PT', label: 'Portugues (Portugal)' },
+	{ code: 'en-US', label: 'English' },
+	{ code: 'es-ES', label: 'Espanol' },
+];
 
 export default function SettingsScreen() {
 	const theme = useAppColorScheme();
 	const { profile, loadProfile } = useProfile();
 	const { settings, loadSettings, updateNotifications, updateLocation, setTheme } = useSettings();
+	const { t, changeLanguage } = useTranslation('common');
 
 	const [showLogoutModal, setShowLogoutModal] = useState(false);
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
+	const [selectedLanguage, setSelectedLanguage] = useState<Locale>('pt-BR');
 	const [signingOut, setSigningOut] = useState(false);
 	const [deleting, setDeleting] = useState(false);
 
 	useEffect(() => {
 		loadProfile().catch(() => undefined);
 		loadSettings().catch(() => undefined);
+		AsyncStorage.getItem(LANGUAGE_STORAGE_KEY)
+			.then((storedLanguage) => {
+				if (!storedLanguage) return;
+				if (LANGUAGE_OPTIONS.some((option) => option.code === storedLanguage)) {
+					setSelectedLanguage(storedLanguage as Locale);
+				}
+			})
+			.catch(() => undefined);
 	}, [loadProfile, loadSettings]);
+
+	async function handleSelectLanguage(language: Locale) {
+		setSelectedLanguage(language);
+		setShowLanguageModal(false);
+
+		try {
+			await AsyncStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+			await changeLanguage(language);
+		} catch {
+			// sem toast por enquanto, apenas mantem a mudanca visual local
+		}
+	}
+
+	const selectedLanguageLabel =
+		LANGUAGE_OPTIONS.find((option) => option.code === selectedLanguage)?.label ??
+		'Portugues (Brasil)';
 
 	async function handleConfirmSignOut() {
 		if (signingOut) return;
@@ -74,8 +114,8 @@ export default function SettingsScreen() {
 			id: 'edit-profile',
 			icon: <UserRound size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'ok',
-			title: 'Editar perfil',
-			subtitle: 'Nome, bio, telefone, cidade',
+			title: t('settings.editProfile', 'Editar perfil'),
+			subtitle: t('settings.editProfileSubtitle', 'Nome, bio, telefone, cidade'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/edit-profile'),
 		},
@@ -83,8 +123,8 @@ export default function SettingsScreen() {
 			id: 'security',
 			icon: <Lock size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: 'Senha e seguranca',
-			subtitle: 'Trocar senha com OTP',
+			title: t('settings.security', 'Senha e seguranca'),
+			subtitle: t('settings.securitySubtitle', 'Trocar senha com OTP'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/security'),
 		},
@@ -92,9 +132,9 @@ export default function SettingsScreen() {
 			id: 'plan',
 			icon: <Star size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'gold',
-			title: 'Plano e pagamento',
-			subtitle: 'Gold - Renova 10/05',
-			rightLabel: 'Gerenciar',
+			title: t('settings.planPayment', 'Plano e pagamento'),
+			subtitle: t('settings.planPaymentSubtitle', 'Gold - Renova 10/05'),
+			rightLabel: t('actions.manage', 'Gerenciar'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/plan'),
 		},
@@ -102,8 +142,8 @@ export default function SettingsScreen() {
 			id: 'store',
 			icon: <Store size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: 'Planos',
-			subtitle: 'Ver pacotes e beneficios dos planos',
+			title: t('settings.plans', 'Planos'),
+			subtitle: t('settings.plansSubtitle', 'Ver pacotes e beneficios dos planos'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/store'),
 		},
@@ -114,8 +154,8 @@ export default function SettingsScreen() {
 			id: 'notifications',
 			icon: <Bell size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'sky',
-			title: 'Notificacoes',
-			subtitle: 'Push - Chat - Convites',
+			title: t('settings.notifications', 'Notificacoes'),
+			subtitle: t('settings.notificationsSubtitle', 'Push - Chat - Convites'),
 			rightNode: (
 				<ToggleSwitch
 					value={settings?.notificationsEnabled ?? true}
@@ -127,19 +167,29 @@ export default function SettingsScreen() {
 			id: 'location',
 			icon: <MapPin size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: 'Localizacao',
-			subtitle: 'Encontrar partidas perto',
+			title: t('settings.location', 'Localizacao'),
+			subtitle: t('settings.locationSubtitle', 'Encontrar partidas perto'),
 			rightNode: (
 				<ToggleSwitch value={settings?.locationEnabled ?? true} onValueChange={updateLocation} />
 			),
 		},
 		{
+			id: 'language',
+			icon: <Languages size={16} color="currentColor" strokeWidth={2} />,
+			iconTone: 'default',
+			title: t('settings.language', 'Idioma'),
+			subtitle: t('settings.languageSubtitle', 'Portugues (Brasil), Portugues (Portugal), English, Espanol'),
+			rightLabel: selectedLanguageLabel,
+			showArrow: true,
+			onPress: () => setShowLanguageModal(true),
+		},
+		{
 			id: 'theme',
 			icon: settings?.theme === 'dark' ? <Moon size={16} color="currentColor" strokeWidth={2} /> : <Sun size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: 'Tema',
-			subtitle: settings?.theme === 'dark' ? 'Escuro' : 'Claro',
-			rightLabel: settings?.theme === 'dark' ? 'Escuro' : 'Claro',
+			title: t('settings.theme', 'Tema'),
+			subtitle: settings?.theme === 'dark' ? t('dark', 'Escuro') : t('light', 'Claro'),
+			rightLabel: settings?.theme === 'dark' ? t('dark', 'Escuro') : t('light', 'Claro'),
 			showArrow: true,
 			onPress: () => setTheme(settings?.theme === 'dark' ? 'light' : 'dark').catch(() => undefined),
 		},
@@ -150,8 +200,8 @@ export default function SettingsScreen() {
 			id: 'help',
 			icon: <CircleHelp size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: 'Central de ajuda',
-			subtitle: 'FAQ - Tutoriais',
+			title: t('settings.helpCenter', 'Central de ajuda'),
+			subtitle: t('settings.helpCenterSubtitle', 'FAQ - Tutoriais'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/help-center'),
 		},
@@ -159,8 +209,8 @@ export default function SettingsScreen() {
 			id: 'support-chat',
 			icon: <MessageCircle size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: 'Falar com suporte',
-			subtitle: 'Resposta em ate 4h',
+			title: t('settings.support', 'Falar com suporte'),
+			subtitle: t('settings.supportSubtitle', 'Resposta em ate 4h'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/support-chat'),
 		},
@@ -168,8 +218,8 @@ export default function SettingsScreen() {
 			id: 'terms',
 			icon: <FileText size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: 'Termos - Privacidade',
-			subtitle: 'Atualizado em 15/04/26',
+			title: t('settings.termsPrivacy', 'Termos - Privacidade'),
+			subtitle: t('settings.termsUpdated', 'Atualizado em 15/04/26'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/terms'),
 		},
@@ -180,8 +230,8 @@ export default function SettingsScreen() {
 			id: 'logout',
 			icon: <LogOut size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'bad',
-			title: 'Sair da conta',
-			subtitle: 'Voce precisara entrar de novo',
+			title: t('settings.logout', 'Sair da conta'),
+			subtitle: t('settings.logoutSubtitle', 'Voce precisara entrar de novo'),
 			danger: true,
 			onPress: () => setShowLogoutModal(true),
 		},
@@ -189,8 +239,8 @@ export default function SettingsScreen() {
 			id: 'delete',
 			icon: <Trash2 size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'bad',
-			title: 'Excluir conta',
-			subtitle: 'Permanente - Todos dados apagados',
+			title: t('settings.deleteAccount', 'Excluir conta'),
+			subtitle: t('settings.deleteAccountSubtitle', 'Permanente - Todos dados apagados'),
 			danger: true,
 			onPress: () => setShowDeleteModal(true),
 		},
@@ -207,7 +257,7 @@ export default function SettingsScreen() {
 	return (
 		<SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
 			<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-				<HubTopNav title="Configuracoes" subtitle="v 1.4.2" />
+				<HubTopNav title={t('settings.title', 'Configuracoes')} subtitle="v 1.4.2" />
 
 				<LinearGradient
 					colors={theme === 'dark' ? ['#0F3A24', '#072314'] : ['#E3F5EC', '#D6EEE3']}
@@ -235,10 +285,10 @@ export default function SettingsScreen() {
 					</Pressable>
 				</LinearGradient>
 
-				<SettingsGroup title="Conta" rows={accountRows} />
-				<SettingsGroup title="Preferencias" rows={preferenceRows} />
-				<SettingsGroup title="Suporte" rows={supportRows} />
-				<SettingsGroup title="Zona perigosa" rows={dangerRows} />
+				<SettingsGroup title={t('settings.accountGroup', 'Conta')} rows={accountRows} />
+				<SettingsGroup title={t('settings.preferencesGroup', 'Preferencias')} rows={preferenceRows} />
+				<SettingsGroup title={t('settings.supportGroup', 'Suporte')} rows={supportRows} />
+				<SettingsGroup title={t('settings.dangerGroup', 'Zona perigosa')} rows={dangerRows} />
 
 				<View className="items-center px-4 pt-7 pb-5">
 					<Text variant="micro" className="text-[#4B5563] dark:text-fg4 text-center uppercase tracking-[1.8px] leading-[16px]">
@@ -253,11 +303,11 @@ export default function SettingsScreen() {
 			<AuthFeedbackModal
 				visible={showLogoutModal}
 				tone="info"
-				title="Sair da conta?"
-				message="Tem certeza que deseja sair e voltar para o login?"
-				primaryLabel={signingOut ? 'Saindo...' : 'Sim, sair'}
+				title={t('settings.logoutModalTitle', 'Sair da conta?')}
+				message={t('settings.logoutModalMessage', 'Tem certeza que deseja sair e voltar para o login?')}
+				primaryLabel={signingOut ? t('settings.loggingOut', 'Saindo...') : t('settings.confirmLogout', 'Sim, sair')}
 				onPrimaryPress={handleConfirmSignOut}
-				secondaryLabel="Cancelar"
+				secondaryLabel={t('actions.cancel', 'Cancelar')}
 				onSecondaryPress={() => setShowLogoutModal(false)}
 				onClose={() => setShowLogoutModal(false)}
 			/>
@@ -265,14 +315,82 @@ export default function SettingsScreen() {
 			<AuthFeedbackModal
 				visible={showDeleteModal}
 				tone="error"
-				title="Excluir conta permanentemente?"
-				message="Tem certeza? Todos os seus dados, mensagens e historico serao apagados para sempre. Esta acao nao pode ser desfeita."
-				primaryLabel={deleting ? 'Deletando...' : 'Sim, excluir tudo'}
+				title={t('settings.deleteModalTitle', 'Excluir conta permanentemente?')}
+				message={t('settings.deleteModalMessage', 'Tem certeza? Todos os seus dados, mensagens e historico serao apagados para sempre. Esta acao nao pode ser desfeita.')}
+				primaryLabel={deleting ? t('settings.deleting', 'Deletando...') : t('settings.confirmDelete', 'Sim, excluir tudo')}
 				onPrimaryPress={handleConfirmDeleteAccount}
-				secondaryLabel="Cancelar"
+				secondaryLabel={t('actions.cancel', 'Cancelar')}
 				onSecondaryPress={() => setShowDeleteModal(false)}
 				onClose={() => setShowDeleteModal(false)}
 			/>
+
+			<Modal
+				visible={showLanguageModal}
+				transparent
+				animationType="fade"
+				onRequestClose={() => setShowLanguageModal(false)}
+			>
+				<Pressable
+					className="flex-1 justify-center px-6"
+					style={{ backgroundColor: theme === 'light' ? 'rgba(15,23,42,0.28)' : 'rgba(0,0,0,0.6)' }}
+					onPress={() => setShowLanguageModal(false)}
+				>
+					<Pressable
+						className="rounded-[18px] border p-4"
+						style={{
+							backgroundColor: theme === 'light' ? '#F8FAFB' : '#0C111E',
+							borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255,255,255,0.10)',
+						}}
+						onPress={() => undefined}
+					>
+						<Text
+							variant="label"
+							className="font-semibold mb-3"
+							style={{ color: theme === 'light' ? '#111827' : '#FFFFFF' }}
+						>
+							Selecionar idioma
+						</Text>
+
+						{LANGUAGE_OPTIONS.map((languageOption, index) => {
+							const isActive = selectedLanguage === languageOption.code;
+							return (
+								<Pressable
+									key={languageOption.code}
+									onPress={() => handleSelectLanguage(languageOption.code)}
+									style={{
+										paddingVertical: 12,
+										paddingHorizontal: 10,
+										borderRadius: 12,
+										borderWidth: isActive ? 1 : 0,
+										borderColor: isActive ? '#22B76C' : 'transparent',
+										backgroundColor: isActive
+											? theme === 'light'
+												? 'rgba(34,183,108,0.10)'
+												: 'rgba(34,183,108,0.14)'
+											: 'transparent',
+										marginBottom: index < LANGUAGE_OPTIONS.length - 1 ? 6 : 0,
+									}}
+								>
+									<Text
+										variant="body"
+										style={{
+											color: isActive
+												? theme === 'light'
+													? '#11663D'
+													: '#86E5B4'
+												: theme === 'light'
+													? '#1F2937'
+													: 'rgba(255,255,255,0.88)',
+										}}
+									>
+										{languageOption.label}
+									</Text>
+								</Pressable>
+							);
+						})}
+					</Pressable>
+				</Pressable>
+			</Modal>
 		</SafeAreaView>
 	);
 }

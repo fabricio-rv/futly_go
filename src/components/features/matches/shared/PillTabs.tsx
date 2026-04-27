@@ -1,8 +1,10 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from './theme';
+import { TouchableScale } from '@/src/components/ui/TouchableScale';
+import { selectionTick } from '@/src/lib/haptics';
 
 type PillTabsProps = {
   tabs: { id: string; label: string }[];
@@ -22,14 +24,17 @@ export function PillTabs({ tabs, activeId, onChange }: PillTabsProps) {
       {tabs.map((tab) => {
         const active = tab.id === activeId;
         return (
-          <Pressable
+          <TouchableScale
             key={tab.id}
-            onPress={() => onChange(tab.id)}
+            onPress={() => {
+              void selectionTick();
+              onChange(tab.id);
+            }}
             className="flex-1 h-[38px] rounded-[10px] items-center justify-center"
             style={{ backgroundColor: active ? (theme === 'light' ? '#EAF0F8' : 'rgba(255,255,255,0.07)') : 'transparent' }}
           >
             <Text variant="label" style={{ color: active ? matchTheme.colors.fgPrimary : matchTheme.colors.fgSecondary }}>{tab.label}</Text>
-          </Pressable>
+          </TouchableScale>
         );
       })}
     </View>

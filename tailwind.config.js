@@ -8,11 +8,6 @@ module.exports = {
   presets: [require('nativewind/preset')],
   darkMode: 'class',
   theme: {
-    colors: {
-      white: '#FFFFFF',
-      black: '#000000',
-      transparent: 'transparent',
-    },
     extend: {
       colors: {
         ink: {
@@ -123,13 +118,17 @@ module.exports = {
         pill: '999px',
       },
       fontFamily: {
-        sans: ['Geist_400Regular', 'System'],
-        display: ['Geist_700Bold', 'System'],
+        sans: ['Inter_400Regular', 'System'],
+        display: ['Inter_700Bold', 'System'],
         number: ['BebasNeue_400Regular', 'Geist_700Bold', 'System'],
         mono: ['GeistMono_400Regular', 'Menlo'],
-        geist: ['Geist_500Medium', 'System'],
-        geistBold: ['Geist_700Bold', 'System'],
+        geist: ['Inter_500Medium', 'System'],
+        geistBold: ['Inter_700Bold', 'System'],
         bebas: ['BebasNeue_400Regular', 'System'],
+      },
+      spacing: {
+        18: '72px',
+        22: '88px',
       },
       boxShadow: {
         neon: '0 0 0 1px rgba(34,183,108,0.4), 0 10px 40px rgba(34,183,108,0.35)',

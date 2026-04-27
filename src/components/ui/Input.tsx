@@ -18,8 +18,8 @@ type InputProps = TextInputProps & {
   label?: string;
   error?: string;
   hint?: string;
-  leftAdornment?: ReactNode;
-  rightAdornment?: ReactNode;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
   onClear?: () => void;
   showClearButton?: boolean;
   containerClassName?: string;
@@ -32,8 +32,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     label,
     error,
     hint,
-    leftAdornment,
-    rightAdornment,
+    leftIcon,
+    rightIcon,
     onClear,
     showClearButton = false,
     containerClassName,
@@ -51,138 +51,142 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
 ) {
   const theme = useAppColorScheme();
   const [focused, setFocused] = useState(false);
+  const [isFilled, setIsFilled] = useState(!!rest.value || !!rest.defaultValue);
 
-  const borderOpacity = useSharedValue(0);
+  const borderColorValue = useSharedValue(theme === 'light' ? '#E4E4E7' : '#3F3F46');
   const shadowOpacity = useSharedValue(0);
 
   const animatedBorderStyle = useAnimatedStyle(() => ({
-    borderColor: focused
-      ? theme === 'light'
-        ? 'rgba(16, 185, 129, 0.5)'
-        : 'rgba(52, 211, 153, 0.5)'
-      : 'transparent',
-    borderWidth: focused ? 1.5 : 0,
+    borderColor: borderColorValue.value,
   }));
 
   const animatedShadowStyle = useAnimatedStyle(() => ({
-    shadowColor: theme === 'light' ? '#10B981' : '#10B981',
+    shadowColor: '#10B981',
     shadowOpacity: shadowOpacity.value,
     shadowRadius: shadowOpacity.value * 8,
-    elevation: shadowOpacity.value * 4,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: shadowOpacity.value * 3,
   }));
 
   const isMultiline = !!rest.multiline;
-  const containerHeightClass = isMultiline ? 'min-h-[112px] py-4' : 'h-[52px]';
-  const inputClass = isMultiline
-    ? 'font-system text-base text-zinc-900 dark:text-zinc-50 p-0 h-full'
-    : 'font-system text-base text-zinc-900 dark:text-zinc-50 p-0';
-
-  const placeholderColor = theme === 'light' ? '#A1A1AA' : '#52525B';
-  const isDisabled = !editable;
+  const placeholderColor = theme === 'light' ? '#A1A1AA' : '#71717A';
 
   const handleFocus = (e: any) => {
     setFocused(true);
-    borderOpacity.value = withTiming(1, { duration: 200 });
+    borderColorValue.value = withTiming(
+      theme === 'light' ? '#10B981' : '#34D399',
+      { duration: 200 }
+    );
     shadowOpacity.value = withTiming(0.15, { duration: 200 });
     onFocus?.(e);
   };
 
   const handleBlur = (e: any) => {
     setFocused(false);
-    borderOpacity.value = withTiming(0, { duration: 200 });
+    borderColorValue.value = withTiming(
+      theme === 'light' ? '#E4E4E7' : '#3F3F46',
+      { duration: 200 }
+    );
     shadowOpacity.value = withTiming(0, { duration: 200 });
     onBlur?.(e);
   };
 
+  const handleChangeText = (text: string) => {
+    setIsFilled(!!text);
+    rest.onChangeText?.(text);
+  };
+
   const handleClear = () => {
+    handleChangeText('');
     onClear?.();
   };
 
   return (
     <View className="w-full">
-      {label ? (
+      {label && (
         <Text
           variant="label"
-          tone="secondary"
-          className={`mb-2.5 font-medium ${labelClassName || ''}`.trim()}
-          accessibilityLabel={`${label} label`}
+          tone={error ? 'danger' : 'secondary'}
+          className={`mb-2.5 font-semibold ${labelClassName || ''}`.trim()}
         >
           {label}
         </Text>
-      ) : null}
+      )}
 
       <Animated.View
         style={[
           animatedBorderStyle,
           animatedShadowStyle,
-          { minWidth: 0, width: '100%', overflow: 'hidden' },
+          {
+            borderRadius: 12,
+            borderWidth: 1.5,
+          },
         ]}
-        className={`rounded-[12px] bg-zinc-100 dark:bg-zinc-900 px-4 ${containerHeightClass} justify-center ${
-          isDisabled ? 'opacity-60' : ''
+        className={`bg-white dark:bg-zinc-800 ${
+          !editable ? 'opacity-50' : ''
         } ${containerClassName || ''}`.trim()}
       >
-        <View className={`flex-row gap-3 ${isMultiline ? 'items-start pt-1' : 'items-center'}`}>
-          {leftAdornment ? (
-            <View
-              className={`text-zinc-400 dark:text-zinc-500 flex-shrink-0 ${
-                isMultiline ? 'pt-0.5' : ''
-              }`}
-              accessibilityElementsHidden
-            >
-              {leftAdornment}
+        {/* CONTAINER PRINCIPAL - Flexbox com padding e gap */}
+        <View className="flex-row items-center px-5 py-4 gap-3">
+          {/* ÍCONE ESQUERDO - Flex-shrink para não expandir */}
+          {leftIcon && (
+            <View className="flex-shrink-0">
+              {leftIcon}
             </View>
-          ) : null}
+          )}
 
+          {/* TEXTINPUT - Flex-1 para ocupar espaço restante */}
           <TextInput
             ref={ref}
             testID={testID}
             placeholderTextColor={placeholderColor}
             editable={editable}
             accessibilityLabel={accessibilityLabel || label}
-            className={`${inputClass} flex-1 ${inputClassName || ''}`.trim()}
+            accessibilityState={{ disabled: !editable }}
+            className={`flex-1 font-normal text-base text-zinc-900 dark:text-zinc-50 ${
+              inputClassName || ''
+            }`.trim()}
             textAlignVertical={isMultiline ? 'top' : 'center'}
             underlineColorAndroid="transparent"
             selectionColor={theme === 'light' ? '#10B981' : '#34D399'}
-            autoCorrect={rest.autoCorrect ?? false}
             style={[
               {
-                borderWidth: 0,
-                minWidth: 0,
                 padding: 0,
+                margin: 0,
+                includeFontPadding: false,
+                textAlignVertical: isMultiline ? 'top' : 'center',
               },
               style,
             ]}
             onFocus={handleFocus}
             onBlur={handleBlur}
+            onChangeText={handleChangeText}
             {...rest}
           />
 
-          {showClearButton && onClear ? (
+          {/* ÍCONE DIREITO - Flex-shrink para não expandir */}
+          {showClearButton && isFilled && onClear ? (
             <Pressable
               onPress={handleClear}
               accessibilityLabel="Clear input"
               accessibilityRole="button"
-              className="flex-shrink-0 p-1"
+              className="flex-shrink-0 p-1.5"
             >
               <View className="w-5 h-5 rounded-full bg-zinc-300 dark:bg-zinc-600 items-center justify-center">
-                <Text className="text-zinc-600 dark:text-zinc-300 text-lg leading-none font-bold">
+                <Text className="text-zinc-700 dark:text-zinc-200 text-sm font-bold leading-none">
                   ×
                 </Text>
               </View>
             </Pressable>
-          ) : rightAdornment ? (
-            <View
-              className={`flex-shrink-0 text-zinc-400 dark:text-zinc-500 ${
-                isMultiline ? 'pt-0.5' : ''
-              }`}
-              accessibilityElementsHidden
-            >
-              {rightAdornment}
+          ) : rightIcon ? (
+            <View className="flex-shrink-0">
+              {rightIcon}
             </View>
           ) : null}
         </View>
       </Animated.View>
 
+      {/* MENSAGENS DE ERRO/HINT */}
       {error ? (
         <Text
           variant="caption"

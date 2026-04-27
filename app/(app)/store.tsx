@@ -14,8 +14,10 @@ import {
 	type BillingPeriod,
 } from '@/src/components/features/store';
 import { IconButton, Text } from '@/src/components/ui';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 export default function StoreScreen() {
+	const { t } = useTranslation('store');
 	const theme = useAppColorScheme();
 	const [period, setPeriod] = useState<BillingPeriod>('semestral');
 	const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
@@ -24,8 +26,8 @@ export default function StoreScreen() {
 		<SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
 			<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
 				<HubTopNav
-					title="Planos"
-					subtitle="SEU PLANO ATUAL - GOLD"
+					title={t('title', 'Planos')}
+					subtitle={t('currentPlan', 'SEU PLANO ATUAL - GOLD')}
 					rightNode={
 						<IconButton icon={<Check size={16} color="#86E5B4" strokeWidth={2.8} />} />
 					}
@@ -41,10 +43,10 @@ export default function StoreScreen() {
 
 				<View className="mx-[18px] mt-1 rounded-[14px] border border-dashed border-line2 bg-[#FAFBFC]/[0.02] px-[14px] py-[14px]">
 					<Text variant="caption" className="font-bold text-[#111827] dark:text-white mb-1">
-						Pague a vontade. Cancele quando quiser.
+						{t('footer.title', 'Pague a vontade. Cancele quando quiser.')}
 					</Text>
 					<Text variant="micro" className="leading-[18px] text-[#4B5563] dark:text-fg3">
-						PIX, cartao de credito ou Apple/Google Pay. Sem fidelidade. Reembolso integral nos primeiros 7 dias.
+						{t('footer.description', 'PIX, cartao de credito ou Apple/Google Pay. Sem fidelidade. Reembolso integral nos primeiros 7 dias.')}
 					</Text>
 				</View>
 			</ScrollView>

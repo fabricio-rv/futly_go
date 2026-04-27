@@ -16,7 +16,7 @@ const formations: Record<PitchMode, Slot[]> = {
     { key: 'FIXO', x: 50, y: 65 },
     { key: 'ALD', x: 80, y: 40 },
     { key: 'ALE', x: 20, y: 40 },
-    { key: 'PIVÔ', x: 50, y: 16 },
+    { key: 'PIVO', x: 50, y: 16 },
   ],
   society: [
     { key: 'GOL', x: 50, y: 90 },
@@ -25,7 +25,7 @@ const formations: Record<PitchMode, Slot[]> = {
     { key: 'MC', x: 66, y: 48 },
     { key: 'ALE', x: 15, y: 30 },
     { key: 'ALD', x: 85, y: 30 },
-    { key: 'PIVÔ', x: 50, y: 15 },
+    { key: 'PIVO', x: 50, y: 15 },
   ],
   campo: [
     { key: 'GOL', x: 50, y: 92 },
@@ -42,16 +42,47 @@ const formations: Record<PitchMode, Slot[]> = {
   ],
 };
 
+type PitchSpotTone = 'inactive' | 'available' | 'pending' | 'confirmed';
+
 type TacticalPitchProps = {
   mode?: PitchMode;
   selectedIndexes?: number[];
+  spotTones?: PitchSpotTone[];
   onToggleIndex?: (index: number) => void;
   width?: number;
+};
+
+const toneByState: Record<PitchSpotTone, { bg: string; border: string; text: string; borderWidth: number }> = {
+  inactive: {
+    bg: 'rgba(148,163,184,0.26)',
+    border: 'rgba(203,213,225,0.48)',
+    text: 'rgba(241,245,249,0.88)',
+    borderWidth: 1.5,
+  },
+  available: {
+    bg: '#22B76C',
+    border: 'rgba(255,255,255,0.8)',
+    text: '#F5F7FA',
+    borderWidth: 3,
+  },
+  pending: {
+    bg: '#EAB308',
+    border: 'rgba(255,255,255,0.85)',
+    text: '#111827',
+    borderWidth: 3,
+  },
+  confirmed: {
+    bg: '#38BDF8',
+    border: 'rgba(255,255,255,0.9)',
+    text: '#0B1020',
+    borderWidth: 3,
+  },
 };
 
 export function TacticalPitch({
   mode = 'futsal',
   selectedIndexes = [],
+  spotTones,
   onToggleIndex,
   width = 300,
 }: TacticalPitchProps) {
@@ -80,12 +111,14 @@ export function TacticalPitch({
       <View className="absolute left-1/2 top-1/2 w-14 h-14 rounded-full border border-white/15 -ml-7 -mt-7" />
 
       {slots.map((slot, index) => {
-        const isSelected = selected.has(index);
+        const tone: PitchSpotTone = spotTones?.[index] ?? (selected.has(index) ? 'available' : 'inactive');
+        const toneToken = toneByState[tone];
 
         return (
           <Pressable
             key={`${slot.key}-${index}`}
             onPress={() => onToggleIndex?.(index)}
+            disabled={!onToggleIndex}
             className="absolute items-center justify-center rounded-full"
             style={{
               left: `${slot.x}%`,
@@ -94,16 +127,17 @@ export function TacticalPitch({
               height: 54,
               marginLeft: -27,
               marginTop: -27,
-              backgroundColor: isSelected ? '#22B76C' : 'rgba(5,7,11,0.66)',
-              borderWidth: isSelected ? 3 : 1.5,
-              borderColor: isSelected ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.38)',
+              backgroundColor: toneToken.bg,
+              borderWidth: toneToken.borderWidth,
+              borderColor: toneToken.border,
+              opacity: onToggleIndex ? 1 : 0.98,
             }}
           >
             <Text
               variant="label"
               className="font-bold"
               style={{
-                color: isSelected ? '#F5F7FA' : 'rgba(245,247,250,0.86)',
+                color: toneToken.text,
                 fontSize: 12,
               }}
             >

@@ -1,6 +1,6 @@
-import { router } from 'expo-router';
+﻿import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View, useColorScheme } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,6 +8,7 @@ import { AuthFeedbackModal, OtpBoxes, PasswordStrengthMeter, AuthToast } from '@
 import { MatchBottomNav } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
 import { Button, Input, Text } from '@/src/components/ui';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import {
   sendPasswordResetCode,
   verifyPasswordResetCode,
@@ -20,15 +21,21 @@ type Step = 1 | 2 | 3;
 
 const VERIFICATION_CODE_LENGTH = 8;
 
-function getPasswordStrength(password: string): { level: number; label: string } {
-  if (!password) return { level: 0, label: 'Digite uma senha' };
-  if (password.length < 6) return { level: 1, label: 'Muito fraca' };
-  if (password.length < 10) return { level: 2, label: 'Fraca' };
-  if (/[A-Z]/.test(password) && /[0-9]/.test(password)) return { level: 4, label: 'Forte' };
-  return { level: 3, label: 'Media' };
+function getPasswordStrength(
+  password: string,
+  t: (key: string, fallback?: string) => string
+): { level: number; label: string } {
+  if (!password) return { level: 0, label: t('security.passwordStrength.veryWeak', 'Muito fraca - use mais de 8 caracteres') };
+  if (password.length < 6) return { level: 1, label: t('security.passwordStrength.veryWeak', 'Muito fraca - use mais de 8 caracteres') };
+  if (password.length < 10) return { level: 2, label: t('security.passwordStrength.weak', 'Fraca - adicione maiuscula e numero') };
+  if (/[A-Z]/.test(password) && /[0-9]/.test(password)) {
+    return { level: 4, label: t('security.passwordStrength.strong', 'Forte - pronta para uso') };
+  }
+  return { level: 3, label: t('security.passwordStrength.medium', 'Media - 9 caracteres - maiuscula + numero') };
 }
 
 export default function SecurityScreen() {
+  const { t } = useTranslation('auth');
   const theme = useAppColorScheme();
 
   const [step, setStep] = useState<Step>(1);
@@ -57,7 +64,7 @@ export default function SecurityScreen() {
 
   async function handleStep1() {
     if (!email.trim()) {
-      showToast('Digite seu e-mail');
+      showToast(t('security.enterEmail', 'Digite seu e-mail'));
       return;
     }
 
@@ -65,12 +72,12 @@ export default function SecurityScreen() {
     try {
       await sendPasswordResetCode(email);
       setStep(2);
-      showToast('Código enviado para seu e-mail');
+      showToast(t('security.codeSent', 'Codigo enviado para seu e-mail'));
     } catch (error) {
-      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : 'Erro ao enviar código';
+      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.sendCodeFailed', 'Erro ao enviar codigo');
       setModalData({
         tone: 'error',
-        title: 'Falha ao enviar código',
+        title: t('security.sendCodeFailedTitle', 'Falha ao enviar codigo'),
         message,
       });
       setModalVisible(true);
@@ -81,7 +88,13 @@ export default function SecurityScreen() {
 
   async function handleStep2() {
     if (code.length !== VERIFICATION_CODE_LENGTH) {
-      showToast(`Digite os ${VERIFICATION_CODE_LENGTH} digitos do codigo`);
+      showToast(
+        t(
+          'security.enterCodeLength',
+          'Digite os {{VERIFICATION_CODE_LENGTH}} digitos do codigo',
+          { VERIFICATION_CODE_LENGTH }
+        )
+      );
       return;
     }
 
@@ -89,12 +102,12 @@ export default function SecurityScreen() {
     try {
       await verifyPasswordResetCode(email, code);
       setStep(3);
-      showToast('Código verificado com sucesso');
+      showToast(t('security.codeVerified', 'Codigo verificado com sucesso'));
     } catch (error) {
-      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : 'Código inválido';
+      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.invalidCode', 'Codigo invalido');
       setModalData({
         tone: 'error',
-        title: 'Código inválido',
+        title: t('security.invalidCodeTitle', 'Codigo invalido'),
         message,
       });
       setModalVisible(true);
@@ -105,12 +118,12 @@ export default function SecurityScreen() {
 
   async function handleStep3() {
     if (password.length < 6) {
-      showToast('Senha deve ter no mínimo 6 caracteres');
+      showToast(t('security.minPassword', 'Senha deve ter no minimo 6 caracteres'));
       return;
     }
 
     if (password !== confirmPassword) {
-      showToast('As senhas não coincidem');
+      showToast(t('errors.passwordMismatch', 'As senhas nao coincidem'));
       return;
     }
 
@@ -120,15 +133,15 @@ export default function SecurityScreen() {
       await signOut();
       setModalData({
         tone: 'success',
-        title: 'Senha alterada com sucesso',
-        message: 'Você foi desconectado. Faça login novamente com sua nova senha.',
+        title: t('security.passwordChanged', 'Senha alterada com sucesso'),
+        message: t('security.passwordChangedMessage', 'Voce foi desconectado. Faca login novamente com sua nova senha.'),
       });
       setModalVisible(true);
     } catch (error) {
-      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : 'Erro ao alterar senha';
+      const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.updatePasswordFailedMessage', 'Erro ao alterar senha');
       setModalData({
         tone: 'error',
-        title: 'Falha ao alterar senha',
+        title: t('security.updatePasswordFailed', 'Falha ao alterar senha'),
         message,
       });
       setModalVisible(true);
@@ -146,7 +159,7 @@ export default function SecurityScreen() {
 
   function handleResendCode() {
     setCode('');
-    handleStep1();
+    void handleStep1();
   }
 
   function handleBackToEmail() {
@@ -159,42 +172,40 @@ export default function SecurityScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubTopNav title="Senha e Segurança" subtitle="ALTERAR SENHA" />
+        <HubTopNav title={t('security.title', 'Senha e Seguranca')} subtitle={t('security.changePassword', 'ALTERAR SENHA')} />
 
-        {/* Step 1: Email */}
         {step === 1 && (
           <View className="mx-[18px] mt-6">
             <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
               <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-1">
-                Passo 1 de 3
+                {t('security.step1', 'Passo 1 de 3')}
               </Text>
               <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
-                Confirme seu e-mail para receber o código de verificação
+                {t('security.step1Hint', 'Confirme seu e-mail para receber o codigo de verificacao')}
               </Text>
 
               <Input
-                label="E-mail"
+                label={t('signup.email', 'E-mail')}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="seu@email.com"
+                placeholder={t('placeholders.email', 'seu@email.com')}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             </View>
 
-            <Button label="Enviar código" loading={loading} disabled={loading} onPress={handleStep1} />
+            <Button label={t('forgotPassword.sendCode', 'Enviar codigo')} loading={loading} disabled={loading} onPress={() => void handleStep1()} />
           </View>
         )}
 
-        {/* Step 2: OTP */}
         {step === 2 && (
           <View className="mx-[18px] mt-6">
             <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
               <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-1">
-                Passo 2 de 3
+                {t('security.step2', 'Passo 2 de 3')}
               </Text>
               <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
-                Digite o código que foi enviado para {email}
+                {t('security.step2Hint', 'Digite o codigo que foi enviado para {{email}}', { email })}
               </Text>
 
               <View className="mb-4">
@@ -202,40 +213,39 @@ export default function SecurityScreen() {
               </View>
 
               <Input
-                label={`Codigo (${VERIFICATION_CODE_LENGTH} digitos)`}
+                label={t('security.codeLabel', 'Codigo ({{VERIFICATION_CODE_LENGTH}} digitos)', { VERIFICATION_CODE_LENGTH })}
                 value={code}
                 onChangeText={(text) => setCode(text.replace(/[^0-9]/g, '').slice(0, VERIFICATION_CODE_LENGTH))}
                 keyboardType="number-pad"
-                placeholder="00000000"
+                placeholder={t('security.codePlaceholder', '00000000')}
                 maxLength={VERIFICATION_CODE_LENGTH}
               />
             </View>
 
             <View className="gap-3 mb-4">
-              <Button label="Verificar código" loading={loading} disabled={loading} onPress={handleStep2} />
-              <Button variant="ghost" label="Reenviar código" onPress={handleResendCode} />
-              <Button variant="ghost" label="Voltar" onPress={handleBackToEmail} />
+              <Button label={t('forgotPassword.verifyCode', 'Verificar codigo')} loading={loading} disabled={loading} onPress={() => void handleStep2()} />
+              <Button variant="ghost" label={t('forgotPassword.resendCode', 'Reenviar codigo')} onPress={handleResendCode} />
+              <Button variant="ghost" label={t('common.back', 'Voltar')} onPress={handleBackToEmail} />
             </View>
           </View>
         )}
 
-        {/* Step 3: New Password */}
         {step === 3 && (
           <View className="mx-[18px] mt-6">
             <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
               <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-1">
-                Passo 3 de 3
+                {t('security.step3', 'Passo 3 de 3')}
               </Text>
               <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
-                Crie uma nova senha segura
+                {t('security.step3Hint', 'Crie uma nova senha segura')}
               </Text>
 
               <View className="mb-4">
                 <Input
-                  label="Nova senha"
+                  label={t('security.newPassword', 'Nova senha')}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder={t('security.newPasswordPlaceholder', 'Minimo 6 caracteres')}
                   secureTextEntry={!showPassword}
                   rightAdornment={
                     <Text
@@ -244,22 +254,22 @@ export default function SecurityScreen() {
                       onPress={() => setShowPassword(!showPassword)}
                       className="font-medium"
                     >
-                      {showPassword ? 'Ocultar' : 'Mostrar'}
+                      {showPassword ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
                     </Text>
                   }
                 />
               </View>
 
               <View className="mb-4">
-                <PasswordStrengthMeter {...getPasswordStrength(password)} />
+                <PasswordStrengthMeter {...getPasswordStrength(password, t)} />
               </View>
 
               <View className="mb-4">
                 <Input
-                  label="Confirmar senha"
+                  label={t('signup.confirmPassword', 'Confirmar senha')}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
-                  placeholder="Repita a senha"
+                  placeholder={t('security.confirmPasswordPlaceholder', 'Repita a senha')}
                   secureTextEntry={!showConfirmPassword}
                   rightAdornment={
                     <Text
@@ -268,7 +278,7 @@ export default function SecurityScreen() {
                       onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="font-medium"
                     >
-                      {showConfirmPassword ? 'Ocultar' : 'Mostrar'}
+                      {showConfirmPassword ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
                     </Text>
                   }
                 />
@@ -276,10 +286,10 @@ export default function SecurityScreen() {
             </View>
 
             <Button
-              label="Salvar nova senha"
+              label={t('security.changePassword', 'Salvar nova senha')}
               loading={loading}
               disabled={loading || password.length < 6 || password !== confirmPassword}
-              onPress={handleStep3}
+              onPress={() => void handleStep3()}
             />
           </View>
         )}
@@ -294,7 +304,7 @@ export default function SecurityScreen() {
         tone={modalData?.tone ?? 'info'}
         title={modalData?.title ?? ''}
         message={modalData?.message ?? ''}
-        primaryLabel={modalData?.tone === 'success' ? 'Ir para login' : 'Tentar novamente'}
+        primaryLabel={modalData?.tone === 'success' ? t('signup.login', 'Ir para login') : t('common.retry', 'Tentar novamente')}
         onPrimaryPress={handleModalClose}
         onClose={handleModalClose}
       />

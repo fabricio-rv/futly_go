@@ -1,9 +1,10 @@
 import { Check, CheckCheck } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView } from 'moti';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
-import { Text } from '@/src/components/ui';
+import { Text, TouchableScale } from '@/src/components/ui';
 
 import type { ConversationPreview } from './data';
 
@@ -27,12 +28,17 @@ export function ConversationListItem({ item, onPress }: ConversationListItemProp
   const isSent = item.checkStatus === 'sent';
 
   return (
-    <Pressable
-      onPress={onPress}
-      className={`px-[18px] py-[14px] border-b flex-row items-center gap-3 ${item.archived ? 'opacity-60' : ''}`}
-      style={{ borderBottomColor: theme === 'light' ? '#E4EBF5' : 'rgba(255,255,255,0.06)' }}
+    <MotiView
+      from={{ opacity: 0, translateY: 14 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 220 }}
     >
-      <LinearGradient
+      <TouchableScale
+        onPress={onPress}
+        className={`px-[18px] py-[14px] border-b flex-row items-center gap-3 ${item.archived ? 'opacity-60' : ''}`}
+        style={{ borderBottomColor: theme === 'light' ? '#E4EBF5' : 'rgba(255,255,255,0.06)' }}
+      >
+        <LinearGradient
         colors={avatarToneMap[item.avatarTone]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -94,7 +100,8 @@ export function ConversationListItem({ item, onPress }: ConversationListItemProp
             <Check size={14} color={theme === 'light' ? 'rgba(15,23,42,0.35)' : 'rgba(255,255,255,0.45)'} strokeWidth={2.2} />
           ) : null}
         </View>
-      </View>
-    </Pressable>
+        </View>
+      </TouchableScale>
+    </MotiView>
   );
 }

@@ -13,24 +13,21 @@ import { Text } from './Text';
 type Variant = 'primary' | 'secondary' | 'ghost' | 'destructive';
 type Size = 'sm' | 'md' | 'lg' | 'xl';
 
-const base =
-  'flex-row items-center justify-center rounded-[12px] overflow-hidden active:shadow-none';
-
 const variantClass: Record<Variant, string> = {
-  primary: 'bg-emerald-500 shadow-md',
-  secondary: 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm',
-  ghost: 'bg-zinc-100 dark:bg-zinc-900/50',
-  destructive: 'bg-red-500 shadow-md',
+  primary: 'bg-emerald-500',
+  secondary: 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
+  ghost: 'bg-zinc-100 dark:bg-zinc-900',
+  destructive: 'bg-red-500',
 };
 
 const sizeClass: Record<Size, string> = {
   sm: 'h-10 px-4',
   md: 'h-12 px-6',
-  lg: 'h-[52px] px-7',
+  lg: 'h-14 px-6',
   xl: 'h-14 px-8',
 };
 
-const labelTone: Record<Variant, 'inverse' | 'primary' | 'destructive'> = {
+const labelTone: Record<Variant, 'inverse' | 'primary'> = {
   primary: 'inverse',
   secondary: 'primary',
   ghost: 'primary',
@@ -39,7 +36,7 @@ const labelTone: Record<Variant, 'inverse' | 'primary' | 'destructive'> = {
 
 const labelColor: Record<Variant, string> = {
   primary: 'text-white',
-  secondary: 'text-emerald-500 dark:text-emerald-400',
+  secondary: 'text-emerald-600 dark:text-emerald-400',
   ghost: 'text-zinc-900 dark:text-zinc-100',
   destructive: 'text-white',
 };
@@ -50,8 +47,8 @@ type ButtonProps = Omit<PressableProps, 'children'> & {
   size?: Size;
   loading?: boolean;
   fullWidth?: boolean;
-  leftAdornment?: ReactNode;
-  rightAdornment?: ReactNode;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
   className?: string;
   labelClassName?: string;
   contentClassName?: string;
@@ -63,8 +60,8 @@ export function Button({
   size = 'md',
   loading = false,
   fullWidth = true,
-  leftAdornment,
-  rightAdornment,
+  leftIcon,
+  rightIcon,
   className,
   labelClassName,
   contentClassName,
@@ -85,7 +82,7 @@ export function Button({
 
   const handlePressIn = () => {
     scale.value = withTiming(0.96, { duration: 100 });
-    opacity.value = withTiming(0.85, { duration: 100 });
+    opacity.value = withTiming(0.8, { duration: 100 });
   };
 
   const handlePressOut = () => {
@@ -99,7 +96,7 @@ export function Button({
   };
 
   const containerClass = [
-    base,
+    'flex-row items-center justify-center rounded-xl overflow-hidden',
     variantClass[variant],
     sizeClass[size],
     fullWidth ? 'w-full' : '',
@@ -115,7 +112,6 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || label}
       accessibilityState={{ disabled: isDisabled }}
-      accessibilityHint={disabled ? 'Button is disabled' : undefined}
       disabled={isDisabled}
       onPress={handlePress}
       onPressIn={handlePressIn}
@@ -123,28 +119,27 @@ export function Button({
       className={containerClass}
       {...rest}
     >
-      <Animated.View style={animatedStyle} className="flex-1">
+      <Animated.View style={animatedStyle} className="flex-row items-center justify-center gap-2">
         {loading ? (
           <ActivityIndicator
-            color={variant === 'primary' || variant === 'destructive' ? '#FFFFFF' : '#10B981'}
             size="small"
+            color={variant === 'primary' || variant === 'destructive' ? '#FFFFFF' : '#10B981'}
           />
         ) : (
-          <View
-            className={`flex-row items-center justify-center gap-2 ${contentClassName || ''}`.trim()}
-          >
-            {leftAdornment ? <View className="flex-row">{leftAdornment}</View> : null}
+          <>
+            {leftIcon && <View>{leftIcon}</View>}
             <Text
               variant="bodyLg"
               tone={labelTone[variant]}
-              className={`font-semibold tracking-[0.3px] ${labelColor[variant]} ${
+              numberOfLines={1}
+              className={`font-semibold tracking-wide ${labelColor[variant]} ${
                 labelClassName || ''
               }`.trim()}
             >
               {label}
             </Text>
-            {rightAdornment ? <View className="flex-row">{rightAdornment}</View> : null}
-          </View>
+            {rightIcon && <View>{rightIcon}</View>}
+          </>
         )}
       </Animated.View>
     </Pressable>

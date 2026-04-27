@@ -1,7 +1,8 @@
-import { Pressable, type PressableProps, View } from 'react-native';
+import { type PressableProps, View } from 'react-native';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { Text } from './Text';
+import { TouchableScale } from './TouchableScale';
 
 type PillTone = 'default' | 'active' | 'gold' | 'warn' | 'coral' | 'sky';
 
@@ -32,7 +33,7 @@ export function Pill({ label, tone = 'default', rightLabel, className, ...rest }
   const current = toneStyles[tone];
 
   return (
-    <Pressable
+    <TouchableScale
       accessibilityRole="button"
       className={`h-[30px] px-3 rounded-full border flex-row items-center gap-[6px] ${className ?? ''}`.trim()}
       style={{ backgroundColor: current.bg, borderColor: current.border }}
@@ -48,6 +49,6 @@ export function Pill({ label, tone = 'default', rightLabel, className, ...rest }
           </Text>
         </View>
       ) : null}
-    </Pressable>
+    </TouchableScale>
   );
 }

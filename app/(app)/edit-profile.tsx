@@ -9,8 +9,10 @@ import { MatchBottomNav } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
 import { Button, IconButton, Input, Text } from '@/src/components/ui';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 export default function EditProfileScreen() {
+  const { t } = useTranslation('profile');
   const { profile, loadProfile, saveProfile, saving } = useProfile();
 
   const [fullName, setFullName] = useState('');
@@ -46,11 +48,11 @@ export default function EditProfileScreen() {
         bio: bio || null,
       });
 
-      Alert.alert('Perfil atualizado', 'Seus dados foram salvos com sucesso.');
+      Alert.alert(t('success.profileUpdated', 'Perfil atualizado'), t('messages.profileSaved', 'Seus dados foram salvos com sucesso.'));
       router.back();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nao foi possivel salvar o perfil.';
-      Alert.alert('Falha ao salvar', message);
+      const message = error instanceof Error ? error.message : t('errors.saveProfileFailed', 'Nao foi possivel salvar o perfil.');
+      Alert.alert(t('errors.saveProfileTitle', 'Falha ao salvar'), message);
     }
   }
 
@@ -61,8 +63,8 @@ export default function EditProfileScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubTopNav
-          title="Editar perfil"
-          subtitle="DADOS PESSOAIS"
+          title={t('headers.editProfile', 'Editar perfil')}
+          subtitle={t('sections.personalInfo', 'DADOS PESSOAIS')}
           rightNode={
             <IconButton
               icon={<Check size={16} color={saving ? '#CCCCCC' : '#86E5B4'} />}
@@ -74,25 +76,25 @@ export default function EditProfileScreen() {
 
         <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-            Informacoes pessoais
+            {t('sections.personalInfo', 'Informacoes pessoais')}
           </Text>
 
           <View className="mb-3">
             <Input
-              label="Nome completo"
+              label={t('personal.fullName', 'Nome completo')}
               value={fullName}
               onChangeText={setFullName}
-              placeholder="Ex.: Joao Silva"
+              placeholder={t('placeholders.fullName', 'Ex.: Joao Silva')}
             />
           </View>
 
           <View className="flex-row gap-2 mb-3">
             <View className="flex-1">
               <Input
-                label="Telefone"
+                label={t('personal.phone', 'Telefone')}
                 value={phone}
                 onChangeText={setPhone}
-                placeholder="Ex.: (11) 9999-9999"
+                placeholder={t('placeholders.phone', 'Ex.: (11) 9999-9999')}
                 keyboardType="phone-pad"
               />
             </View>
@@ -101,38 +103,38 @@ export default function EditProfileScreen() {
           <View className="flex-row gap-2 mb-3">
             <View className="flex-1">
               <Input
-                label="Estado"
+                label={t('placeholders.stateLabel', 'Estado')}
                 value={state}
                 onChangeText={setState}
-                placeholder="Ex.: SP"
+                placeholder={t('placeholders.state', 'Ex.: SP')}
               />
             </View>
             <View className="flex-1">
               <Input
-                label="Cidade"
+                label={t('personal.location', 'Cidade')}
                 value={city}
                 onChangeText={setCity}
-                placeholder="Ex.: Sao Paulo"
+                placeholder={t('placeholders.city', 'Ex.: Sao Paulo')}
               />
             </View>
           </View>
 
           <View className="mb-3">
             <Input
-              label="CEP"
+              label={t('placeholders.cepLabel', 'CEP')}
               value={cep}
               onChangeText={setCep}
-              placeholder="Ex.: 01310-100"
+              placeholder={t('placeholders.cep', 'Ex.: 01310-100')}
               keyboardType="number-pad"
             />
           </View>
 
           <View>
             <Input
-              label="Bio"
+              label={t('personal.bio', 'Bio')}
               value={bio}
               onChangeText={setBio}
-              placeholder="Conte um pouco sobre voce..."
+              placeholder={t('personal.bioPlaceholder', 'Conte um pouco sobre voce...')}
               multiline
               numberOfLines={4}
             />
@@ -141,7 +143,7 @@ export default function EditProfileScreen() {
 
         <View className="mx-[18px] mt-4 mb-4">
           <Button
-            label={saving ? 'Salvando...' : 'Salvar alteracoes'}
+            label={saving ? t('common.saving', 'Salvando...') : t('actions.saveProfile', 'Salvar alteracoes')}
             loading={saving}
             disabled={saving}
             onPress={handleSaveProfile}

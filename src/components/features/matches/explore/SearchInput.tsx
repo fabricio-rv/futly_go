@@ -2,6 +2,7 @@ import { Search, SlidersHorizontal } from 'lucide-react-native';
 import { TextInput, View, Pressable } from 'react-native';
 
 import { useMatchTheme } from '../shared/theme';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type SearchInputProps = {
   value: string;
@@ -13,6 +14,7 @@ type SearchInputProps = {
 
 export function SearchInput({ value, onChangeText, placeholder, onFilterPress, filtersExpanded = false }: SearchInputProps) {
   const matchTheme = useMatchTheme();
+  const { t } = useTranslation('matches');
 
   return (
     <View className="px-[18px] mb-[10px]">
@@ -25,7 +27,7 @@ export function SearchInput({ value, onChangeText, placeholder, onFilterPress, f
           <TextInput
             value={value}
             onChangeText={onChangeText}
-            placeholder={placeholder ?? 'Buscar local, time, organizador...'}
+            placeholder={placeholder ?? t('search.placeholder', 'Buscar local, time, organizador...')}
             placeholderTextColor={matchTheme.colors.fgMuted}
             className="flex-1 text-[14px] ml-2"
             style={{ color: matchTheme.colors.fgPrimary }}

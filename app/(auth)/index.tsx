@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { ArrowRight, Check, Eye, Lock, Mail } from 'lucide-react-native';
+import { Check, Eye, Lock, Mail } from 'lucide-react-native';
 import { useState } from 'react';
-import { Image, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -11,6 +11,7 @@ import {
 	SocialAuthRow,
 } from '@/src/components/features/auth';
 import { Button, Input, Text } from '@/src/components/ui';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import {
 	isProfileMissingRequiredData,
 	signInWithPassword,
@@ -19,6 +20,7 @@ import {
 } from '@/src/features/auth/service';
 
 export default function LoginScreen() {
+	const { t } = useTranslation('auth');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [showPassword, setShowPassword] = useState(false);
@@ -44,7 +46,7 @@ export default function LoginScreen() {
 		tone: 'info',
 		title: '',
 		message: '',
-		primaryLabel: 'Fechar',
+		primaryLabel: t('common.close', 'Fechar'),
 		onPrimary: () => undefined,
 	});
 
@@ -65,13 +67,13 @@ export default function LoginScreen() {
 
 	async function handleLogin() {
 		if (!email.trim() || !password.trim()) {
-			showToast('Preencha os campos obrigatorios', 'error');
+			showToast(t('validation.fillRequiredFields', 'Preencha os campos obrigatorios'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Dados incompletos',
-				message: 'Preencha e-mail e senha para entrar.',
-				primaryLabel: 'Ok',
+				title: t('errors.incompleteDataTitle', 'Dados incompletos'),
+				message: t('errors.incompleteDataMessage', 'Preencha e-mail e senha para entrar.'),
+				primaryLabel: t('common.ok', 'Ok'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 			return;
@@ -80,24 +82,24 @@ export default function LoginScreen() {
 		try {
 			setLoading(true);
 			await signInWithPassword(email, password);
-			showToast('Login realizado com sucesso', 'success');
+			showToast(t('login.loginSuccess', 'Login realizado com sucesso'), 'success');
 			setTimeout(() => {
 				void navigateAfterLogin();
 			}, 400);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Nao foi possivel fazer login.';
-			showToast('Falha no login', 'error');
+			const message = error instanceof Error ? error.message : t('errors.loginGeneric', 'Nao foi possivel fazer login.');
+			showToast(t('errors.loginFailedTitle', 'Falha no login'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Nao foi possivel entrar',
+				title: t('errors.loginFailedTitle', 'Nao foi possivel entrar'),
 				message,
-				primaryLabel: 'Ir para cadastro',
+				primaryLabel: t('signup.createAccount', 'Ir para cadastro'),
 				onPrimary: () => {
 					setFeedback((prev) => ({ ...prev, visible: false }));
 					router.push('/(auth)/signup');
 				},
-				secondaryLabel: 'Tentar de novo',
+				secondaryLabel: t('common.retry', 'Tentar de novo'),
 				onSecondary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 		} finally {
@@ -109,19 +111,19 @@ export default function LoginScreen() {
 		try {
 			setSocialLoading(provider);
 			await signInWithSocial(provider);
-			showToast('Login social realizado com sucesso', 'success');
+			showToast(t('login.socialLoginSuccess', 'Login social realizado com sucesso'), 'success');
 			setTimeout(() => {
 				void navigateAfterLogin();
 			}, 300);
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Nao foi possivel fazer login social.';
-			showToast('Falha no login social', 'error');
+			const message = error instanceof Error ? error.message : t('errors.socialGeneric', 'Nao foi possivel fazer login social.');
+			showToast(t('errors.socialLoginFailedTitle', 'Falha no login social'), 'error');
 			setFeedback({
 				visible: true,
 				tone: 'error',
-				title: 'Falha no login social',
+				title: t('errors.socialLoginFailedTitle', 'Falha no login social'),
 				message,
-				primaryLabel: 'Fechar',
+				primaryLabel: t('common.close', 'Fechar'),
 				onPrimary: () => setFeedback((prev) => ({ ...prev, visible: false })),
 			});
 		} finally {
@@ -158,33 +160,33 @@ export default function LoginScreen() {
 							</Text>
 						</Text>
 						<Text variant="micro" className="mt-1.5 uppercase tracking-[2.8px] font-bold text-fg3">
-							Marque - Jogue - Avalie
+							{t('marketing.tagline', 'Marque - Jogue - Avalie')}
 						</Text>
 					</View>
 
 					<View className="gap-4">
 						<Input
-							label="E-mail"
+							label={t('signup.email', 'E-mail')}
 							value={email}
 							onChangeText={setEmail}
-							placeholder="seuemail@dominio.com"
+							placeholder={t('placeholders.email', 'seuemail@dominio.com')}
 							autoCapitalize="none"
 							autoCorrect={false}
 							keyboardType="email-address"
-							leftAdornment={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
-							containerClassName="h-12 rounded-[14px] border-line2 bg-[#0C111E]"
+							leftIcon={<Mail size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+							containerClassName="h-14 px-5 rounded-2xl border-line2 bg-[#0C111E]"
 							labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 						/>
 
 						<Input
-							label="Senha"
+							label={t('signup.password', 'Senha')}
 							value={password}
 							onChangeText={setPassword}
-							placeholder="Digite sua senha"
+							placeholder={t('placeholders.password', 'Digite sua senha')}
 							secureTextEntry={!showPassword}
 							autoCapitalize="none"
-							leftAdornment={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
-							rightAdornment={(
+							leftIcon={<Lock size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+							rightIcon={(
 								<Pressable
 									accessibilityRole="button"
 									onPress={() => setShowPassword((prev) => !prev)}
@@ -193,7 +195,7 @@ export default function LoginScreen() {
 									<Eye size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />
 								</Pressable>
 							)}
-							containerClassName="h-12 rounded-[14px] border-ok bg-[#0C111E]"
+							containerClassName="h-14 px-5 rounded-2xl border-ok bg-[#0C111E]"
 							labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 						/>
 					</View>
@@ -209,7 +211,7 @@ export default function LoginScreen() {
 								{remember ? <Check size={12} color="#05070B" strokeWidth={2.8} /> : null}
 							</View>
 							<Text variant="caption" className="text-fg2 font-medium">
-								Lembrar
+								{t('login.remember', 'Lembrar')}
 							</Text>
 						</Pressable>
 
@@ -218,25 +220,24 @@ export default function LoginScreen() {
 							onPress={() => router.push('/(auth)/forgot-password')}
 						>
 							<Text variant="caption" className="font-semibold" style={{ color: '#22B76C' }}>
-								Esqueci a senha
+								{t('forgotPassword.title', 'Esqueci a senha')}
 							</Text>
 						</Pressable>
 					</View>
 
 					<Button
-						label="Entrar"
+						label={t('signup.login', 'Entrar')}
 						variant="primary"
 						size="xl"
 						loading={loading}
 						disabled={loading || socialLoading !== null}
-						rightAdornment={<ArrowRight size={14} color="#05070B" strokeWidth={2.4} />}
 						className="rounded-[14px]"
 						onPress={handleLogin}
 					/>
 					<View className="my-6 flex-row items-center gap-[10px]">
 						<View className="h-px flex-1 bg-line2" />
 						<Text variant="micro" className="uppercase tracking-[2.4px] font-bold text-fg4">
-							ou continue com
+							{t('login.orContinueWith', 'ou continue com')}
 						</Text>
 						<View className="h-px flex-1 bg-line2" />
 					</View>
@@ -250,7 +251,7 @@ export default function LoginScreen() {
 
 					<View className="mt-9 items-center">
 						<Text variant="label" className="text-fg3">
-							Ainda nao tem conta?
+							{t('login.noAccountYet', 'Ainda nao tem conta?')}
 						</Text>
 						<Pressable
 							accessibilityRole="button"
@@ -258,7 +259,7 @@ export default function LoginScreen() {
 							className="mt-2"
 						>
 							<Text variant="label" className="font-bold" style={{ color: '#22B76C' }}>
-								Criar conta gratis
+								{t('signup.createAccount', 'Criar conta gratis')}
 							</Text>
 						</Pressable>
 					</View>
@@ -278,3 +279,5 @@ export default function LoginScreen() {
 		</SafeAreaView>
 	);
 }
+
+

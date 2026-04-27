@@ -1,9 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, MoreVertical, Plus, Send, Smile, Star } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Alert, Modal, Pressable, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlashList } from '@shopify/flash-list';
 
 import {
   ChatBubble,
@@ -12,6 +13,7 @@ import {
 import { IconButton, Text } from '@/src/components/ui';
 import { useConversationThread } from '@/src/features/chat/hooks/useConversationThread';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 const QUICK_ATTACH_MESSAGES = [
   'Compartilhando localizacao agora.',
@@ -28,6 +30,7 @@ function roleLabel(role: 'host' | 'player' | 'system') {
 }
 
 export default function ConversationDetailScreen() {
+  const { t } = useTranslation('chat');
   const insets = useSafeAreaInsets();
   const theme = useAppColorScheme();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -62,13 +65,13 @@ export default function ConversationDetailScreen() {
       await send(message);
     } catch {
       setDraft(message);
-      Alert.alert('Falha ao enviar', 'Nao foi possivel enviar a mensagem agora.');
+      Alert.alert(t('errors.sendFailedTitle', 'Falha ao enviar'), t('errors.sendFailedMessage', 'Nao foi possivel enviar a mensagem agora.'));
     }
   }, [draft, send]);
 
   const handleBannerPress = useCallback(() => {
     if (!header?.matchId) {
-      Alert.alert('Sem partida vinculada', 'Esta conversa nao possui partida vinculada.');
+      Alert.alert(t('errors.noMatchLinkedTitle', 'Sem partida vinculada'), t('errors.noMatchLinkedMessage', 'Esta conversa nao possui partida vinculada.'));
       return;
     }
 
@@ -81,7 +84,7 @@ export default function ConversationDetailScreen() {
       setMenuVisible(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Nao foi possivel atualizar o status da conversa.';
-      Alert.alert('Falha ao arquivar', message);
+      Alert.alert(t('errors.archiveFailedTitle', 'Falha ao arquivar'), message);
     }
   }, [header?.isArchived, setArchived]);
 
@@ -89,10 +92,10 @@ export default function ConversationDetailScreen() {
     try {
       await markUnread();
       setMenuVisible(false);
-      Alert.alert('Conversa atualizada', 'Marcamos esta conversa como nao lida.');
+      Alert.alert(t('status.updatedTitle', 'Conversa atualizada'), t('status.markedUnreadMessage', 'Marcamos esta conversa como nao lida.'));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Nao foi possivel marcar como nao lida.';
-      Alert.alert('Falha ao atualizar', message);
+      Alert.alert(t('errors.updateFailedTitle', 'Falha ao atualizar'), message);
     }
   }, [markUnread]);
 
@@ -102,7 +105,7 @@ export default function ConversationDetailScreen() {
       setPlusVisible(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Nao foi possivel compartilhar o item.';
-      Alert.alert('Falha', message);
+      Alert.alert(t('common.error', 'Falha'), message);
     }
   }, [send]);
 
@@ -145,12 +148,12 @@ export default function ConversationDetailScreen() {
             <View className="flex-1">
               <View className="flex-row items-center gap-1">
                 <Text variant="label" className="font-semibold text-[#111827] dark:text-white" numberOfLines={1}>
-                  {header?.title ?? 'Conversa'}
+                  {header?.title ?? t('detail.title', 'Conversa')}
                 </Text>
                 <Star size={11} color="#D4A13A" fill="#D4A13A" strokeWidth={1.6} />
               </View>
               <Text variant="micro" className="text-[#1A8F57] dark:text-[#86E5B4] mt-[1px]" numberOfLines={1}>
-                {header?.subtitle ?? 'Carregando...'}
+                {header?.subtitle ?? t('common.loading', 'Carregando...')}
               </Text>
             </View>
           </View>
@@ -160,49 +163,53 @@ export default function ConversationDetailScreen() {
       </View>
 
       <ChatContextBanner
-        title={header?.bannerTitle ?? 'Partida marcada'}
-        subtitle={header?.bannerSubtitle ?? 'Aguarde enquanto carregamos os detalhes'}
+        title={header?.bannerTitle ?? t('detail.matchBannerTitle', 'Partida marcada')}
+        subtitle={header?.bannerSubtitle ?? t('detail.matchBannerSubtitle', 'Aguarde enquanto carregamos os detalhes')}
         onPress={handleBannerPress}
       />
 
-      <ScrollView
+      <FlashList
+        data={messages}
+        keyExtractor={(item) => item.id}
+bounces
+        overScrollMode="always"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 112 + insets.bottom }}
-      >
-        <View
-          className="self-center rounded-full px-3 py-1 mb-3 mt-1"
-          style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}
-        >
-          <Text variant="micro" className="uppercase tracking-[1.6px] text-[#6B7280] dark:text-fg3 font-bold">
-            Hoje
-          </Text>
-        </View>
+        ListHeaderComponent={(
+          <>
+            <View
+              className="self-center rounded-full px-3 py-1 mb-3 mt-1"
+              style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}
+            >
+              <Text variant="micro" className="uppercase tracking-[1.6px] text-[#6B7280] dark:text-fg3 font-bold">
+                {t('common.today', 'Hoje')}
+              </Text>
+            </View>
 
-        {error ? (
-          <View className="self-center rounded-full border border-[#FF9A9A66] bg-[#FF9A9A22] px-3 py-1.5 mb-2">
-            <Text variant="micro" className="text-[#D66658] dark:text-[#FFB5B5] font-semibold">
-              {error}
-            </Text>
-          </View>
-        ) : null}
+            {error ? (
+              <View className="self-center rounded-full border border-[#FF9A9A66] bg-[#FF9A9A22] px-3 py-1.5 mb-2">
+                <Text variant="micro" className="text-[#D66658] dark:text-[#FFB5B5] font-semibold">
+                  {error}
+                </Text>
+              </View>
+            ) : null}
 
-        {loading && messages.length === 0 ? (
-          <View
-            className="self-center rounded-full px-3 py-1.5 mb-2"
-            style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}
-          >
-            <Text variant="micro" className="text-[#6B7280] dark:text-fg3 font-semibold">
-              Carregando mensagens...
-            </Text>
-          </View>
-        ) : null}
-
-        <View className="gap-1">
-          {messages.map((message) => (
-            <ChatBubble key={message.id} message={message} />
-          ))}
-        </View>
-      </ScrollView>
+            {loading && messages.length === 0 ? (
+              <View
+                className="self-center rounded-full px-3 py-1.5 mb-2"
+                style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}
+              >
+                <Text variant="micro" className="text-[#6B7280] dark:text-fg3 font-semibold">
+                  {t('detail.loadingMessages', 'Carregando mensagens...')}
+                </Text>
+              </View>
+            ) : null}
+          </>
+        )}
+        renderItem={({ item }) => (
+          <ChatBubble message={item} />
+        )}
+      />
 
       <View
         className="absolute left-0 right-0 bottom-0 border-t px-[14px] pt-3 flex-row items-end gap-2"
@@ -233,7 +240,7 @@ export default function ConversationDetailScreen() {
           <TextInput
             value={draft}
             onChangeText={setDraft}
-            placeholder="Mensagem..."
+            placeholder={t('detail.messagePlaceholder', 'Mensagem...')}
             placeholderTextColor={theme === 'light' ? '#7A8597' : 'rgba(255,255,255,0.45)'}
             className="flex-1"
             style={{ color: theme === 'light' ? '#1F2937' : '#FFFFFF' }}
@@ -265,16 +272,16 @@ export default function ConversationDetailScreen() {
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setMenuVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={handleMarkUnread}>
-              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">Marcar como nao lida</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{t('actions.markUnread', 'Marcar como nao lida')}</Text>
             </Pressable>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => { setParticipantsVisible(true); setMenuVisible(false); }}>
-              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">Ver participantes</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{t('actions.viewParticipants', 'Ver participantes')}</Text>
             </Pressable>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={handleArchiveToggle}>
-              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{header?.isArchived ? 'Desarquivar conversa' : 'Arquivar conversa'}</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{header?.isArchived ? t('actions.unarchiveConversation', 'Desarquivar conversa') : t('actions.archiveConversation', 'Arquivar conversa')}</Text>
             </Pressable>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => { setMenuVisible(false); handleBannerPress(); }}>
-              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">Abrir detalhes da partida</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{t('actions.openMatchDetails', 'Abrir detalhes da partida')}</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -283,7 +290,7 @@ export default function ConversationDetailScreen() {
       <Modal visible={plusVisible} transparent animationType="fade" onRequestClose={() => setPlusVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setPlusVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
-            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-1">Acoes rapidas</Text>
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-1">{t('detail.quickActions', 'Acoes rapidas')}</Text>
             {QUICK_ATTACH_MESSAGES.map((item) => (
               <Pressable key={item} className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => void handleQuickAttach(item)}>
                 <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item}</Text>
@@ -296,7 +303,7 @@ export default function ConversationDetailScreen() {
       <Modal visible={emojiVisible} transparent animationType="fade" onRequestClose={() => setEmojiVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setEmojiVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
-            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-2">Escolha um emoji</Text>
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-2">{t('detail.chooseEmoji', 'Escolha um emoji')}</Text>
             <View className="flex-row flex-wrap gap-2">
               {QUICK_EMOJIS.map((emoji) => (
                 <Pressable key={emoji} className="h-11 w-11 rounded-xl border items-center justify-center" style={{ borderColor: panelBorder }} onPress={() => handleEmojiPick(emoji)}>
@@ -311,7 +318,7 @@ export default function ConversationDetailScreen() {
       <Modal visible={participantsVisible} transparent animationType="fade" onRequestClose={() => setParticipantsVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setParticipantsVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
-            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-2">Participantes</Text>
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-2">{t('detail.participants', 'Participantes')}</Text>
             <View className="gap-2">
               {participants.map((participant) => (
                 <View key={participant.user_id} className="rounded-xl border px-3 py-2" style={{ borderColor: panelBorder }}>
@@ -326,3 +333,6 @@ export default function ConversationDetailScreen() {
     </SafeAreaView>
   );
 }
+
+
+
