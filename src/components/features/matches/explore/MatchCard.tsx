@@ -29,6 +29,13 @@ const defaultBanner: [string, string, string] = ['#0F3A24', '#072314', '#021109'
 export function MatchCard({ partida, onPress, rightAction, bannerPalette = defaultBanner }: MatchCardProps) {
   const matchTheme = useMatchTheme();
   const fillPercent = partida.totalSlots > 0 ? Math.round((partida.occupiedSlots / partida.totalSlots) * 100) : 0;
+  const formattedMatchDate = partida.matchDate
+    ? new Date(`${partida.matchDate}T12:00:00`).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })
+    : null;
 
   return (
     <Pressable
@@ -92,6 +99,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
               <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
                 {partida.location}
                 {typeof partida.distanceKm === 'number' ? ` - ${partida.distanceKm.toFixed(1)}km` : ''}
+                {formattedMatchDate ? ` - ${formattedMatchDate}` : ''}
               </Text>
             </View>
           </View>

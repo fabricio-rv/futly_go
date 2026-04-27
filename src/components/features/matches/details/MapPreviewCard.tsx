@@ -2,7 +2,7 @@ import { MapPin } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
-import { matchTheme } from '../shared/theme';
+import { useMatchTheme } from '../shared/theme';
 
 type MapPreviewCardProps = {
   addressLine: string;
@@ -10,9 +10,11 @@ type MapPreviewCardProps = {
 };
 
 export function MapPreviewCard({ addressLine, districtLine }: MapPreviewCardProps) {
+  const matchTheme = useMatchTheme();
+
   return (
     <View>
-      <View className="h-40 rounded-[18px] border mb-2 items-center justify-center" style={{ backgroundColor: '#0A1825', borderColor: matchTheme.colors.lineStrong }}>
+      <View className="h-40 rounded-[18px] border mb-2 items-center justify-center" style={{ backgroundColor: matchTheme.colors.bgBase, borderColor: matchTheme.colors.lineStrong }}>
         <View className="w-9 h-9 rounded-full border-2 items-center justify-center" style={{ backgroundColor: 'rgba(34,183,108,0.9)', borderColor: '#D8E0EE' }}>
           <MapPin size={14} color="#FFFFFF" />
         </View>

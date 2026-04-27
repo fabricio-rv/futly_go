@@ -5,7 +5,7 @@ import { Text } from '@/src/components/ui';
 import type { Jogador } from '@/src/features/matches/types';
 import { RatingStars } from './RatingStars';
 import { StatBadge } from './StatBadge';
-import { matchTheme } from './theme';
+import { useMatchTheme } from './theme';
 
 type PlayerRowProps = {
   player: Jogador;
@@ -14,6 +14,7 @@ type PlayerRowProps = {
 };
 
 export function PlayerRow({ player, showStars, pendingLabel }: PlayerRowProps) {
+  const matchTheme = useMatchTheme();
   const ratingLabel = player.rating !== null
     ? `${player.rating.toFixed(1)} estrelas`
     : 'Sem avaliacoes ainda';

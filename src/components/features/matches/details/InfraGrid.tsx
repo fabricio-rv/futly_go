@@ -3,13 +3,14 @@ import { View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
 import type { InfraItem } from '@/src/features/matches/types';
-import { matchTheme } from '../shared/theme';
+import { useMatchTheme } from '../shared/theme';
 
 type InfraGridProps = {
   items: InfraItem[];
 };
 
 export function InfraGrid({ items }: InfraGridProps) {
+  const matchTheme = useMatchTheme();
   const goldTone = 'gold' as const;
 
   return (
