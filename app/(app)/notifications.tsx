@@ -38,7 +38,7 @@ export default function NotificationsScreen() {
   const [ratingData, setRatingData] = useState<{ matchId: string; targetUserId: string; targetRole: 'creator' | 'player' } | null>(null);
 
   const title = useMemo(() => `Notificacoes ${unreadCount > 0 ? `(${unreadCount})` : ''}`.trim(), [unreadCount]);
-  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
   const handleRequestAction = useCallback(async (requestId: string, action: 'accept' | 'reject') => {
     try {
@@ -98,17 +98,17 @@ export default function NotificationsScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View className="px-[18px]">
-          <View className="rounded-[16px] border border-line bg-white dark:bg-[#0C111E] p-4">
+          <View className="rounded-[16px] border border-line bg-[#FAFBFC] dark:bg-[#0C111E] p-4">
             <View className="flex-row items-center gap-2 mb-3">
               <Bell size={16} color="#86E5B4" />
-              <Text variant="label" className="font-semibold text-gray-900 dark:text-white">Notificacoes da conta</Text>
+              <Text variant="label" className="font-semibold text-[#111827] dark:text-white">Notificacoes da conta</Text>
             </View>
 
-            {loading ? <Text variant="caption" className="text-gray-600 dark:text-fg3">Carregando notificacoes...</Text> : null}
+            {loading ? <Text variant="caption" className="text-[#4B5563] dark:text-fg3">Carregando notificacoes...</Text> : null}
             {error ? <Text variant="caption" className="text-[#FCA5A5]">{error}</Text> : null}
 
             {!loading && notifications.length === 0 ? (
-              <Text variant="caption" className="text-gray-600 dark:text-fg3">Nenhuma notificacao por enquanto.</Text>
+              <Text variant="caption" className="text-[#4B5563] dark:text-fg3">Nenhuma notificacao por enquanto.</Text>
             ) : (
               <View className="gap-2">
                 {notifications.map((item) => (
@@ -119,10 +119,10 @@ export default function NotificationsScreen() {
                   >
                     <View className="flex-row items-start justify-between gap-2">
                       <View className="flex-1">
-                        <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">{item.title}</Text>
-                        <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{item.body}</Text>
+                        <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item.title}</Text>
+                        <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">{item.body}</Text>
                       </View>
-                      <Text variant="micro" className="text-gray-600 dark:text-fg3">{toRelative(item.createdAt)}</Text>
+                      <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(item.createdAt)}</Text>
                     </View>
 
                     {item.type === 'participation_requested' && item.metadata && item.metadata.request_id ? (
@@ -150,7 +150,7 @@ export default function NotificationsScreen() {
                         style={{ backgroundColor: matchTheme.colors.ok }}
                         onPress={() => handleOpenRating(item)}
                       >
-                        <Text variant="micro" className="text-gray-900 dark:text-white font-semibold text-center">Avaliar agora</Text>
+                        <Text variant="micro" className="text-[#111827] dark:text-white font-semibold text-center">Avaliar agora</Text>
                       </Pressable>
                     ) : null}
                   </View>
@@ -159,23 +159,23 @@ export default function NotificationsScreen() {
             )}
           </View>
 
-          <View className="rounded-[16px] border border-line bg-white dark:bg-[#0C111E] p-4 mt-4">
+          <View className="rounded-[16px] border border-line bg-[#FAFBFC] dark:bg-[#0C111E] p-4 mt-4">
             <View className="flex-row items-center gap-2 mb-3">
               <CircleDot size={16} color="#D4A13A" />
-              <Text variant="label" className="font-semibold text-gray-900 dark:text-white">Acoes recentes</Text>
+              <Text variant="label" className="font-semibold text-[#111827] dark:text-white">Acoes recentes</Text>
             </View>
 
             {recentActions.length === 0 ? (
-              <Text variant="caption" className="text-gray-600 dark:text-fg3">Sem acoes recentes.</Text>
+              <Text variant="caption" className="text-[#4B5563] dark:text-fg3">Sem acoes recentes.</Text>
             ) : (
               <View className="gap-2">
                 {recentActions.map((action) => (
                   <View key={action.id} className="rounded-[12px] border border-line px-3 py-3">
                     <View className="flex-row items-center justify-between">
-                      <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">{action.title}</Text>
-                      <Text variant="micro" className="text-gray-600 dark:text-fg3">{toRelative(action.createdAt)}</Text>
+                      <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{action.title}</Text>
+                      <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(action.createdAt)}</Text>
                     </View>
-                    <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{action.body}</Text>
+                    <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">{action.body}</Text>
                   </View>
                 ))}
               </View>
@@ -195,7 +195,7 @@ export default function NotificationsScreen() {
               backgroundColor: matchTheme.colors.bgSurfaceA,
             }}
           >
-            <Text variant="label" className="font-bold text-gray-900 dark:text-white">Avaliar</Text>
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white">Avaliar</Text>
 
             <View className="flex-row gap-2 mt-4">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -214,7 +214,7 @@ export default function NotificationsScreen() {
               onChangeText={setRatingComment}
               placeholder="Comentario opcional"
               placeholderTextColor={matchTheme.colors.fgMuted}
-              className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2 text-gray-900 dark:text-white"
+              className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2 text-[#111827] dark:text-white"
               style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
               multiline
               maxLength={280}

@@ -43,11 +43,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     ? 'border-danger'
     : focused
       ? 'border-emerald-400'
-      : 'border-gray-200 dark:border-ink-hairline';
+      : 'border-[rgba(0,0,0,0.08)] dark:border-ink-hairline';
   const containerHeightClass = isMultiline ? 'min-h-[112px] py-3' : 'h-[52px]';
   const inputClass = isMultiline
-    ? 'font-sans text-[15px] text-gray-900 dark:text-text-primary p-0 h-full'
-    : 'font-sans text-[15px] text-gray-900 dark:text-text-primary p-0';
+    ? 'font-sans text-[15px] text-[#111827] dark:text-text-primary p-0 h-full'
+    : 'font-sans text-[15px] text-[#111827] dark:text-text-primary p-0';
   const placeholderColor = theme === 'light' ? '#9CA3AF' : '#7A8699';
 
   return (
@@ -58,7 +58,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         </Text>
       ) : null}
       <View
-        className={`rounded-md border ${borderClass} bg-white dark:bg-ink-2 px-4 ${containerHeightClass} justify-center ${containerClassName ?? ''}`.trim()}
+        className={`rounded-md border ${borderClass} bg-[#FAFBFC] dark:bg-ink-2 px-4 ${containerHeightClass} justify-center ${containerClassName ?? ''}`.trim()}
         style={{ minWidth: 0, width: '100%', overflow: 'hidden' }}
       >
         <View className={`flex-row gap-2 ${isMultiline ? 'items-start' : 'items-center'}`}>

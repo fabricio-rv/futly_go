@@ -27,7 +27,7 @@ export function StepIndicator({ total, current }: StepIndicatorProps) {
           );
         }
 
-        return <View key={step} className="flex-1 h-[3px] rounded-full bg-white/10" />;
+        return <View key={step} className="flex-1 h-[3px] rounded-full bg-[#FAFBFC]/10" />;
       })}
     </View>
   );

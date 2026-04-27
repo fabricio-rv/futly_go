@@ -52,12 +52,12 @@ export function ChatBubble({ message }: ChatBubbleProps) {
         </Text>
       ) : null}
 
-      <Text variant="caption" className={mine ? 'text-white' : 'text-gray-900 dark:text-white'} style={{ lineHeight: 18 }}>
+      <Text variant="caption" className={mine ? 'text-white' : 'text-[#111827] dark:text-white'} style={{ lineHeight: 18 }}>
         {message.text}
       </Text>
 
       {message.time ? (
-        <Text variant="micro" className={`mt-1 text-right ${mine ? 'text-white/55' : 'text-gray-500 dark:text-fg4'}`}>
+        <Text variant="micro" className={`mt-1 text-right ${mine ? 'text-white/55' : 'text-[#6B7280] dark:text-fg4'}`}>
           {mine ? `${message.time} OK` : message.time}
         </Text>
       ) : null}

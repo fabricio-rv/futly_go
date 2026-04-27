@@ -18,7 +18,7 @@ import { IconButton, Text } from '@/src/components/ui';
 export default function StoreScreen() {
 	const theme = useAppColorScheme();
 	const [period, setPeriod] = useState<BillingPeriod>('semestral');
-	const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+	const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
 	return (
 		<SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
@@ -39,11 +39,11 @@ export default function StoreScreen() {
 					<StorePlanCard key={plan.id} plan={plan} />
 				))}
 
-				<View className="mx-[18px] mt-1 rounded-[14px] border border-dashed border-line2 bg-white/[0.02] px-[14px] py-[14px]">
-					<Text variant="caption" className="font-bold text-gray-900 dark:text-white mb-1">
+				<View className="mx-[18px] mt-1 rounded-[14px] border border-dashed border-line2 bg-[#FAFBFC]/[0.02] px-[14px] py-[14px]">
+					<Text variant="caption" className="font-bold text-[#111827] dark:text-white mb-1">
 						Pague a vontade. Cancele quando quiser.
 					</Text>
-					<Text variant="micro" className="leading-[18px] text-gray-600 dark:text-fg3">
+					<Text variant="micro" className="leading-[18px] text-[#4B5563] dark:text-fg3">
 						PIX, cartao de credito ou Apple/Google Pay. Sem fidelidade. Reembolso integral nos primeiros 7 dias.
 					</Text>
 				</View>

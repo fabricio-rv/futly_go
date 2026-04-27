@@ -28,7 +28,7 @@ export function AuthStepIndicator({ current, total = 3 }: AuthStepIndicatorProps
 					);
 				}
 
-				return <View key={step} className="h-[3px] flex-1 rounded-full bg-white/10" />;
+				return <View key={step} className="h-[3px] flex-1 rounded-full bg-[#FAFBFC]/10" />;
 			})}
 		</View>
 	);

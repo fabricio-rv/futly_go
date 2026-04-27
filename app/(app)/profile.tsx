@@ -74,7 +74,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <View className="flex-1">
-              <Text variant="bodyLg" className="font-bold text-gray-900 dark:text-white">
+              <Text variant="bodyLg" className="font-bold text-[#111827] dark:text-white">
                 {profile?.full_name ?? 'Atleta Futly'}
               </Text>
               <Text variant="micro" className="mt-0.5 tracking-[0.4px]" style={{ color: theme === 'light' ? '#2F6C54' : '#86E5B4' }}>
@@ -84,32 +84,32 @@ export default function ProfileScreen() {
           </View>
 
           <View className="mt-4 flex-row gap-2">
-            <View className="flex-1 rounded-[12px] border border-gray-200 dark:border-line bg-white dark:bg-[#0C111E] px-3 py-2">
-              <Text variant="micro" className="uppercase tracking-[1.4px] text-gray-600 dark:text-fg4">
+            <View className="flex-1 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0C111E] px-3 py-2">
+              <Text variant="micro" className="uppercase tracking-[1.4px] text-[#4B5563] dark:text-fg4">
                 Cidade
               </Text>
-              <Text variant="label" className="mt-1 font-semibold text-gray-900 dark:text-white">
+              <Text variant="label" className="mt-1 font-semibold text-[#111827] dark:text-white">
                 {profile?.city ?? 'Nao definida'}
               </Text>
             </View>
           </View>
         </LinearGradient>
 
-        <View className="mx-[18px] mt-4 rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[14px]">
+        <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
           <View className="flex-row items-center gap-2">
             <Trophy size={16} color="#D4A13A" strokeWidth={2} />
-            <Text variant="label" className="font-bold text-gray-900 dark:text-white">
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white">
               Resumo no app
             </Text>
           </View>
 
           <View className="mt-3 flex-row gap-2">
             {summary.map((item) => (
-              <View key={item.id} className="flex-1 rounded-[12px] border border-gray-200 dark:border-line bg-white dark:bg-[#0A0F1C] px-2 py-2">
-                <Text variant="title" className="font-bold text-gray-900 dark:text-white text-center">
+              <View key={item.id} className="flex-1 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0A0F1C] px-2 py-2">
+                <Text variant="title" className="font-bold text-[#111827] dark:text-white text-center">
                   {item.value}
                 </Text>
-                <Text variant="micro" className="text-gray-600 dark:text-fg3 text-center mt-1">
+                <Text variant="micro" className="text-[#4B5563] dark:text-fg3 text-center mt-1">
                   {item.label}
                 </Text>
               </View>
@@ -117,10 +117,10 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View className="mx-[18px] mt-4 rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[14px]">
+        <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
           <View className="flex-row items-center gap-2">
             <CalendarClock size={16} color={theme === 'light' ? '#1A8F57' : '#86E5B4'} strokeWidth={2} />
-            <Text variant="label" className="font-bold text-gray-900 dark:text-white">
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white">
               Proximas partidas
             </Text>
           </View>
@@ -128,51 +128,51 @@ export default function ProfileScreen() {
           <View className="mt-3 gap-2">
             {recentMatches.length > 0 ? (
               recentMatches.map((match) => (
-                <View key={match.id} className="rounded-[12px] border border-gray-200 dark:border-line bg-white dark:bg-[#0A0F1C] px-3 py-3">
+                <View key={match.id} className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3">
                   <View className="flex-row items-center justify-between">
-                    <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                    <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                       {match.title}
                     </Text>
-                    <Text variant="micro" className="text-gray-600 dark:text-fg3">
+                    <Text variant="micro" className="text-[#4B5563] dark:text-fg3">
                       {match.timeLabel}
                     </Text>
                   </View>
                   <View className="mt-1 flex-row items-center gap-2">
                     <MapPin size={13} color={theme === 'light' ? 'rgba(15,23,42,0.45)' : 'rgba(255,255,255,0.45)'} />
-                    <Text variant="micro" className="text-gray-600 dark:text-fg3">
+                    <Text variant="micro" className="text-[#4B5563] dark:text-fg3">
                       {match.location} - {match.dateLabel}
                     </Text>
                   </View>
                 </View>
               ))
             ) : (
-              <Text variant="caption" className="text-gray-600 dark:text-fg3">Nenhuma partida na agenda.</Text>
+              <Text variant="caption" className="text-[#4B5563] dark:text-fg3">Nenhuma partida na agenda.</Text>
             )}
           </View>
         </View>
 
-        <View className="mx-[18px] mt-4 rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[14px]">
-          <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-3">
+        <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
+          <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
             Historico por posicao e modalidade
           </Text>
 
           {positionStats.length === 0 ? (
-            <View className="rounded-[12px] border border-gray-200 dark:border-line bg-white dark:bg-[#0A0F1C] px-3 py-3">
-              <Text variant="caption" className="text-gray-600 dark:text-fg3">
+            <View className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3">
+              <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
                 Ainda nao ha historico de posicoes jogadas.
               </Text>
             </View>
           ) : (
             <View className="gap-2">
               {positionStats.map((stat) => (
-                <View key={`${stat.modality}:${stat.positionKey}`} className="rounded-[12px] border border-gray-200 dark:border-line bg-white dark:bg-[#0A0F1C] px-3 py-3">
-                  <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                <View key={`${stat.modality}:${stat.positionKey}`} className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3">
+                  <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                     {stat.modality.toUpperCase()} - {stat.positionLabel}
                   </Text>
-                  <Text variant="micro" className="mt-1 text-gray-600 dark:text-fg3">
+                  <Text variant="micro" className="mt-1 text-[#4B5563] dark:text-fg3">
                     {stat.matchesCount} jogos nessa posicao/modalidade
                   </Text>
-                  <Text variant="micro" className="mt-1 text-gray-600 dark:text-fg3">
+                  <Text variant="micro" className="mt-1 text-[#4B5563] dark:text-fg3">
                     {stat.ratingsCount > 0 && stat.avgRating !== null
                       ? `Media de avaliacoes: ${stat.avgRating.toFixed(1)} (${stat.ratingsCount} avaliacoes)`
                       : 'Ainda sem avaliacoes recebidas nessa posicao/modalidade.'}
@@ -183,29 +183,29 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        <View className="mx-[18px] mt-4 rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[14px]">
+        <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
           <View className="flex-row items-center gap-2 mb-3">
             <ShieldCheck size={16} color={theme === 'light' ? '#5B6B80' : '#9DB0D1'} strokeWidth={2} />
-            <Text variant="label" className="font-bold text-gray-900 dark:text-white">
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white">
               Acessos rapidos
             </Text>
           </View>
 
           <View className="gap-2">
             <Pressable
-              className="rounded-[12px] border border-gray-200 dark:border-line bg-white dark:bg-[#0A0F1C] px-3 py-3 flex-row items-center justify-between"
+              className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3 flex-row items-center justify-between"
               onPress={() => router.push('/(app)/edit-profile')}
             >
-              <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+              <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                 Editar meu perfil
               </Text>
               <ChevronRight size={16} color={theme === 'light' ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)'} />
             </Pressable>
             <Pressable
-              className="rounded-[12px] border border-gray-200 dark:border-line bg-white dark:bg-[#0A0F1C] px-3 py-3 flex-row items-center justify-between"
+              className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3 flex-row items-center justify-between"
               onPress={() => router.push('/(app)/settings')}
             >
-              <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+              <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                 Configuracoes
               </Text>
               <ChevronRight size={16} color={theme === 'light' ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)'} />

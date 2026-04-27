@@ -1,5 +1,6 @@
 import { MapPin } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Image, Pressable, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
@@ -7,17 +8,41 @@ import { useMatchTheme } from '../shared/theme';
 type MapPreviewCardProps = {
   addressLine: string;
   districtLine: string;
+  mapImageUrls?: string[];
+  onRoutePress?: () => void;
 };
 
-export function MapPreviewCard({ addressLine, districtLine }: MapPreviewCardProps) {
+export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], onRoutePress }: MapPreviewCardProps) {
   const matchTheme = useMatchTheme();
+  const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
+
+  useEffect(() => {
+    setCurrentUrlIndex(0);
+  }, [mapImageUrls]);
+
+  const activeMapUrl = mapImageUrls[currentUrlIndex] ?? null;
 
   return (
     <View>
-      <View className="h-40 rounded-[18px] border mb-2 items-center justify-center" style={{ backgroundColor: matchTheme.colors.bgBase, borderColor: matchTheme.colors.lineStrong }}>
-        <View className="w-9 h-9 rounded-full border-2 items-center justify-center" style={{ backgroundColor: 'rgba(34,183,108,0.9)', borderColor: '#D8E0EE' }}>
-          <MapPin size={14} color="#FFFFFF" />
-        </View>
+      <View className="h-40 rounded-[18px] border mb-2 overflow-hidden" style={{ backgroundColor: matchTheme.colors.bgBase, borderColor: matchTheme.colors.lineStrong }}>
+        {activeMapUrl ? (
+          <Image
+            source={{ uri: activeMapUrl }}
+            resizeMode="cover"
+            className="w-full h-full"
+            onError={() => {
+              if (currentUrlIndex < mapImageUrls.length - 1) {
+                setCurrentUrlIndex((prev) => prev + 1);
+              }
+            }}
+          />
+        ) : (
+          <View className="flex-1 items-center justify-center">
+            <View className="w-9 h-9 rounded-full border-2 items-center justify-center" style={{ backgroundColor: 'rgba(34,183,108,0.9)', borderColor: '#D8E0EE' }}>
+              <MapPin size={14} color="#FFFFFF" />
+            </View>
+          </View>
+        )}
       </View>
 
       <View className="rounded-[16px] border p-3 mb-4 flex-row items-center" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
@@ -28,7 +53,7 @@ export function MapPreviewCard({ addressLine, districtLine }: MapPreviewCardProp
           <Text variant="label" className="font-semibold">{addressLine}</Text>
           <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{districtLine}</Text>
         </View>
-        <Pressable className="h-10 rounded-[10px] border px-3 items-center justify-center" style={{ borderColor: matchTheme.colors.lineStrong }}>
+        <Pressable className="h-10 rounded-[10px] border px-3 items-center justify-center" style={{ borderColor: matchTheme.colors.lineStrong }} onPress={onRoutePress}>
           <Text variant="body" className="font-semibold">Rota</Text>
         </Pressable>
       </View>

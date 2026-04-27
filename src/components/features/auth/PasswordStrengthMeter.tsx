@@ -14,7 +14,7 @@ export function PasswordStrengthMeter({ level, label }: PasswordStrengthMeterPro
 				{Array.from({ length: 4 }).map((_, index) => (
 					<View
 						key={index}
-						className={`h-[3px] flex-1 rounded-full ${index < level ? 'bg-ok' : 'bg-white/10'}`}
+						className={`h-[3px] flex-1 rounded-full ${index < level ? 'bg-ok' : 'bg-[#FAFBFC]/10'}`}
 					/>
 				))}
 			</View>

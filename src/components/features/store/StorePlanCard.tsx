@@ -30,8 +30,8 @@ export function StorePlanCard({ plan }: StorePlanCardProps) {
 
 	const tagToneClass = {
 		neutral: isLight
-			? 'bg-black/5 border border-black/10 text-gray-700'
-			: 'bg-white/10 border border-line2 text-fg2',
+			? 'bg-black/5 border border-black/10 text-[#1F2937]'
+			: 'bg-[#FAFBFC]/10 border border-line2 text-fg2',
 		gold: 'bg-gold-500 text-[#2A1A05]',
 		popular: isLight
 			? 'bg-[#22B76C1A] border border-[#22B76C40] text-[#1A7A4A]'

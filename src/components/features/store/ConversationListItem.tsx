@@ -47,7 +47,7 @@ export function ConversationListItem({ item, onPress }: ConversationListItemProp
       <View className="flex-1">
         <View className="flex-row items-center justify-between mb-0.5">
           <View className="flex-row items-center gap-1.5 flex-1">
-            <Text numberOfLines={1} variant="label" className="font-semibold text-gray-900 dark:text-white">
+            <Text numberOfLines={1} variant="label" className="font-semibold text-[#111827] dark:text-white">
               {item.title}
             </Text>
             {item.privateTag ? (
@@ -61,7 +61,7 @@ export function ConversationListItem({ item, onPress }: ConversationListItemProp
 
           <Text
             variant="micro"
-            className={`ml-2 font-semibold ${item.unread ? 'text-[#1A8F57] dark:text-ok' : 'text-gray-500 dark:text-fg3'}`}
+            className={`ml-2 font-semibold ${item.unread ? 'text-[#1A8F57] dark:text-ok' : 'text-[#6B7280] dark:text-fg3'}`}
           >
             {item.time}
           </Text>
@@ -71,7 +71,7 @@ export function ConversationListItem({ item, onPress }: ConversationListItemProp
           <Text
             numberOfLines={1}
             variant="caption"
-            className={`flex-1 ${item.unread ? 'text-gray-700 dark:text-fg2 font-medium' : 'text-gray-500 dark:text-fg3'}`}
+            className={`flex-1 ${item.unread ? 'text-[#1F2937] dark:text-fg2 font-medium' : 'text-[#6B7280] dark:text-fg3'}`}
           >
             {item.author ? `${item.author}: ` : ''}
             {item.message}

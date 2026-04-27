@@ -32,7 +32,7 @@ export default function RateScreen() {
   const [anonymous, setAnonymous] = useState(false);
 
   const selectedTags = useMemo(() => rateTags.filter((tag) => tag.active), []);
-  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: bgColor }}>

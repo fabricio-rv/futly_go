@@ -46,11 +46,11 @@ export function HubTopNav({
 			)}
 
 			<View className="flex-1 items-center">
-				<Text variant="body" className="font-semibold text-gray-900 dark:text-white">
+				<Text variant="body" className="font-semibold text-[#111827] dark:text-white">
 					{title}
 				</Text>
 				{subtitle ? (
-					<Text variant="micro" className="mt-[1px] uppercase tracking-[1.8px] font-bold text-gray-600 dark:text-fg3">
+					<Text variant="micro" className="mt-[1px] uppercase tracking-[1.8px] font-bold text-[#4B5563] dark:text-fg3">
 						{subtitle}
 					</Text>
 				) : null}

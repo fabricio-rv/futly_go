@@ -25,7 +25,7 @@ export function PitchModalitySelector({
             className={`flex-1 py-3 px-4 rounded-lg items-center justify-center border-2 ${
               isSelected
                 ? 'bg-emerald-500/20 border-emerald-500'
-                : 'bg-slate-900/50 border-slate-700'
+                : 'bg-[rgba(0,0,0,0.04)] dark:bg-slate-900/50 border-[rgba(0,0,0,0.10)] dark:border-slate-700'
             }`}
             accessibilityRole="radio"
             accessibilityState={{ selected: isSelected }}
@@ -33,7 +33,7 @@ export function PitchModalitySelector({
           >
             <Text
               className={`font-semibold text-sm ${
-                isSelected ? 'text-emerald-400' : 'text-slate-300'
+                isSelected ? 'text-emerald-400' : 'text-[#6B7280] dark:text-slate-300'
               }`}
             >
               {option.icon} {option.label}

@@ -90,8 +90,8 @@ export default function SupportChatScreen() {
         <HubTopNav title="Falar com Suporte" subtitle="CENTRAL DE SUPORTE" />
 
         {/* Form */}
-        <View className="mx-[18px] mt-6 rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[18px] mb-6">
-          <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-4">
+        <View className="mx-[18px] mt-6 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-6">
+          <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-4">
             Enviar mensagem
           </Text>
 
@@ -116,7 +116,7 @@ export default function SupportChatScreen() {
             />
           </View>
 
-          <Text variant="caption" className="text-gray-600 dark:text-fg3 mb-4">
+          <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mb-4">
             Responderemos o mais breve possível. Você receberá a resposta por e-mail.
           </Text>
 
@@ -131,11 +131,11 @@ export default function SupportChatScreen() {
         {/* History */}
         {!loadingHistory && messages.length > 0 && (
           <View className="mx-[18px] mb-4">
-            <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-3">
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
               Histórico de mensagens
             </Text>
 
-            <View className="rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] overflow-hidden">
+            <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] overflow-hidden">
               {messages.map((msg, index) => (
                 <View
                   key={msg.id}
@@ -145,10 +145,10 @@ export default function SupportChatScreen() {
                 >
                   <View className="flex-row items-start justify-between gap-3 mb-2">
                     <View className="flex-1">
-                      <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                      <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                         {msg.subject}
                       </Text>
-                      <Text variant="caption" className="text-gray-600 dark:text-fg3 mt-0.5">
+                      <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mt-0.5">
                         {new Date(msg.created_at).toLocaleDateString('pt-BR', {
                           day: '2-digit',
                           month: '2-digit',
@@ -172,7 +172,7 @@ export default function SupportChatScreen() {
                     </View>
                   </View>
 
-                  <Text variant="body" className="text-gray-700 dark:text-text-primary">
+                  <Text variant="body" className="text-[#1F2937] dark:text-text-primary">
                     {msg.message}
                   </Text>
                 </View>
@@ -182,8 +182,8 @@ export default function SupportChatScreen() {
         )}
 
         {!loadingHistory && messages.length === 0 && (
-          <View className="mx-[18px] rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[18px]">
-            <Text variant="body" className="text-center text-gray-600 dark:text-fg3">
+          <View className="mx-[18px] rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px]">
+            <Text variant="body" className="text-center text-[#4B5563] dark:text-fg3">
               Você ainda não enviou nenhuma mensagem de suporte.
             </Text>
           </View>

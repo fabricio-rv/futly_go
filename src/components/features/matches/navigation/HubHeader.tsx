@@ -37,7 +37,7 @@ export function HubHeader({ onMessagesPress, unreadCount = 0 }: HubHeaderProps) 
             {unreadCount > 0 ? (
               <View
                 className="absolute -right-1 -top-1 min-w-[18px] rounded-full border bg-[#22B76C] px-1"
-                style={{ borderColor: theme === 'light' ? '#F3F6FB' : '#05070B' }}
+                style={{ borderColor: theme === 'light' ? '#F4F6F9' : '#05070B' }}
               >
                 <Text className="text-center font-geistBold text-[10px] text-[#05070B]">
                   {unreadCount > 9 ? '9+' : unreadCount}

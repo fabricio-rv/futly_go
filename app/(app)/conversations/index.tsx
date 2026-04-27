@@ -16,7 +16,7 @@ export default function ConversationsListScreen() {
   const theme = useAppColorScheme();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme === 'light' ? '#F3F6FB' : '#05070B' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme === 'light' ? '#F4F6F9' : '#05070B' }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 28 }}>
         <HubTopNav
           title="Conversas"
@@ -51,13 +51,13 @@ export default function ConversationsListScreen() {
           }}
         >
           <Clock3 size={12} color={theme === 'light' ? '#1A8F57' : '#86E5B4'} strokeWidth={2.2} />
-          <Text variant="micro" className="text-gray-700 dark:text-fg2">
+          <Text variant="micro" className="text-[#1F2937] dark:text-fg2">
             Cada conversa e vinculada a uma <Text className="text-[#1A8F57] dark:text-[#86E5B4] font-bold">partida marcada</Text>. Auto-arquiva 7 dias apos o jogo.
           </Text>
         </View>
 
         {error ? (
-          <View className="px-[18px] py-3 border-b border-gray-200 dark:border-line">
+          <View className="px-[18px] py-3 border-b border-[rgba(0,0,0,0.08)] dark:border-line">
             <Text variant="micro" className="text-[#D66658] dark:text-[#FF9A9A]">
               {error}
             </Text>
@@ -65,8 +65,8 @@ export default function ConversationsListScreen() {
         ) : null}
 
         {loading ? (
-          <View className="px-[18px] py-3 border-b border-gray-200 dark:border-line">
-            <Text variant="micro" className="text-gray-600 dark:text-fg3">
+          <View className="px-[18px] py-3 border-b border-[rgba(0,0,0,0.08)] dark:border-line">
+            <Text variant="micro" className="text-[#4B5563] dark:text-fg3">
               Carregando conversas...
             </Text>
           </View>
@@ -83,7 +83,7 @@ export default function ConversationsListScreen() {
         {visibleArchived.length > 0 ? (
           <View>
             <View className="px-[18px] pt-[14px] pb-1">
-              <Text variant="micro" className="uppercase tracking-[2.4px] font-extrabold text-gray-900 dark:text-white">
+              <Text variant="micro" className="uppercase tracking-[2.4px] font-extrabold text-[#111827] dark:text-white">
                 Arquivadas <Text className="text-gold-700 dark:text-goldA">{visibleArchived.length}</Text>
               </Text>
             </View>

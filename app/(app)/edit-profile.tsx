@@ -55,7 +55,7 @@ export default function EditProfileScreen() {
   }
 
   const theme = useAppColorScheme();
-  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
@@ -72,8 +72,8 @@ export default function EditProfileScreen() {
           }
         />
 
-        <View className="mx-[18px] mt-4 rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[14px]">
-          <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-3">
+        <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
+          <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
             Informacoes pessoais
           </Text>
 

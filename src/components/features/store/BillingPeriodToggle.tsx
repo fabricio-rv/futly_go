@@ -25,7 +25,7 @@ export function BillingPeriodToggle({ value, onChange }: BillingPeriodToggleProp
 						accessibilityRole="button"
 						onPress={() => onChange(option.value)}
 						className={`h-10 flex-1 rounded-[10px] flex-row items-center justify-center gap-1 ${
-							active ? (isLight ? 'bg-black/5' : 'bg-white/10') : 'bg-transparent'
+							active ? (isLight ? 'bg-black/5' : 'bg-[#FAFBFC]/10') : 'bg-transparent'
 						}`}
 					>
 						<Text

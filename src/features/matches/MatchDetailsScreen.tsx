@@ -2,10 +2,11 @@ import { Share2, MapPin, Phone, Clock, Users } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
 
 import {
   MatchBackground,
+  MapPreviewCard,
   MatchTopNav,
   PlayerRow,
   SectionTitle,
@@ -25,6 +26,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const { getMatchDetails, joinMatch, leaveMatch, processParticipationRequest, loadingDetails, submitting } = useMatches();
   const [details, setDetails] = useState<MatchDetails | null>(null);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [mapPreviewUrls, setMapPreviewUrls] = useState<string[]>([]);
 
   const loadDetails = useCallback(async () => {
     try {
@@ -83,6 +85,76 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     return details.slots.filter((slot) => slot.occupied).map((slot) => slot.index);
   }, [details]);
 
+  const locationQuery = useMemo(() => {
+    if (!details) return '';
+    const locationParts = [
+      details.match.address,
+      details.match.district,
+      details.match.city,
+      details.match.state,
+      details.match.cep,
+      'Brasil',
+    ].filter(Boolean);
+    return locationParts.join(', ');
+  }, [details]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMapPreview() {
+      if (!locationQuery) {
+        setMapPreviewUrls([]);
+        return;
+      }
+
+      try {
+        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(locationQuery)}`;
+        const response = await fetch(geocodeUrl, {
+          headers: {
+            Accept: 'application/json',
+          },
+        });
+        const payload = (await response.json()) as Array<{ lat?: string; lon?: string }>;
+        const first = payload?.[0];
+
+        if (!first?.lat || !first?.lon) {
+          if (!cancelled) setMapPreviewUrls([]);
+          return;
+        }
+
+        const lat = Number(first.lat);
+        const lon = Number(first.lon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+          if (!cancelled) setMapPreviewUrls([]);
+          return;
+        }
+
+        const osmStaticUrl =
+          `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lon}` +
+          '&zoom=15&size=1000x420&maptype=mapnik' +
+          `&markers=${lat},${lon},lightblue1`;
+        const yandexStaticUrl =
+          `https://static-maps.yandex.ru/1.x/?lang=pt_BR&ll=${lon},${lat}` +
+          '&z=15&l=map&size=650,300' +
+          `&pt=${lon},${lat},pm2rdm`;
+
+        if (!cancelled) {
+          setMapPreviewUrls([osmStaticUrl, yandexStaticUrl]);
+        }
+      } catch {
+        if (!cancelled) {
+          setMapPreviewUrls([]);
+        }
+      }
+    }
+
+    void loadMapPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locationQuery]);
+
   async function handleJoin() {
     if (!details || !selectedSlot) return;
 
@@ -122,6 +194,19 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
       const message = error instanceof Error ? error.message : 'Nao foi possivel processar a solicitacao.';
       Alert.alert('Erro', message);
     }
+  }
+
+  async function handleOpenRoute() {
+    if (!locationQuery) return;
+    const routeUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationQuery)}`;
+    const canOpen = await Linking.canOpenURL(routeUrl);
+    if (canOpen) {
+      await Linking.openURL(routeUrl);
+      return;
+    }
+
+    const fallback = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`;
+    await Linking.openURL(fallback);
   }
 
   if (!details) {
@@ -311,6 +396,16 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 details.participants.map((player) => <PlayerRow key={player.id} player={player} />)
               )}
             </Card>
+          </View>
+
+          <View className="mt-[14px]">
+            <SectionTitle title="Localizacao" />
+            <MapPreviewCard
+              addressLine={match.address ?? match.venue_name ?? 'Endereco nao informado'}
+              districtLine={[match.district, match.city, match.state].filter(Boolean).join(' - ') || 'Local nao informado'}
+              mapImageUrls={mapPreviewUrls}
+              onRoutePress={() => void handleOpenRoute()}
+            />
           </View>
 
           <View className="mt-[14px]">

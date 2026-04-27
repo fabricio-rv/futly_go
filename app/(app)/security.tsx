@@ -164,11 +164,11 @@ export default function SecurityScreen() {
         {/* Step 1: Email */}
         {step === 1 && (
           <View className="mx-[18px] mt-6">
-            <View className="rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[18px] mb-4">
-              <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-1">
+            <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
+              <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-1">
                 Passo 1 de 3
               </Text>
-              <Text variant="body" className="text-gray-600 dark:text-fg3 mb-4">
+              <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
                 Confirme seu e-mail para receber o código de verificação
               </Text>
 
@@ -189,11 +189,11 @@ export default function SecurityScreen() {
         {/* Step 2: OTP */}
         {step === 2 && (
           <View className="mx-[18px] mt-6">
-            <View className="rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[18px] mb-4">
-              <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-1">
+            <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
+              <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-1">
                 Passo 2 de 3
               </Text>
-              <Text variant="body" className="text-gray-600 dark:text-fg3 mb-4">
+              <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
                 Digite o código que foi enviado para {email}
               </Text>
 
@@ -222,11 +222,11 @@ export default function SecurityScreen() {
         {/* Step 3: New Password */}
         {step === 3 && (
           <View className="mx-[18px] mt-6">
-            <View className="rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[18px] mb-4">
-              <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-1">
+            <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
+              <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-1">
                 Passo 3 de 3
               </Text>
-              <Text variant="body" className="text-gray-600 dark:text-fg3 mb-4">
+              <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
                 Crie uma nova senha segura
               </Text>
 

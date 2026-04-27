@@ -203,7 +203,7 @@ export default function SettingsScreen() {
 		.map((part) => part[0]?.toUpperCase())
 		.join('');
 
-	const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+	const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 	return (
 		<SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
 			<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
@@ -222,7 +222,7 @@ export default function SettingsScreen() {
 					</View>
 
 					<View className="flex-1">
-						<Text variant="label" className="font-bold text-gray-900 dark:text-white">
+						<Text variant="label" className="font-bold text-[#111827] dark:text-white">
 							{profile?.full_name ?? 'Atleta Futly'}
 						</Text>
 						<Text variant="micro" className="mt-0.5 tracking-[0.5px]" style={{ color: theme === 'light' ? '#2F6C54' : '#86E5B4' }}>
@@ -231,7 +231,7 @@ export default function SettingsScreen() {
 					</View>
 
 					<Pressable className="h-9 w-9 rounded-[12px] border items-center justify-center" style={{ borderColor: theme === 'light' ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.10)', backgroundColor: theme === 'light' ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.10)' }}>
-						<Text variant="body" className="text-gray-700 dark:text-white">&gt;</Text>
+						<Text variant="body" className="text-[#1F2937] dark:text-white">&gt;</Text>
 					</Pressable>
 				</LinearGradient>
 
@@ -241,7 +241,7 @@ export default function SettingsScreen() {
 				<SettingsGroup title="Zona perigosa" rows={dangerRows} />
 
 				<View className="items-center px-4 pt-7 pb-5">
-					<Text variant="micro" className="text-gray-600 dark:text-fg4 text-center uppercase tracking-[1.8px] leading-[16px]">
+					<Text variant="micro" className="text-[#4B5563] dark:text-fg4 text-center uppercase tracking-[1.8px] leading-[16px]">
 						HUB DE PARTIDAS
 						{'\n'}v 1.4.2 - Build 240425
 					</Text>

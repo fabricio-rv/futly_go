@@ -113,7 +113,7 @@ export default function ConversationDetailScreen() {
 
   const panelBg = theme === 'light' ? '#FFFFFF' : '#0E1322';
   const panelBorder = theme === 'light' ? '#D6DFEB' : 'rgba(255,255,255,0.06)';
-  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
   const topBg = theme === 'light' ? 'rgba(243,246,251,0.95)' : 'rgba(5,7,11,0.95)';
 
   return (
@@ -144,7 +144,7 @@ export default function ConversationDetailScreen() {
 
             <View className="flex-1">
               <View className="flex-row items-center gap-1">
-                <Text variant="label" className="font-semibold text-gray-900 dark:text-white" numberOfLines={1}>
+                <Text variant="label" className="font-semibold text-[#111827] dark:text-white" numberOfLines={1}>
                   {header?.title ?? 'Conversa'}
                 </Text>
                 <Star size={11} color="#D4A13A" fill="#D4A13A" strokeWidth={1.6} />
@@ -173,7 +173,7 @@ export default function ConversationDetailScreen() {
           className="self-center rounded-full px-3 py-1 mb-3 mt-1"
           style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}
         >
-          <Text variant="micro" className="uppercase tracking-[1.6px] text-gray-500 dark:text-fg3 font-bold">
+          <Text variant="micro" className="uppercase tracking-[1.6px] text-[#6B7280] dark:text-fg3 font-bold">
             Hoje
           </Text>
         </View>
@@ -191,7 +191,7 @@ export default function ConversationDetailScreen() {
             className="self-center rounded-full px-3 py-1.5 mb-2"
             style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}
           >
-            <Text variant="micro" className="text-gray-500 dark:text-fg3 font-semibold">
+            <Text variant="micro" className="text-[#6B7280] dark:text-fg3 font-semibold">
               Carregando mensagens...
             </Text>
           </View>
@@ -265,16 +265,16 @@ export default function ConversationDetailScreen() {
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setMenuVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={handleMarkUnread}>
-              <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">Marcar como nao lida</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">Marcar como nao lida</Text>
             </Pressable>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => { setParticipantsVisible(true); setMenuVisible(false); }}>
-              <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">Ver participantes</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">Ver participantes</Text>
             </Pressable>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={handleArchiveToggle}>
-              <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">{header?.isArchived ? 'Desarquivar conversa' : 'Arquivar conversa'}</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{header?.isArchived ? 'Desarquivar conversa' : 'Arquivar conversa'}</Text>
             </Pressable>
             <Pressable className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => { setMenuVisible(false); handleBannerPress(); }}>
-              <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">Abrir detalhes da partida</Text>
+              <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">Abrir detalhes da partida</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -283,10 +283,10 @@ export default function ConversationDetailScreen() {
       <Modal visible={plusVisible} transparent animationType="fade" onRequestClose={() => setPlusVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setPlusVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4 gap-2" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
-            <Text variant="caption" className="text-gray-600 dark:text-fg2 mb-1">Acoes rapidas</Text>
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-1">Acoes rapidas</Text>
             {QUICK_ATTACH_MESSAGES.map((item) => (
               <Pressable key={item} className="rounded-xl border px-3 py-3" style={{ borderColor: panelBorder }} onPress={() => void handleQuickAttach(item)}>
-                <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">{item}</Text>
+                <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item}</Text>
               </Pressable>
             ))}
           </Pressable>
@@ -296,7 +296,7 @@ export default function ConversationDetailScreen() {
       <Modal visible={emojiVisible} transparent animationType="fade" onRequestClose={() => setEmojiVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setEmojiVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
-            <Text variant="caption" className="text-gray-600 dark:text-fg2 mb-2">Escolha um emoji</Text>
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-2">Escolha um emoji</Text>
             <View className="flex-row flex-wrap gap-2">
               {QUICK_EMOJIS.map((emoji) => (
                 <Pressable key={emoji} className="h-11 w-11 rounded-xl border items-center justify-center" style={{ borderColor: panelBorder }} onPress={() => handleEmojiPick(emoji)}>
@@ -311,12 +311,12 @@ export default function ConversationDetailScreen() {
       <Modal visible={participantsVisible} transparent animationType="fade" onRequestClose={() => setParticipantsVisible(false)}>
         <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setParticipantsVisible(false)}>
           <Pressable className="border-t rounded-t-2xl px-4 py-4" style={{ backgroundColor: panelBg, borderTopColor: panelBorder }}>
-            <Text variant="caption" className="text-gray-600 dark:text-fg2 mb-2">Participantes</Text>
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg2 mb-2">Participantes</Text>
             <View className="gap-2">
               {participants.map((participant) => (
                 <View key={participant.user_id} className="rounded-xl border px-3 py-2" style={{ borderColor: panelBorder }}>
-                  <Text variant="caption" className="text-gray-900 dark:text-white font-semibold">{participant.full_name}</Text>
-                  <Text variant="micro" className="text-gray-500 dark:text-fg3">{roleLabel(participant.role)}</Text>
+                  <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{participant.full_name}</Text>
+                  <Text variant="micro" className="text-[#6B7280] dark:text-fg3">{roleLabel(participant.role)}</Text>
                 </View>
               ))}
             </View>

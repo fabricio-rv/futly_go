@@ -85,7 +85,7 @@ export default function ExploreMatchesScreen() {
     return result;
   }, [availableMatches, query, advancedFilters]);
 
-  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
@@ -122,7 +122,7 @@ export default function ExploreMatchesScreen() {
 
         {loadingAvailable ? (
           <View className="px-[18px] mt-2">
-            <Text variant="caption" className="text-gray-600 dark:text-fg3">
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
               Carregando partidas...
             </Text>
           </View>

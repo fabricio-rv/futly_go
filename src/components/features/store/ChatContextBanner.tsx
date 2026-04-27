@@ -26,10 +26,10 @@ export function ChatContextBanner({ title, subtitle, onPress }: ChatContextBanne
       </View>
 
       <View className="flex-1">
-        <Text variant="caption" className="font-bold text-gray-900 dark:text-white">
+        <Text variant="caption" className="font-bold text-[#111827] dark:text-white">
           {title}
         </Text>
-        <Text variant="micro" className="mt-[2px] text-gray-600 dark:text-fg2">
+        <Text variant="micro" className="mt-[2px] text-[#4B5563] dark:text-fg2">
           {subtitle}
         </Text>
       </View>

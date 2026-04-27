@@ -25,7 +25,7 @@ export function AuthBackground() {
 				{verticalLines.map((_, index) => (
 					<View
 						key={`v-${index}`}
-						className="absolute top-0 bottom-0 w-px bg-white/[0.04]"
+						className="absolute top-0 bottom-0 w-px bg-[#FAFBFC]/[0.04]"
 						style={{ left: 28 + index * 29 }}
 					/>
 				))}
@@ -33,7 +33,7 @@ export function AuthBackground() {
 				{horizontalLines.map((_, index) => (
 					<View
 						key={`h-${index}`}
-						className="absolute left-0 right-0 h-px bg-white/[0.03]"
+						className="absolute left-0 right-0 h-px bg-[#FAFBFC]/[0.03]"
 						style={{ top: index * 29 }}
 					/>
 				))}

@@ -19,7 +19,7 @@ export function ToggleSwitch({ value, onValueChange, disabled, className }: Togg
       } ${disabled ? 'opacity-45' : ''} ${className ?? ''}`.trim()}
     >
       <View
-        className={`h-6 w-6 rounded-full bg-white dark:bg-white ${value ? 'translate-x-[18px]' : 'translate-x-0'}`}
+        className={`h-6 w-6 rounded-full bg-[#FAFBFC] dark:bg-[#FAFBFC] ${value ? 'translate-x-[18px]' : 'translate-x-0'}`}
       />
     </Pressable>
   );

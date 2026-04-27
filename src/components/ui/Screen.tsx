@@ -12,7 +12,7 @@ type ScreenProps = PropsWithChildren<{
 
 export function Screen({ children, padded = true, showBackground = true, style }: ScreenProps) {
   const theme = useAppColorScheme();
-  const backgroundColor = theme === 'light' ? '#F3F6FB' : '#0A0E18';
+  const backgroundColor = theme === 'light' ? '#F4F6F9' : '#0A0E18';
 
   return (
     <SafeAreaView className="flex-1" style={[{ backgroundColor }, style]}>

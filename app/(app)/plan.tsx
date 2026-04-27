@@ -26,7 +26,7 @@ export default function PlanScreen() {
               </Text>
             </View>
 
-            <Text variant="body" className="text-gray-400 dark:text-fg3 mb-4">
+            <Text variant="body" className="text-[#9CA3AF] dark:text-fg3 mb-4">
               Você está no nosso plano premium com todos os benefícios exclusivos.
             </Text>
 
@@ -40,66 +40,66 @@ export default function PlanScreen() {
           </View>
 
           {/* Benefits */}
-          <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-3">
+          <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
             Benefícios do Gold
           </Text>
 
           <View className="gap-3 mb-6">
-            <View className="flex-row items-center gap-3 rounded-[12px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] px-3 py-3">
+            <View className="flex-row items-center gap-3 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] px-3 py-3">
               <CheckCircle size={20} color="#22B76C" strokeWidth={2} />
               <View className="flex-1">
-                <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                   Partidas ilimitadas
                 </Text>
-                <Text variant="caption" className="text-gray-600 dark:text-fg3">
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
                   Crie e participe de quantas partidas quiser
                 </Text>
               </View>
             </View>
 
-            <View className="flex-row items-center gap-3 rounded-[12px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] px-3 py-3">
+            <View className="flex-row items-center gap-3 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] px-3 py-3">
               <CheckCircle size={20} color="#22B76C" strokeWidth={2} />
               <View className="flex-1">
-                <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                   Filtros avançados
                 </Text>
-                <Text variant="caption" className="text-gray-600 dark:text-fg3">
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
                   Busque partidas por nível, horário e localização
                 </Text>
               </View>
             </View>
 
-            <View className="flex-row items-center gap-3 rounded-[12px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] px-3 py-3">
+            <View className="flex-row items-center gap-3 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] px-3 py-3">
               <CheckCircle size={20} color="#22B76C" strokeWidth={2} />
               <View className="flex-1">
-                <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                   Prioridade no chat
                 </Text>
-                <Text variant="caption" className="text-gray-600 dark:text-fg3">
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
                   Suas mensagens aparecem em destaque
                 </Text>
               </View>
             </View>
 
-            <View className="flex-row items-center gap-3 rounded-[12px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] px-3 py-3">
+            <View className="flex-row items-center gap-3 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] px-3 py-3">
               <CheckCircle size={20} color="#22B76C" strokeWidth={2} />
               <View className="flex-1">
-                <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                   Perfil verificado
                 </Text>
-                <Text variant="caption" className="text-gray-600 dark:text-fg3">
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
                   Seu perfil recebe o badge de verificação
                 </Text>
               </View>
             </View>
 
-            <View className="flex-row items-center gap-3 rounded-[12px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] px-3 py-3">
+            <View className="flex-row items-center gap-3 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] px-3 py-3">
               <CheckCircle size={20} color="#22B76C" strokeWidth={2} />
               <View className="flex-1">
-                <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                   Sem anúncios
                 </Text>
-                <Text variant="caption" className="text-gray-600 dark:text-fg3">
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
                   Aproveite a experiência sem distrações
                 </Text>
               </View>
@@ -107,41 +107,41 @@ export default function PlanScreen() {
           </View>
 
           {/* Other Plans */}
-          <View className="rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[18px] mb-4">
-            <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-4">
+          <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-4">
               Explorar outros planos
             </Text>
 
             <View className="gap-3">
-              <View className="rounded-[12px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0A0F1C] px-3 py-3">
+              <View className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3">
                 <View className="flex-row items-center justify-between">
-                  <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                  <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                     Plano Gratuito
                   </Text>
                   <Pill tone="default" label="Ativo" className="px-2" />
                 </View>
-                <Text variant="caption" className="text-gray-600 dark:text-fg3 mt-1">
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mt-1">
                   Funcionalidades básicas - R$ 0,00/mês
                 </Text>
               </View>
 
-              <View className="rounded-[12px] border border-gold-500 bg-white dark:bg-[#0A0F1C] px-3 py-3 border-2">
+              <View className="rounded-[12px] border border-gold-500 bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3 border-2">
                 <View className="flex-row items-center justify-between">
-                  <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                  <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                     Plano Gold
                   </Text>
                   <Pill tone="gold" label="Seu plano" className="px-2" />
                 </View>
-                <Text variant="caption" className="text-gray-600 dark:text-fg3 mt-1">
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mt-1">
                   Plano premium - R$ 19,90/mês
                 </Text>
               </View>
 
-              <View className="rounded-[12px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0A0F1C] px-3 py-3">
+              <View className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3">
                 <View className="flex-row items-center justify-between">
                   <View className="flex-1">
                     <View className="flex-row items-center gap-2">
-                      <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                      <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                         Plano Elite
                       </Text>
                       <Zap size={14} color="#FF8B7A" />
@@ -149,18 +149,18 @@ export default function PlanScreen() {
                   </View>
                   <Pill tone="sky" label="Em breve" className="px-2" />
                 </View>
-                <Text variant="caption" className="text-gray-600 dark:text-fg3 mt-1">
+                <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mt-1">
                   Plano exclusivo - R$ 49,90/mês
                 </Text>
               </View>
             </View>
           </View>
 
-          <View className="rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[18px] mb-4">
-            <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-2">
+          <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-2">
               Tem dúvidas sobre os planos?
             </Text>
-            <Text variant="caption" className="text-gray-600 dark:text-fg3 mb-4">
+            <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mb-4">
               Consulte nossa central de ajuda ou fale com o suporte para mais informações.
             </Text>
           </View>

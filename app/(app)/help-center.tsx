@@ -115,7 +115,7 @@ const tutorials: TutorialItem[] = [
 export default function HelpCenterScreen() {
   const theme = useAppColorScheme();
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
-  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
@@ -124,11 +124,11 @@ export default function HelpCenterScreen() {
 
         {/* FAQ Section */}
         <View className="mx-[18px] mt-6">
-          <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-3">
+          <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
             Perguntas Frequentes
           </Text>
 
-          <View className="rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] overflow-hidden mb-6">
+          <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] overflow-hidden mb-6">
             {faqItems.map((item, index) => (
               <Pressable
                 key={item.id}
@@ -138,12 +138,12 @@ export default function HelpCenterScreen() {
                 }`}
               >
                 <View className="flex-1">
-                  <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                  <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                     {item.question}
                   </Text>
 
                   {expandedFAQ === item.id && (
-                    <Text variant="body" className="text-gray-600 dark:text-fg3 mt-2">
+                    <Text variant="body" className="text-[#4B5563] dark:text-fg3 mt-2">
                       {item.answer}
                     </Text>
                   )}
@@ -159,7 +159,7 @@ export default function HelpCenterScreen() {
           </View>
 
           {/* Tutorials Section */}
-          <Text variant="label" className="font-bold text-gray-900 dark:text-white mb-3">
+          <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
             Tutoriais
           </Text>
 
@@ -167,14 +167,14 @@ export default function HelpCenterScreen() {
             {tutorials.map((item) => (
               <View
                 key={item.id}
-                className="flex-row items-start gap-3 rounded-[12px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-3"
+                className="flex-row items-start gap-3 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-3"
               >
                 <View className="mt-1">{item.icon}</View>
                 <View className="flex-1">
-                  <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                  <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                     {item.title}
                   </Text>
-                  <Text variant="caption" className="text-gray-600 dark:text-fg3 mt-1">
+                  <Text variant="caption" className="text-[#4B5563] dark:text-fg3 mt-1">
                     {item.description}
                   </Text>
                 </View>
@@ -183,15 +183,15 @@ export default function HelpCenterScreen() {
           </View>
 
           {/* Support Section */}
-          <View className="rounded-[18px] border border-gray-200 dark:border-line2 bg-white dark:bg-[#0C111E] p-[18px] mb-4">
+          <View className="rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-4">
             <View className="flex-row items-center gap-2 mb-2">
               <MessageCircle size={20} color="#5AB1FF" strokeWidth={2} />
-              <Text variant="label" className="font-bold text-gray-900 dark:text-white">
+              <Text variant="label" className="font-bold text-[#111827] dark:text-white">
                 Ainda com dúvidas?
               </Text>
             </View>
 
-            <Text variant="body" className="text-gray-600 dark:text-fg3 mb-4">
+            <Text variant="body" className="text-[#4B5563] dark:text-fg3 mb-4">
               Nosso time de suporte está pronto para ajudar. Entre em contato conosco.
             </Text>
 

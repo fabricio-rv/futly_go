@@ -64,7 +64,7 @@ export default function AgendaScreen() {
     }
   }
 
-  const bgColor = theme === 'light' ? '#F3F6FB' : '#05070B';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
@@ -125,11 +125,18 @@ export default function AgendaScreen() {
                 <View className="gap-2">
                   {agenda.ratingTasks.map((task) => (
                     <View key={task.taskId} className="rounded-[16px] border px-4 py-3" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
-                      <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                      <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                         {task.actionLabel}: {task.targetUserName}
                       </Text>
-                      <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{task.matchTitle} - {task.matchDate}</Text>
-                      <Button label="Avaliar agora" className="mt-3" onPress={() => openRating(task)} />
+                      <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">{task.matchTitle} - {task.matchDate}</Text>
+                      <Pressable
+                        className="rounded-[10px] border border-[#22B76C66] bg-[#22B76C22] px-3 py-2 mt-3"
+                        onPress={() => openRating(task)}
+                      >
+                        <Text variant="micro" className="font-semibold text-center" style={{ color: isLight ? '#1A7A4A' : '#86E5B4' }}>
+                          Avaliar agora
+                        </Text>
+                      </Pressable>
                     </View>
                   ))}
                 </View>
@@ -156,14 +163,14 @@ export default function AgendaScreen() {
                 <View className="gap-2">
                   {hostPendingRequests.map((request) => (
                     <View key={request.id} className="rounded-[16px] border px-4 py-3" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
-                      <Text variant="label" className="font-semibold text-gray-900 dark:text-white">
+                      <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
                         {request.userName}
                       </Text>
-                      <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">
+                      <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">
                         {request.matchTitle} - {request.requestedPositionLabel}
                       </Text>
                       {request.note ? (
-                        <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">
+                        <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">
                           Nota: {request.note}
                         </Text>
                       ) : null}
@@ -209,8 +216,8 @@ export default function AgendaScreen() {
               backgroundColor: matchTheme.colors.bgSurfaceA,
             }}
           >
-            <Text variant="label" className="font-bold text-gray-900 dark:text-white">Avaliar {selectedTask?.targetUserName}</Text>
-            <Text variant="micro" className="text-gray-600 dark:text-fg3 mt-1">{selectedTask?.matchTitle}</Text>
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white">Avaliar {selectedTask?.targetUserName}</Text>
+            <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">{selectedTask?.matchTitle}</Text>
 
             <View className="flex-row gap-2 mt-4">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -229,7 +236,7 @@ export default function AgendaScreen() {
               onChangeText={setRatingComment}
               placeholder="Comentario opcional"
               placeholderTextColor={matchTheme.colors.fgMuted}
-              className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2 text-gray-900 dark:text-white"
+              className="mt-4 min-h-[84px] rounded-[12px] border px-3 py-2 text-[#111827] dark:text-white"
               style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
               multiline
               maxLength={280}
