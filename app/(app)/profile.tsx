@@ -12,12 +12,45 @@ import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { fetchUsersPositionStats, type UserPositionStat } from '@/src/features/profile/services/profileService';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 export default function ProfileScreen() {
+  const { t } = useTranslation('profile');
+  const matchT = useTranslation('matches').t;
   const theme = useAppColorScheme();
   const { profile, loadProfile } = useProfile();
   const { agenda, getUserAgenda } = useMatches();
   const [positionStats, setPositionStats] = useState<UserPositionStat[]>([]);
+
+  const translateDayAbbr = (dayAbbr: string) => {
+    const days: Record<string, string> = {
+      'SEG': matchT('days.mon', 'SEG'),
+      'TER': matchT('days.tue', 'TER'),
+      'QUA': matchT('days.wed', 'QUA'),
+      'QUI': matchT('days.thu', 'QUI'),
+      'SEX': matchT('days.fri', 'SEX'),
+      'SAB': matchT('days.sat', 'SAB'),
+      'DOM': matchT('days.sun', 'DOM'),
+    };
+    return days[dayAbbr] || dayAbbr;
+  };
+
+  const translateShiftLabel = (shift: string) => {
+    const shifts: Record<string, string> = {
+      'Manhã': matchT('shifts.morning', 'Manhã'),
+      'Tarde': matchT('shifts.afternoon', 'Tarde'),
+      'Noite': matchT('shifts.evening', 'Noite'),
+    };
+    return shifts[shift] || shift;
+  };
+
+  const translateDateLabel = (label: string) => {
+    const parts = label.split(' - ');
+    if (parts.length === 2) {
+      return `${translateDayAbbr(parts[0])} - ${translateShiftLabel(parts[1])}`;
+    }
+    return label;
+  };
 
   useEffect(() => {
     loadProfile().catch(() => undefined);
@@ -34,11 +67,11 @@ export default function ProfileScreen() {
 
   const summary = useMemo(
     () => [
-      { id: 'created', label: 'Partidas criadas', value: String(agenda.criadas.length) },
-      { id: 'booked', label: 'Partidas marcadas', value: String(agenda.marcadas.length) },
-      { id: 'history', label: 'Partidas realizadas', value: String(agenda.criadas.length + agenda.marcadas.length) },
+      { id: 'created', label: t('summary.createdMatches', 'Partidas criadas'), value: String(agenda.criadas.length) },
+      { id: 'booked', label: t('summary.bookedMatches', 'Partidas marcadas'), value: String(agenda.marcadas.length) },
+      { id: 'history', label: t('summary.playedMatches', 'Partidas realizadas'), value: String(agenda.criadas.length + agenda.marcadas.length) },
     ],
-    [agenda.criadas.length, agenda.marcadas.length],
+    [agenda.criadas.length, agenda.marcadas.length, t],
   );
 
   const recentMatches = useMemo(() => [...agenda.criadas, ...agenda.marcadas].slice(0, 2), [agenda]);
@@ -56,8 +89,8 @@ export default function ProfileScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubTopNav
-          title="Perfil"
-          subtitle="ATLETA"
+          title={t('headers.myProfile', 'Perfil')}
+          subtitle={t('headers.athlete', 'ATLETA')}
           rightNode={<IconButton icon={<Settings size={16} color={theme === 'light' ? '#1F2937' : '#FFFFFF'} />} onPress={() => router.push('/(app)/settings')} />}
         />
 
@@ -86,10 +119,10 @@ export default function ProfileScreen() {
           <View className="mt-4 flex-row gap-2">
             <View className="flex-1 rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0C111E] px-3 py-2">
               <Text variant="micro" className="uppercase tracking-[1.4px] text-[#4B5563] dark:text-fg4">
-                Cidade
+                {t('personal.location', 'Cidade')}
               </Text>
               <Text variant="label" className="mt-1 font-semibold text-[#111827] dark:text-white">
-                {profile?.city ?? 'Nao definida'}
+                {profile?.city ?? t('messages.notDefined', 'Nao definida')}
               </Text>
             </View>
           </View>
@@ -99,7 +132,7 @@ export default function ProfileScreen() {
           <View className="flex-row items-center gap-2">
             <Trophy size={16} color="#D4A13A" strokeWidth={2} />
             <Text variant="label" className="font-bold text-[#111827] dark:text-white">
-              Resumo no app
+              {t('summary.appSummary', 'Resumo no app')}
             </Text>
           </View>
 
@@ -121,7 +154,7 @@ export default function ProfileScreen() {
           <View className="flex-row items-center gap-2">
             <CalendarClock size={16} color={theme === 'light' ? '#1A8F57' : '#86E5B4'} strokeWidth={2} />
             <Text variant="label" className="font-bold text-[#111827] dark:text-white">
-              Proximas partidas
+              {t('summary.nextMatches', 'Proximas partidas')}
             </Text>
           </View>
 
@@ -140,26 +173,26 @@ export default function ProfileScreen() {
                   <View className="mt-1 flex-row items-center gap-2">
                     <MapPin size={13} color={theme === 'light' ? 'rgba(15,23,42,0.45)' : 'rgba(255,255,255,0.45)'} />
                     <Text variant="micro" className="text-[#4B5563] dark:text-fg3">
-                      {match.location} - {match.dateLabel}
+                      {match.location} - {translateDateLabel(match.dateLabel)}
                     </Text>
                   </View>
                 </View>
               ))
             ) : (
-              <Text variant="caption" className="text-[#4B5563] dark:text-fg3">Nenhuma partida na agenda.</Text>
+              <Text variant="caption" className="text-[#4B5563] dark:text-fg3">{t('summary.noMatchesInAgenda', 'Nenhuma partida na agenda.')}</Text>
             )}
           </View>
         </View>
 
         <View className="mx-[18px] mt-4 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[14px]">
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">
-            Historico por posicao e modalidade
+            {t('history.byPositionAndModality', 'Historico por posicao e modalidade')}
           </Text>
 
           {positionStats.length === 0 ? (
             <View className="rounded-[12px] border border-[rgba(0,0,0,0.08)] dark:border-line bg-[#FAFBFC] dark:bg-[#0A0F1C] px-3 py-3">
               <Text variant="caption" className="text-[#4B5563] dark:text-fg3">
-                Ainda nao ha historico de posicoes jogadas.
+                {t('history.emptyPositionsHistory', 'Ainda nao ha historico de posicoes jogadas.')}
               </Text>
             </View>
           ) : (
@@ -170,12 +203,12 @@ export default function ProfileScreen() {
                     {stat.modality.toUpperCase()} - {stat.positionLabel}
                   </Text>
                   <Text variant="micro" className="mt-1 text-[#4B5563] dark:text-fg3">
-                    {stat.matchesCount} jogos nessa posicao/modalidade
+                    {t('history.positionMatchesCount', '{{count}} jogos nessa posicao/modalidade', { count: stat.matchesCount })}
                   </Text>
                   <Text variant="micro" className="mt-1 text-[#4B5563] dark:text-fg3">
                     {stat.ratingsCount > 0 && stat.avgRating !== null
-                      ? `Media de avaliacoes: ${stat.avgRating.toFixed(1)} (${stat.ratingsCount} avaliacoes)`
-                      : 'Ainda sem avaliacoes recebidas nessa posicao/modalidade.'}
+                      ? t('history.avgRatings', 'Media de avaliacoes: {{avg}} ({{count}} avaliacoes)', { avg: stat.avgRating.toFixed(1), count: stat.ratingsCount })
+                      : t('history.noRatingsYet', 'Ainda sem avaliacoes recebidas nessa posicao/modalidade.')}
                   </Text>
                 </View>
               ))}
@@ -187,7 +220,7 @@ export default function ProfileScreen() {
           <View className="flex-row items-center gap-2 mb-3">
             <ShieldCheck size={16} color={theme === 'light' ? '#5B6B80' : '#9DB0D1'} strokeWidth={2} />
             <Text variant="label" className="font-bold text-[#111827] dark:text-white">
-              Acessos rapidos
+              {t('actions.quickAccess', 'Acessos rapidos')}
             </Text>
           </View>
 
@@ -197,7 +230,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/(app)/edit-profile')}
             >
               <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
-                Editar meu perfil
+                {t('actions.editProfile', 'Editar meu perfil')}
               </Text>
               <ChevronRight size={16} color={theme === 'light' ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)'} />
             </Pressable>
@@ -206,7 +239,7 @@ export default function ProfileScreen() {
               onPress={() => router.push('/(app)/settings')}
             >
               <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
-                Configuracoes
+                {t('actions.openSettings', 'Configuracoes')}
               </Text>
               <ChevronRight size={16} color={theme === 'light' ? 'rgba(15,23,42,0.5)' : 'rgba(255,255,255,0.5)'} />
             </Pressable>
