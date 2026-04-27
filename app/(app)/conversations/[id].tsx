@@ -137,7 +137,7 @@ export default function ConversationDetailScreen() {
               colors={['#0F3A24', '#072314']}
               className="h-9 w-9 rounded-full border border-ok items-center justify-center"
             >
-              <Text variant="label" className="font-bold text-white">
+              <Text variant="label" className="font-bold text-white dark:text-white">
                 {header?.avatar ?? 'CH'}
               </Text>
             </LinearGradient>
