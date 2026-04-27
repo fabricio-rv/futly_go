@@ -1,5 +1,6 @@
 ﻿import '@/global.css';
 import { AppProviders } from '@/src/components/layout/AppProviders';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import {
   Geist_400Regular,
@@ -24,6 +25,30 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
+function RootLayoutContent() {
+  const theme = useAppColorScheme();
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: bgColor }}>
+      <SafeAreaProvider>
+        <View style={{ flex: 1, backgroundColor: bgColor }}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: bgColor },
+              animation: 'fade',
+            }}
+          >
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(app)" />
+          </Stack>
+        </View>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  );
+}
+
 export default function RootLayout() {
   const [loaded] = useFonts({
     BebasNeue_400Regular,
@@ -40,23 +65,8 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#05060A' }}>
-      <SafeAreaProvider>
-        <AppProviders>
-          <View style={{ flex: 1, backgroundColor: '#05060A' }}>
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                contentStyle: { backgroundColor: '#05060A' },
-                animation: 'fade',
-              }}
-            >
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(app)" />
-            </Stack>
-          </View>
-        </AppProviders>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <AppProviders>
+      <RootLayoutContent />
+    </AppProviders>
   );
 }

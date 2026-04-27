@@ -215,8 +215,8 @@ export default function SettingsScreen() {
 					end={{ x: 1, y: 1 }}
 					className="mx-[18px] mb-2 rounded-[18px] border border-[#22B76C4D] px-[14px] py-[14px] flex-row items-center gap-3"
 				>
-					<View className="h-[46px] w-[46px] rounded-full border-2 border-goldB bg-[#1B3A5F] items-center justify-center">
-						<Text variant="label" className="font-bold text-white">
+					<View className="h-[46px] w-[46px] rounded-full border-2 border-goldB dark:bg-[#1B3A5F] bg-[#E3F5EC] items-center justify-center">
+						<Text variant="label" className="font-bold text-white dark:text-white" style={{ color: theme === 'light' ? '#1A7A4A' : '#FFFFFF' }}>
 							{initials || 'AA'}
 						</Text>
 					</View>

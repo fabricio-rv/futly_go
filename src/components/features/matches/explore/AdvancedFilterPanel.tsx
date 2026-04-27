@@ -193,7 +193,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                   <View
                     className="absolute left-0 right-0 rounded-[12px] border overflow-hidden"
                     style={{
-                      top: 70,
+                      top: 74,
                       zIndex: 60,
                       elevation: 60,
                       backgroundColor: matchTheme.colors.bgSurfaceB,
@@ -201,8 +201,9 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                     }}
                   >
                     <Pressable
-                      className="px-3 py-3 border-b"
+                      className="w-full min-h-[48px] px-3 py-3 border-b justify-center"
                       style={{ borderColor: matchTheme.colors.line }}
+                      hitSlop={6}
                       onPress={() => {
                         onFiltersChange({ ...filters, shift: undefined });
                         setShowShiftDropdown(false);
@@ -217,8 +218,9 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                       return (
                         <Pressable
                           key={option.value}
-                          className="px-3 py-3 border-b"
+                          className="w-full min-h-[48px] px-3 py-3 border-b justify-center"
                           style={{ borderColor: matchTheme.colors.line }}
+                          hitSlop={6}
                           onPress={() => {
                             handleShiftChange(option.value);
                             setShowShiftDropdown(false);

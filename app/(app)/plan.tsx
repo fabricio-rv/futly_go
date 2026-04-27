@@ -9,7 +9,7 @@ import { Button, Pill, Text } from '@/src/components/ui';
 
 export default function PlanScreen() {
   const theme = useAppColorScheme();
-  const bgColor = theme === 'light' ? '#FFFFFF' : '#05070B';
+  const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
@@ -18,10 +18,10 @@ export default function PlanScreen() {
 
         {/* Current Plan */}
         <View className="mx-[18px] mt-6">
-          <View className="rounded-[18px] border-2 border-goldB bg-gradient-to-b from-[#3A2A0B] to-[#1A0F04] p-[18px] mb-6">
+          <View className="rounded-[18px] border-2 border-goldB dark:bg-gradient-to-b dark:from-[#3A2A0B] dark:to-[#1A0F04] p-[18px] mb-6 bg-[#FFFBF0]">
             <View className="flex-row items-center gap-2 mb-3">
               <Star size={24} color="#D4A13A" strokeWidth={2} />
-              <Text variant="title" className="font-bold text-white">
+              <Text variant="title" className="font-bold text-white dark:text-white" style={{ color: theme === 'light' ? '#111827' : '#FFFFFF' }}>
                 Plano Gold
               </Text>
             </View>

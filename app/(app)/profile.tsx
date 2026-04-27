@@ -68,8 +68,8 @@ export default function ProfileScreen() {
           className="mx-[18px] rounded-[18px] border border-[#22B76C4D] p-[14px]"
         >
           <View className="flex-row items-center gap-3">
-            <View className="h-[52px] w-[52px] rounded-full border-2 border-goldB bg-[#1B3A5F] items-center justify-center">
-              <Text variant="label" className="font-bold text-white">
+            <View className="h-[52px] w-[52px] rounded-full border-2 border-goldB dark:bg-[#1B3A5F] bg-[#E3F5EC] items-center justify-center">
+              <Text variant="label" className="font-bold text-white dark:text-white" style={{ color: theme === 'light' ? '#1A7A4A' : '#FFFFFF' }}>
                 {initials || 'AF'}
               </Text>
             </View>
