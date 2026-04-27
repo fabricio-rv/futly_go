@@ -251,7 +251,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
   function formatPositionStats(request: MatchDetails['pendingRequests'][number]) {
     if (request.userPositionStats.length === 0) {
-      return t('details.noMatchHistory', 'No match history');
+      return t('noMatchHistory', 'No match history');
     }
 
     return request.userPositionStats
@@ -259,7 +259,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
       .map((stat) => {
         const ratingText = stat.ratingsCount > 0 && stat.avgRating !== null
           ? `${stat.avgRating.toFixed(1)} (${stat.ratingsCount})`
-          : t('details.noRatings', 'No ratings');
+          : t('noRatings', 'No ratings');
 
         return `${stat.modality.toUpperCase()} - ${stat.positionLabel}: ${stat.matchesCount} - ${ratingText}`;
       })
@@ -271,7 +271,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
       <MatchBackground />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <MatchTopNav
-          title={t('details.title', 'Detalhes')}
+          title={t('details.title')}
           subtitle={`PARTIDA #${match.id.slice(0, 8).toUpperCase()}`}
           rightSlot={
             <View
