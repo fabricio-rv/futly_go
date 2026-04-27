@@ -90,12 +90,12 @@ export function SelectField<T extends string>({
                   resizeMode="cover"
                 />
               ) : null}
-              <Text variant="body" tone="primary" numberOfLines={1}>
+              <Text variant="body" tone="primary" numberOfLines={1} style={{ color: theme === 'light' ? '#111827' : '#F5F7FA' }}>
                 {selectedOption.label}
               </Text>
             </>
           ) : (
-            <Text variant="body" tone="muted">
+            <Text variant="body" tone="muted" style={{ color: theme === 'light' ? '#64748B' : '#7A8699' }}>
               {placeholder}
             </Text>
           )}
@@ -124,7 +124,7 @@ export function SelectField<T extends string>({
             onPress={(event) => event.stopPropagation()}
           >
             <View className="px-4 py-3 border-b" style={{ borderColor: theme === 'light' ? 'rgba(0,0,0,0.12)' : '#1F2A44' }}>
-              <Text variant="title" tone="primary">
+              <Text variant="title" tone="primary" style={{ color: theme === 'light' ? '#111827' : '#F5F7FA' }}>
                 {label ?? 'Selecione'}
               </Text>
             </View>
@@ -138,12 +138,12 @@ export function SelectField<T extends string>({
                     onChangeText={setSearch}
                     placeholder="Buscar..."
                     placeholderTextColor={theme === 'light' ? '#9CA3AF' : '#7A8699'}
-                    className="flex-1 ml-2 text-text-primary"
+                    className="flex-1 ml-2"
                     autoCapitalize="none"
                     autoCorrect={false}
                     underlineColorAndroid="transparent"
                     selectionColor="#22C54D"
-                    style={[{ borderWidth: 0 }]}
+                    style={[{ borderWidth: 0, color: theme === 'light' ? '#111827' : '#F5F7FA' }]}
                   />
                 </View>
               </View>
@@ -183,11 +183,11 @@ export function SelectField<T extends string>({
                     ) : null}
 
                     <View className="flex-1">
-                      <Text variant="body" tone={active ? 'success' : 'primary'}>
+                      <Text variant="body" tone={active ? 'success' : 'primary'} style={{ color: active ? '#22B76C' : (theme === 'light' ? '#111827' : '#F5F7FA') }}>
                         {item.label}
                       </Text>
                       {item.description ? (
-                        <Text variant="caption" tone="muted">
+                        <Text variant="caption" tone="muted" style={{ color: theme === 'light' ? '#64748B' : '#7A8699' }}>
                           {item.description}
                         </Text>
                       ) : null}
