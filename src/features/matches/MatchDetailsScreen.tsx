@@ -98,6 +98,11 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     return locationParts.join(', ');
   }, [details]);
 
+  const mapEmbedUrl = useMemo(() => {
+    if (!locationQuery) return null;
+    return `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&z=18&output=embed`;
+  }, [locationQuery]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -129,13 +134,14 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           return;
         }
 
+        const zoomLevel = 18;
         const osmStaticUrl =
           `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lon}` +
-          '&zoom=15&size=1000x420&maptype=mapnik' +
+          `&zoom=${zoomLevel}&size=1000x420&maptype=mapnik` +
           `&markers=${lat},${lon},lightblue1`;
         const yandexStaticUrl =
           `https://static-maps.yandex.ru/1.x/?lang=pt_BR&ll=${lon},${lat}` +
-          '&z=15&l=map&size=650,300' +
+          `&z=${zoomLevel}&l=map&size=650,300` +
           `&pt=${lon},${lat},pm2rdm`;
 
         if (!cancelled) {
@@ -404,6 +410,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               addressLine={match.address ?? match.venue_name ?? 'Endereco nao informado'}
               districtLine={[match.district, match.city, match.state].filter(Boolean).join(' - ') || 'Local nao informado'}
               mapImageUrls={mapPreviewUrls}
+              mapEmbedUrl={mapEmbedUrl}
               onRoutePress={() => void handleOpenRoute()}
             />
           </View>

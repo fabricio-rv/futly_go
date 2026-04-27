@@ -1,6 +1,6 @@
 import { MapPin } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, View } from 'react-native';
+import { Image, Platform, Pressable, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
@@ -9,12 +9,14 @@ type MapPreviewCardProps = {
   addressLine: string;
   districtLine: string;
   mapImageUrls?: string[];
+  mapEmbedUrl?: string | null;
   onRoutePress?: () => void;
 };
 
-export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], onRoutePress }: MapPreviewCardProps) {
+export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], mapEmbedUrl, onRoutePress }: MapPreviewCardProps) {
   const matchTheme = useMatchTheme();
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
+  const Iframe: any = 'iframe';
 
   useEffect(() => {
     setCurrentUrlIndex(0);
@@ -25,7 +27,15 @@ export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], o
   return (
     <View>
       <View className="h-40 rounded-[18px] border mb-2 overflow-hidden" style={{ backgroundColor: matchTheme.colors.bgBase, borderColor: matchTheme.colors.lineStrong }}>
-        {activeMapUrl ? (
+        {Platform.OS === 'web' && mapEmbedUrl ? (
+          <Iframe
+            src={mapEmbedUrl}
+            title="Mapa da partida"
+            style={{ width: '100%', height: '100%', border: 0 }}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        ) : activeMapUrl ? (
           <Image
             source={{ uri: activeMapUrl }}
             resizeMode="cover"
