@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react-native';
 
 import { Button, Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 export interface AdvancedFilters {
   state?: string;
@@ -26,10 +27,10 @@ type FieldButtonProps = {
   onPress: () => void;
 };
 
-const TURNO_OPTIONS: Array<{ value: NonNullable<AdvancedFilters['shift']>; label: string }> = [
-  { value: 'manha', label: 'Manha' },
-  { value: 'tarde', label: 'Tarde' },
-  { value: 'noite', label: 'Noite' },
+const TURNO_OPTIONS: Array<{ value: NonNullable<AdvancedFilters['shift']>; labelKey: string; fallback: string }> = [
+  { value: 'manha', labelKey: 'filters.shiftMorning', fallback: 'Manha' },
+  { value: 'tarde', labelKey: 'filters.shiftAfternoon', fallback: 'Tarde' },
+  { value: 'noite', labelKey: 'filters.shiftNight', fallback: 'Noite' },
 ];
 
 function formatDateField(value: Date) {
@@ -90,6 +91,7 @@ function FieldButton({ label, value, placeholder, onPress }: FieldButtonProps) {
 
 export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilterPanelProps) {
   const matchTheme = useMatchTheme();
+  const { t, currentLanguage } = useTranslation('matches');
   const { width } = useWindowDimensions();
   const isCompact = width < 380;
 
@@ -103,7 +105,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
   const [webHour, setWebHour] = useState(parsedTime?.hour ?? 19);
   const [webMinute, setWebMinute] = useState(parsedTime?.minute ?? 0);
 
-  const monthYearLabel = webDateCursor.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const monthYearLabel = webDateCursor.toLocaleDateString(currentLanguage, { month: 'long', year: 'numeric' });
   const currentYear = webDateCursor.getFullYear();
   const currentMonth = webDateCursor.getMonth();
   const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
@@ -135,16 +137,16 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             backgroundColor: matchTheme.colors.bgSurfaceA,
             borderColor: matchTheme.colors.line,
             position: 'relative',
-            zIndex: 40,
-            elevation: 40,
+            zIndex: 100,
+            elevation: 100,
           }}
         >
           <View className={isCompact ? 'gap-2' : 'flex-row gap-2'}>
             <View className={isCompact ? 'w-full' : 'flex-1'}>
               <FieldButton
-                label="Data"
+                label={t('filters.date', 'Data')}
                 value={filters.date ? formatDateField(parseIsoDate(filters.date) ?? new Date()) : ''}
-                placeholder="Selecione a data"
+                placeholder={t('filters.selectDate', 'Selecione a data')}
                 onPress={() => {
                   const base = parseIsoDate(filters.date) ?? new Date();
                   setWebDateCursor(new Date(base.getFullYear(), base.getMonth(), 1));
@@ -154,9 +156,9 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             </View>
             <View className={isCompact ? 'w-full' : 'flex-1'}>
               <FieldButton
-                label="Horario"
+                label={t('filters.time', 'Horario')}
                 value={filters.time ?? ''}
-                placeholder="Selecione o horario"
+                placeholder={t('filters.selectTime', 'Selecione o horario')}
                 onPress={() => {
                   const time = parseIsoTime(filters.time);
                   setWebHour(time?.hour ?? 19);
@@ -171,7 +173,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             <View className={isCompact ? 'w-full' : 'flex-1'}>
               <View className="gap-2 relative">
                 <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
-                  Turno
+                  {t('filters.shift', 'Turno')}
                 </Text>
                 <Pressable
                   onPress={() => setShowShiftDropdown((prev) => !prev)}
@@ -184,7 +186,11 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                       color: matchTheme.colors.fgPrimary,
                     }}
                   >
-                    {TURNO_OPTIONS.find((item) => item.value === filters.shift)?.label ?? 'Todos os turnos'}
+                    {(() => {
+                      const current = TURNO_OPTIONS.find((item) => item.value === filters.shift);
+                      if (!current) return t('filters.allShifts', 'Todos os turnos');
+                      return t(current.labelKey, current.fallback);
+                    })()}
                   </Text>
                   <ChevronDown size={18} color={matchTheme.colors.fgMuted} />
                 </Pressable>
@@ -194,8 +200,8 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                     className="absolute left-0 right-0 rounded-[12px] border overflow-hidden"
                     style={{
                       top: 74,
-                      zIndex: 60,
-                      elevation: 60,
+                      zIndex: 200,
+                      elevation: 200,
                       backgroundColor: matchTheme.colors.bgSurfaceB,
                       borderColor: matchTheme.colors.lineStrong,
                     }}
@@ -210,7 +216,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                       }}
                     >
                       <Text variant="body" style={{ color: !filters.shift ? matchTheme.colors.okSoft : matchTheme.colors.fgPrimary }}>
-                        Todos os turnos
+                        {t('filters.allShifts', 'Todos os turnos')}
                       </Text>
                     </Pressable>
                     {TURNO_OPTIONS.map((option) => {
@@ -227,7 +233,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                           }}
                         >
                           <Text variant="body" style={{ color: active ? matchTheme.colors.okSoft : matchTheme.colors.fgPrimary }}>
-                            {option.label}
+                            {t(option.labelKey, option.fallback)}
                           </Text>
                         </Pressable>
                       );
@@ -238,7 +244,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             </View>
             <View className={isCompact ? 'w-full gap-2' : 'flex-1 gap-2'}>
               <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
-                Preco maximo
+                {t('filters.maxPrice', 'Preco maximo')}
               </Text>
               <View
                 className="h-12 rounded-[12px] border px-3 flex-row items-center gap-2"
@@ -262,7 +268,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
           <View className="items-end mt-[2px]">
             <Pressable onPress={handleClearFilters} className="px-1 py-[2px]">
               <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgMuted }}>
-                Limpar
+                {t('filters.clear', 'Limpar')}
               </Text>
             </Pressable>
           </View>
@@ -293,7 +299,15 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             </View>
 
             <View className="flex-row mb-2">
-              {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((weekDay, idx) => (
+              {[
+                t('filters.weekdaySun', 'D'),
+                t('filters.weekdayMon', 'S'),
+                t('filters.weekdayTue', 'T'),
+                t('filters.weekdayWed', 'Q'),
+                t('filters.weekdayThu', 'Q'),
+                t('filters.weekdayFri', 'S'),
+                t('filters.weekdaySat', 'S'),
+              ].map((weekDay, idx) => (
                 <View key={`weekday-${weekDay}-${idx}`} className="flex-1 items-center">
                   <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>{weekDay}</Text>
                 </View>
@@ -335,7 +349,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
               })}
             </View>
 
-            <Button label="Fechar" variant="ghost" size="md" className="mt-3" onPress={() => setShowWebDateModal(false)} />
+            <Button label={t('common.close', 'Fechar')} variant="ghost" size="md" className="mt-3" onPress={() => setShowWebDateModal(false)} />
           </View>
         </View>
       </Modal>
@@ -344,7 +358,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
           <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
-              Selecione o horario
+              {t('filters.selectTime', 'Selecione o horario')}
             </Text>
             <View className="flex-row items-center justify-center gap-4">
               <Button label="-" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 23) % 24)} />
