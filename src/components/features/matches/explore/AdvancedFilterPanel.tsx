@@ -171,12 +171,12 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
 
           <View className={isCompact ? 'gap-2 mt-1' : 'flex-row gap-2 mt-1'}>
             <View className={isCompact ? 'w-full' : 'flex-1'}>
-              <View className="gap-2 relative">
+              <View className="gap-2">
                 <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
                   {t('filters.shift', 'Turno')}
                 </Text>
                 <Pressable
-                  onPress={() => setShowShiftDropdown((prev) => !prev)}
+                  onPress={() => setShowShiftDropdown(true)}
                   className="h-12 rounded-[12px] border px-3 flex-row items-center justify-between"
                   style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
                 >
@@ -194,52 +194,6 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                   </Text>
                   <ChevronDown size={18} color={matchTheme.colors.fgMuted} />
                 </Pressable>
-
-                {showShiftDropdown ? (
-                  <View
-                    className="absolute left-0 right-0 rounded-[12px] border overflow-hidden"
-                    style={{
-                      top: 74,
-                      zIndex: 200,
-                      elevation: 200,
-                      backgroundColor: matchTheme.colors.bgSurfaceB,
-                      borderColor: matchTheme.colors.lineStrong,
-                    }}
-                  >
-                    <Pressable
-                      className="w-full min-h-[48px] px-3 py-3 border-b justify-center"
-                      style={{ borderColor: matchTheme.colors.line }}
-                      hitSlop={6}
-                      onPress={() => {
-                        onFiltersChange({ ...filters, shift: undefined });
-                        setShowShiftDropdown(false);
-                      }}
-                    >
-                      <Text variant="body" style={{ color: !filters.shift ? matchTheme.colors.okSoft : matchTheme.colors.fgPrimary }}>
-                        {t('filters.allShifts', 'Todos os turnos')}
-                      </Text>
-                    </Pressable>
-                    {TURNO_OPTIONS.map((option) => {
-                      const active = filters.shift === option.value;
-                      return (
-                        <Pressable
-                          key={option.value}
-                          className="w-full min-h-[48px] px-3 py-3 border-b justify-center"
-                          style={{ borderColor: matchTheme.colors.line }}
-                          hitSlop={6}
-                          onPress={() => {
-                            handleShiftChange(option.value);
-                            setShowShiftDropdown(false);
-                          }}
-                        >
-                          <Text variant="body" style={{ color: active ? matchTheme.colors.okSoft : matchTheme.colors.fgPrimary }}>
-                            {t(option.labelKey, option.fallback)}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-                ) : null}
               </View>
             </View>
             <View className={isCompact ? 'w-full gap-2' : 'flex-1 gap-2'}>
@@ -389,6 +343,52 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             />
           </View>
         </View>
+      </Modal>
+
+      <Modal transparent visible={showShiftDropdown} onRequestClose={() => setShowShiftDropdown(false)}>
+        <Pressable className="flex-1 bg-black/60 justify-center px-6" onPress={() => setShowShiftDropdown(false)}>
+          <Pressable
+            className="rounded-[18px] border p-4"
+            style={{
+              borderColor: matchTheme.colors.lineStrong,
+              backgroundColor: matchTheme.colors.bgSurfaceA,
+            }}
+          >
+            <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">{t('filters.shift', 'Turno')}</Text>
+            <View className="gap-2">
+              <Pressable
+                className="rounded-[10px] border px-3 py-3"
+                style={{ borderColor: matchTheme.colors.line, backgroundColor: !filters.shift ? matchTheme.colors.ok : matchTheme.colors.bgSurfaceB }}
+                onPress={() => {
+                  onFiltersChange({ ...filters, shift: undefined });
+                  setShowShiftDropdown(false);
+                }}
+              >
+                <Text variant="body" style={{ color: !filters.shift ? '#05070B' : matchTheme.colors.fgPrimary }}>
+                  {t('filters.allShifts', 'Todos os turnos')}
+                </Text>
+              </Pressable>
+              {TURNO_OPTIONS.map((option) => {
+                const active = filters.shift === option.value;
+                return (
+                  <Pressable
+                    key={option.value}
+                    className="rounded-[10px] border px-3 py-3"
+                    style={{ borderColor: matchTheme.colors.line, backgroundColor: active ? matchTheme.colors.ok : matchTheme.colors.bgSurfaceB }}
+                    onPress={() => {
+                      handleShiftChange(option.value);
+                      setShowShiftDropdown(false);
+                    }}
+                  >
+                    <Text variant="body" style={{ color: active ? '#05070B' : matchTheme.colors.fgPrimary }}>
+                      {t(option.labelKey, option.fallback)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </>
   );
