@@ -1,10 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock3, MapPin } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
+import { MotiView } from 'moti';
 
-import { Text } from '@/src/components/ui';
+import { Text, TouchableScale } from '@/src/components/ui';
 import type { Partida } from '@/src/features/matches/types';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { AvatarStack } from '../shared/AvatarStack';
 import { MatchPricePill } from './MatchPricePill';
 import { StatBadge } from '../shared/StatBadge';
@@ -28,29 +30,78 @@ const defaultBanner: [string, string, string] = ['#0F3A24', '#072314', '#021109'
 
 export function MatchCard({ partida, onPress, rightAction, bannerPalette = defaultBanner }: MatchCardProps) {
   const matchTheme = useMatchTheme();
+  const { t, currentLanguage } = useTranslation('matches');
   const fillPercent = partida.totalSlots > 0 ? Math.round((partida.occupiedSlots / partida.totalSlots) * 100) : 0;
   const formattedMatchDate = partida.matchDate
-    ? new Date(`${partida.matchDate}T12:00:00`).toLocaleDateString('pt-BR', {
+    ? new Date(`${partida.matchDate}T12:00:00`).toLocaleDateString(currentLanguage, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
       })
     : null;
 
+  const translateDayAbbr = (dayAbbr: string) => {
+    const days: Record<string, string> = {
+      'SEG': t('days.mon', 'SEG'),
+      'TER': t('days.tue', 'TER'),
+      'QUA': t('days.wed', 'QUA'),
+      'QUI': t('days.thu', 'QUI'),
+      'SEX': t('days.fri', 'SEX'),
+      'SAB': t('days.sat', 'SAB'),
+      'DOM': t('days.sun', 'DOM'),
+    };
+    return days[dayAbbr] || dayAbbr;
+  };
+
+  const translateShiftLabel = (shift: string) => {
+    const shifts: Record<string, string> = {
+      'Manhã': t('shifts.morning', 'Manhã'),
+      'Tarde': t('shifts.afternoon', 'Tarde'),
+      'Noite': t('shifts.evening', 'Noite'),
+    };
+    return shifts[shift] || shift;
+  };
+
+  const translateDateLabel = (label: string) => {
+    const parts = label.split(' - ');
+    if (parts.length === 2) {
+      return `${translateDayAbbr(parts[0])} - ${translateShiftLabel(parts[1])}`;
+    }
+    return label;
+  };
+
+  const translateStatusLabel = (label: string) => {
+    if (label.includes('abertas') || label.includes('Open') || label.includes('disponibles')) return t('statusOpen', 'Open spots');
+    if (label.includes('Lotada') || label.includes('Full') || label.includes('Completo')) return t('statusFull', 'Full');
+    return label;
+  };
+
+  const translateLevelLabel = (label: string) => {
+    if (label === 'Casual') return t('levelCasual', 'Casual');
+    if (label.includes('Intermediário') || label.includes('Intermédio') || label.includes('Intermedio')) return t('levelIntermediate', 'Intermediate');
+    if (label.includes('Avançado') || label.includes('Avanzado')) return t('levelAdvanced', 'Advanced');
+    return label;
+  };
+
   return (
-    <Pressable
-      onPress={onPress}
-      className="rounded-[20px] overflow-hidden border mb-3"
-      style={{
-        borderColor: matchTheme.colors.line,
-        backgroundColor: matchTheme.colors.bgSurfaceA,
-        opacity: partida.isDimmed ? 0.55 : 1,
-        ...matchShadows.panel,
-      }}
+    <MotiView
+      from={{ opacity: 0, translateY: 20 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ type: 'timing', duration: 280 }}
     >
-      <LinearGradient colors={bannerPalette} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="h-24 px-[14px] py-3">
+      <TouchableScale
+        onPress={onPress}
+        className="rounded-[20px] overflow-hidden border mb-3"
+        style={{
+          borderColor: matchTheme.colors.line,
+          backgroundColor: matchTheme.colors.bgSurfaceA,
+          opacity: partida.isDimmed ? 0.55 : 1,
+          ...matchShadows.panel,
+        }}
+      >
+        <LinearGradient colors={bannerPalette} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="h-24 px-[14px] py-3">
         <View className="absolute right-[14px] top-[14px]">
-          <StatusStamp status={partida.status} label={partida.statusLabel} />
+          <StatusStamp status={partida.status} label={translateStatusLabel(partida.statusLabel)} />
         </View>
 
         <View className="absolute right-[14px] top-1/2 -mt-7">
@@ -79,7 +130,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
                 fontFamily: 'Geist_600SemiBold',
               }}
             >
-              {partida.dateLabel}
+              {translateDateLabel(partida.dateLabel)}
             </Text>{'\n'}
             {partida.timeLabel.toUpperCase()}
           </Text>
@@ -104,7 +155,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
             </View>
           </View>
 
-          <StatBadge label={partida.levelLabel} tone={levelToneToBadge(partida.levelTone)} small />
+          <StatBadge label={translateLevelLabel(partida.levelLabel)} tone={levelToneToBadge(partida.levelTone)} small />
         </View>
 
         <View className="flex-row items-center justify-between">
@@ -136,7 +187,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
               >
                 {partida.occupiedSlots}/{partida.totalSlots}
               </Text>{' '}
-              vagas
+              {t('cta.slots', 'vagas')}
             </Text>
           </View>
 
@@ -149,7 +200,8 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
             </View>
           )}
         </View>
-      </View>
-    </Pressable>
+        </View>
+      </TouchableScale>
+    </MotiView>
   );
 }

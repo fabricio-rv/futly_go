@@ -1,10 +1,12 @@
 import { Text, View } from 'react-native';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type MatchPricePillProps = {
   price: number;
 };
 
 export function MatchPricePill({ price }: MatchPricePillProps) {
+  const { t } = useTranslation('matches');
   return (
     <View
       style={{
@@ -56,7 +58,7 @@ export function MatchPricePill({ price }: MatchPricePillProps) {
           letterSpacing: 0,
         }}
       >
-        /pessoa
+        {t('pricePerPerson', '/pessoa')}
       </Text>
     </View>
   );
