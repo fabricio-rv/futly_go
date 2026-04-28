@@ -56,11 +56,14 @@ export type ConversationParticipant = {
   user_id: string;
   role: ConversationRole;
   full_name: string;
+  avatar_url?: string | null;
 };
 
 export type MessageReceiptStatus = {
   delivered_at: string | null;
   read_at: string | null;
+  delivered_by: string[];
+  read_by: string[];
 };
 
 export type MessageReceiptMap = Record<string, MessageReceiptStatus>;
@@ -102,6 +105,13 @@ function isStorageLockAbort(error: unknown) {
   const message = String((error as { message?: unknown }).message ?? '').toLowerCase();
   const name = String((error as { name?: unknown }).name ?? '').toLowerCase();
   return name === 'aborterror' || message.includes('lock broken by another request');
+}
+
+function isNetworkFetchError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const message = String((error as { message?: unknown }).message ?? '').toLowerCase();
+  const name = String((error as { name?: unknown }).name ?? '').toLowerCase();
+  return name === 'typeerror' && (message.includes('failed to fetch') || message.includes('network request failed'));
 }
 
 async function resolveCurrentAuthUserId() {
@@ -185,6 +195,18 @@ export async function fetchChatList() {
   const rows = (data ?? []) as ChatListRow[];
 
   const currentProfileId = await getCurrentProfileId();
+  const conversationIds = rows.map((row) => row.conversation_id);
+  const { data: participantRows } = await supabase
+    .from('conversation_participants')
+    .select('conversation_id,user_id')
+    .in('conversation_id', conversationIds);
+  const otherParticipantsCountByConversation = (participantRows ?? []).reduce<Record<string, number>>((acc, row) => {
+    const typedRow = row as { conversation_id: string; user_id: string };
+    if (typedRow.user_id === currentProfileId) return acc;
+    acc[typedRow.conversation_id] = (acc[typedRow.conversation_id] ?? 0) + 1;
+    return acc;
+  }, {});
+
   const ownLastMessageIds = rows
     .filter((row) => row.last_message_id && row.last_message_sender_id === currentProfileId)
     .map((row) => row.last_message_id as string);
@@ -193,12 +215,11 @@ export async function fetchChatList() {
   return Promise.all(
     rows.map(async (row) => {
       const receipt = row.last_message_id ? receiptMap[row.last_message_id] : undefined;
+      const othersCount = otherParticipantsCountByConversation[row.conversation_id] ?? 0;
+      const readByOthersCount = (receipt?.read_by ?? []).filter((profileId) => profileId !== currentProfileId).length;
+      const allOthersRead = othersCount > 0 && readByOthersCount >= othersCount;
       const receiptStatus: ChatListRow['last_message_receipt_status'] = row.last_message_sender_id === currentProfileId
-        ? receipt?.read_at
-          ? 'read'
-          : receipt?.delivered_at
-            ? 'delivered'
-            : 'sent'
+        ? allOthersRead ? 'read' : 'delivered'
         : undefined;
 
       const rowWithReceipt = {
@@ -268,24 +289,25 @@ export async function fetchConversationParticipants(conversationId: string) {
   const rows = (data ?? []) as Array<{ user_id: string; role: ConversationRole }>;
   const ids = rows.map((row) => row.user_id);
 
-  let profileById = new Map<string, string>();
+  let profileById = new Map<string, { full_name: string; avatar_url: string | null }>();
   if (ids.length > 0) {
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id,full_name')
+      .select('id,full_name,avatar_url')
       .in('id', ids);
 
     if (profilesError) {
       throw new Error(errorMessage('Não foi possível carregar os perfis dos participantes.', profilesError));
     }
 
-    profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile.full_name]));
+    profileById = new Map((profiles ?? []).map((profile) => [profile.id, { full_name: profile.full_name, avatar_url: profile.avatar_url }]));
   }
 
   return rows.map((row) => ({
     user_id: row.user_id,
     role: row.role,
-    full_name: profileById.get(row.user_id) ?? 'Atleta',
+    full_name: (profileById.get(row.user_id) as { full_name?: string } | undefined)?.full_name ?? 'Atleta',
+    avatar_url: (profileById.get(row.user_id) as { avatar_url?: string | null } | undefined)?.avatar_url ?? null,
   })) as ConversationParticipant[];
 }
 
@@ -293,14 +315,16 @@ export async function sendMessage(conversationId: string, content: string, optio
   const senderId = await getCurrentProfileId();
 
   const trimmed = content.trim();
-  if (!trimmed) return;
+  const hasAttachmentMetadata = Boolean(options.metadata && (options.metadata as Record<string, unknown>).attachment_kind);
+  if (!trimmed && !hasAttachmentMetadata) return;
+  const persistedContent = trimmed || '\u200B';
 
   const { data, error } = await db
     .from('messages')
     .insert({
       conversation_id: conversationId,
       sender_id: options.messageType === 'system' ? null : senderId,
-      content: trimmed,
+      content: persistedContent,
       message_type: options.messageType ?? 'user',
       metadata: options.metadata ?? {},
     })
@@ -359,14 +383,20 @@ export async function deleteOwnMessage(messageId: string) {
   }
 }
 
-function collapseReceiptRows(rows: Array<{ message_id: string; delivered_at: string | null; read_at: string | null }>) {
+function collapseReceiptRows(rows: Array<{ message_id: string; profile_id: string; delivered_at: string | null; read_at: string | null }>) {
   const map: MessageReceiptMap = {};
 
   rows.forEach((row) => {
     const current = map[row.message_id];
+    const deliveredBy = new Set(current?.delivered_by ?? []);
+    const readBy = new Set(current?.read_by ?? []);
+    if (row.delivered_at) deliveredBy.add(row.profile_id);
+    if (row.read_at) readBy.add(row.profile_id);
     map[row.message_id] = {
       delivered_at: latestTimestamp(current?.delivered_at ?? null, row.delivered_at),
       read_at: latestTimestamp(current?.read_at ?? null, row.read_at),
+      delivered_by: Array.from(deliveredBy),
+      read_by: Array.from(readBy),
     };
   });
 
@@ -400,7 +430,7 @@ export async function getConversationMessageReceiptMap(messageIds: string[]) {
 
   const { data, error } = await db
     .from('chat_message_receipts')
-    .select('message_id,delivered_at,read_at')
+    .select('message_id,profile_id,delivered_at,read_at')
     .in('message_id', messageIds);
 
   if (error) {
@@ -416,12 +446,19 @@ export async function markConversationMessagesDelivered(messageIds: string[]) {
   const userId = await getCurrentProfileId();
   const now = new Date().toISOString();
   const conversationByMessage = await getConversationIdsByMessage(messageIds);
-  const rows = Array.from(new Set(messageIds)).map((messageId) => ({
-    message_id: messageId,
-    conversation_id: conversationByMessage[messageId],
-    profile_id: userId,
-    delivered_at: now,
-  }));
+  const rows = Array.from(new Set(messageIds))
+    .map((messageId) => {
+      const conversationId = conversationByMessage[messageId];
+      if (!conversationId) return null;
+
+      return {
+        message_id: messageId,
+        conversation_id: conversationId,
+        profile_id: userId,
+        delivered_at: now,
+      };
+    })
+    .filter((row): row is { message_id: string; conversation_id: string; profile_id: string; delivered_at: string } => Boolean(row));
 
   if (rows.length === 0) return;
 
@@ -430,6 +467,10 @@ export async function markConversationMessagesDelivered(messageIds: string[]) {
     .upsert(rows, { onConflict: 'message_id,profile_id' });
 
   if (error) {
+    if (isNetworkFetchError(error)) {
+      console.warn('[chat] delivered receipt sync skipped:', (error as { message?: string }).message ?? error);
+      return;
+    }
     throw new Error(errorMessage('Nao foi possivel marcar mensagens como entregues.', error));
   }
 }
@@ -439,13 +480,26 @@ export async function markConversationMessagesRead(messageIds: string[]) {
   const userId = await getCurrentProfileId();
   const now = new Date().toISOString();
   const conversationByMessage = await getConversationIdsByMessage(messageIds);
-  const rows = Array.from(new Set(messageIds)).map((messageId) => ({
-    message_id: messageId,
-    conversation_id: conversationByMessage[messageId],
-    profile_id: userId,
-    delivered_at: now,
-    read_at: now,
-  }));
+  const rows = Array.from(new Set(messageIds))
+    .map((messageId) => {
+      const conversationId = conversationByMessage[messageId];
+      if (!conversationId) return null;
+
+      return {
+        message_id: messageId,
+        conversation_id: conversationId,
+        profile_id: userId,
+        delivered_at: now,
+        read_at: now,
+      };
+    })
+    .filter((row): row is {
+      message_id: string;
+      conversation_id: string;
+      profile_id: string;
+      delivered_at: string;
+      read_at: string;
+    } => Boolean(row));
 
   if (rows.length === 0) return;
 
@@ -454,6 +508,10 @@ export async function markConversationMessagesRead(messageIds: string[]) {
     .upsert(rows, { onConflict: 'message_id,profile_id' });
 
   if (error) {
+    if (isNetworkFetchError(error)) {
+      console.warn('[chat] read receipt sync skipped:', (error as { message?: string }).message ?? error);
+      return;
+    }
     throw new Error(errorMessage('Nao foi possivel marcar mensagens como lidas.', error));
   }
 }
@@ -585,6 +643,7 @@ export async function getMySavedMessageIds(messageIds: string[]) {
     .in('message_id', messageIds);
 
   if (error) {
+    if (isNetworkFetchError(error)) return [];
     throw new Error(errorMessage('Nao foi possivel carregar salvas.', error));
   }
 
@@ -699,18 +758,27 @@ export async function getChatAttachmentDownloadPayload(attachmentId: string) {
     throw new Error(errorMessage('Nao foi possivel carregar anexo.', error));
   }
 
-  const { data, error: signedError } = await supabase.storage
+  const { data: openData, error: openError } = await supabase.storage
+    .from(attachment.storage_bucket)
+    .createSignedUrl(attachment.storage_path, 60 * 5);
+
+  if (openError || !openData?.signedUrl) {
+    throw new Error(errorMessage('Nao foi possivel gerar link seguro.', openError));
+  }
+
+  const { data: downloadData, error: signedError } = await supabase.storage
     .from(attachment.storage_bucket)
     .createSignedUrl(attachment.storage_path, 60 * 5, {
       download: attachment.file_name ?? undefined,
     });
 
-  if (signedError || !data?.signedUrl) {
+  if (signedError || !downloadData?.signedUrl) {
     throw new Error(errorMessage('Nao foi possivel gerar link seguro.', signedError));
   }
 
   return {
-    url: data.signedUrl,
+    url: openData.signedUrl,
+    downloadUrl: downloadData.signedUrl,
     fileName: attachment.file_name as string | null,
     mimeType: attachment.mime_type as string | null,
     fileSize: attachment.file_size as number | null,
@@ -727,7 +795,11 @@ export async function markConversationAsRead(conversationId: string) {
     .eq('user_id', userId);
 
   if (error) {
-    throw new Error(errorMessage('Não foi possível atualizar leitura da conversa.', error));
+    if (isNetworkFetchError(error)) {
+      console.warn('[chat] mark conversation as read skipped:', (error as { message?: string }).message ?? error);
+      return;
+    }
+    throw new Error(errorMessage('N??o foi poss??vel atualizar leitura da conversa.', error));
   }
 }
 

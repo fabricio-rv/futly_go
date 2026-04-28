@@ -131,6 +131,7 @@ export function ComposerBar({
           </Pressable>
         ) : (
           <Pressable
+            onPress={onStartRecording}
             onLongPress={onStartRecording}
             delayLongPress={200}
             accessibilityRole="button"

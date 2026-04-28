@@ -3,12 +3,14 @@ import { AppState } from 'react-native';
 
 import {
   deleteOwnMessage,
+  fetchAttachmentsForMessages,
   fetchChatList,
   fetchConversationMessages,
   fetchConversationParticipants,
   getConversationMessageReceiptMap,
   getConversationMessageReactions,
   getConversationPinnedMessageIds,
+  getChatAttachmentDownloadPayload,
   getMySavedMessageIds,
   getCurrentUserId,
   markConversationMessagesDelivered,
@@ -41,6 +43,12 @@ type HeaderData = {
   isArchived: boolean;
 };
 
+function isNetworkFetchError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+  const message = String((error as { message?: unknown }).message ?? '').toLowerCase();
+  return message.includes('failed to fetch') || message.includes('network request failed');
+}
+
 function parseReplyText(content: string) {
   const match = content.match(/^>\s?(.+)\n([\s\S]+)$/);
   if (!match) return { text: content, replyTo: undefined };
@@ -51,13 +59,20 @@ function parseReplyText(content: string) {
   };
 }
 
+function cleanMessageText(text: string) {
+  const normalized = text.replace(/\u200B/g, '').trim();
+  if (!normalized) return '';
+  if (/^\[(Audio|Foto|Video|Arquivo)/i.test(normalized)) return '';
+  return normalized;
+}
+
 export function useConversationThread(conversationId: string) {
   const { t, currentLanguage } = useTranslation('chat');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [header, setHeader] = useState<HeaderData | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [participants, setParticipants] = useState<Array<{ user_id: string; full_name: string; role: 'host' | 'player' | 'system' }>>([]);
+  const [participants, setParticipants] = useState<Array<{ user_id: string; full_name: string; avatar_url?: string | null; role: 'host' | 'player' | 'system' }>>([]);
   const [messageReceipts, setMessageReceipts] = useState<MessageReceiptMap>({});
   const [reactions, setReactions] = useState<Record<string, ReactionGroup[]>>({});
   const [pinnedMessageIds, setPinnedMessageIds] = useState<string[]>([]);
@@ -71,6 +86,12 @@ export function useConversationThread(conversationId: string) {
   const reconnectAttemptRef = useRef(0);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [presenceRetryToken, setPresenceRetryToken] = useState(0);
+  const attachmentUrlCacheRef = useRef<Record<string, { url: string; expiresAt: number }>>({});
+  type SendOptions = {
+    metadata?: Record<string, unknown>;
+    optimisticText?: string;
+    optimisticAttachment?: ChatMessage['attachment'];
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -141,12 +162,38 @@ export function useConversationThread(conversationId: string) {
         reactionMap,
         pinnedIds,
         savedIds,
+        attachmentsByMessageId,
       ] = await Promise.all([
-        getConversationMessageReceiptMap(ownMessageIds),
-        getConversationMessageReactions(messageIds),
-        getConversationPinnedMessageIds(conversationId),
-        getMySavedMessageIds(messageIds),
+        getConversationMessageReceiptMap(ownMessageIds).catch(() => ({} as MessageReceiptMap)),
+        getConversationMessageReactions(messageIds).catch(() => ({})),
+        getConversationPinnedMessageIds(conversationId).catch(() => []),
+        getMySavedMessageIds(messageIds).catch(() => []),
+        fetchAttachmentsForMessages(messageIds).catch(() => ({} as Record<string, Array<{ id: string; file_name: string | null; mime_type: string | null }>>)),
       ]);
+      const attachmentUrlById: Record<string, string> = {};
+      const attachmentDownloadUrlById: Record<string, string> = {};
+      const nowMs = Date.now();
+      await Promise.all(
+        (Object.values(attachmentsByMessageId).flat() as Array<{ id: string }>)
+          .map(async (attachment) => {
+            const cached = attachmentUrlCacheRef.current[attachment.id];
+            if (cached && cached.expiresAt > nowMs + 30_000) {
+              attachmentUrlById[attachment.id] = cached.url;
+              return;
+            }
+            try {
+              const payload = await getChatAttachmentDownloadPayload(attachment.id);
+              attachmentUrlById[attachment.id] = payload.url;
+              attachmentDownloadUrlById[attachment.id] = payload.downloadUrl;
+              attachmentUrlCacheRef.current[attachment.id] = {
+                url: payload.url,
+                expiresAt: nowMs + 4 * 60 * 1000,
+              };
+            } catch {
+              attachmentUrlById[attachment.id] = '';
+            }
+          }),
+      );
 
       const chatMessages: ChatMessage[] = decryptedMessages.map((message) => {
         if (message.message_type === 'system' || !message.sender_id) {
@@ -161,14 +208,50 @@ export function useConversationThread(conversationId: string) {
         const participant = participantById.get(message.sender_id);
         const mine = message.sender_id === userId;
         const parsed = parseReplyText(message.content);
+        const othersIds = participants
+          .map((entry) => entry.user_id)
+          .filter((id) => id !== userId);
+        const receipt = receiptMap[message.id];
+        const allOthersRead = othersIds.length > 0
+          && othersIds.every((id) => receipt?.read_by?.includes(id));
+
+        const firstAttachment = attachmentsByMessageId[message.id]?.[0];
+        const attachment = (() => {
+          if (!firstAttachment) return undefined;
+          const mime = firstAttachment.mime_type ?? '';
+          const kind = mime.startsWith('image/')
+            ? 'image'
+            : mime.startsWith('video/')
+              ? 'video'
+              : mime.startsWith('audio/')
+                ? 'audio'
+                : 'document';
+          return {
+            id: firstAttachment.id,
+            kind,
+            fileName: firstAttachment.file_name,
+            mimeType: firstAttachment.mime_type,
+            url: attachmentUrlById[firstAttachment.id] || null,
+            downloadUrl: attachmentDownloadUrlById[firstAttachment.id] || null,
+            previewUrl: kind === 'document' && (firstAttachment.mime_type ?? '').includes('pdf')
+              ? `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(attachmentUrlById[firstAttachment.id] || '')}`
+              : null,
+            durationSec: Number((message.metadata as Record<string, unknown> | undefined)?.attachment_duration_sec ?? 0) || null,
+          } as ChatMessage['attachment'];
+        })();
+
+        const cleanedText = cleanMessageText(parsed.text) || undefined;
+        if (!attachment && !cleanedText) return null as unknown as ChatMessage;
 
         return {
           id: message.id,
           kind: mine ? 'me' : 'them',
           senderId: message.sender_id,
-          text: parsed.text,
+          text: attachment ? undefined : cleanedText,
+          attachment,
           replyTo: parsed.replyTo,
           author: participant?.full_name ?? t('detail.athleteFallback', 'Atleta'),
+          avatarUrl: participant?.avatar_url ?? null,
           role: participant?.role === 'host'
             ? t('roles.host', 'Host')
             : participant?.role === 'player'
@@ -176,14 +259,10 @@ export function useConversationThread(conversationId: string) {
               : undefined,
           time: formatRelativeChatTime(message.created_at, currentLanguage),
           receipt: mine
-            ? receiptMap[message.id]?.read_at
-              ? 'read'
-              : receiptMap[message.id]?.delivered_at
-                ? 'delivered'
-                : 'sent'
+            ? allOthersRead ? 'read' : 'delivered'
             : undefined,
         };
-      });
+      }).filter(Boolean) as ChatMessage[];
 
       setHeader({
         title,
@@ -201,16 +280,22 @@ export function useConversationThread(conversationId: string) {
       setReactions(reactionMap);
       setPinnedMessageIds(pinnedIds);
       setSavedMessageIds(savedIds);
-      await markConversationMessagesDelivered(incomingMessageIds);
-      await markConversationMessagesRead(incomingMessageIds);
-      await markConversationAsRead(conversationId);
+      void Promise.allSettled([
+        markConversationMessagesDelivered(incomingMessageIds),
+        markConversationMessagesRead(incomingMessageIds),
+        markConversationAsRead(conversationId),
+      ]);
     } catch (err) {
       const message = err instanceof Error ? err.message : t('errors.loadConversationFailed', 'Erro ao carregar conversa.');
-      setError(message);
+      if (messages.length > 0 && isNetworkFetchError(err)) {
+        console.warn('[chat] transient fetch error while refreshing conversation:', message);
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
-  }, [conversationId, currentLanguage, t]);
+  }, [conversationId, currentLanguage, messages.length, t]);
 
   useEffect(() => {
     void load();
@@ -374,23 +459,25 @@ export function useConversationThread(conversationId: string) {
     }
   }, [updateTypingState]);
 
-  const send = useCallback(async (content: string) => {
+  const send = useCallback(async (content: string, options: SendOptions = {}) => {
     updateTypingState(false);
     if (!currentUserId) {
       await load();
-      return;
+      return null;
     }
 
     const tempId = `temp-${Date.now()}`;
     const now = new Date().toISOString();
+    const parsed = parseReplyText(content);
     const optimisticMessage: ChatMessage = {
       id: tempId,
       kind: 'me',
       senderId: currentUserId,
-      text: parseReplyText(content).text,
-      replyTo: parseReplyText(content).replyTo,
+      text: options.optimisticText ?? parsed.text,
+      attachment: options.optimisticAttachment,
+      replyTo: parsed.replyTo,
       time: formatRelativeChatTime(now, currentLanguage),
-      receipt: 'sent',
+      receipt: 'delivered',
     };
 
     setMessages((previous) => [...previous, optimisticMessage]);
@@ -405,7 +492,10 @@ export function useConversationThread(conversationId: string) {
         console.warn('Chat E2EE unavailable in this runtime; sending plaintext fallback.', encryptionError);
       }
       const persisted = await sendMessage(conversationId, encryptedContent, {
-        metadata: { encryptionStatus },
+        metadata: {
+          ...(options.metadata ?? {}),
+          encryptionStatus,
+        },
       });
       if (persisted) {
         setMessages((previous) =>
@@ -419,6 +509,7 @@ export function useConversationThread(conversationId: string) {
               : message,
           ),
         );
+        return persisted.id;
       }
       await markConversationAsRead(conversationId);
     } catch (error) {
@@ -426,6 +517,7 @@ export function useConversationThread(conversationId: string) {
       await load();
       throw error;
     }
+    return null;
   }, [conversationId, currentLanguage, currentUserId, load, updateTypingState]);
 
   const markUnread = useCallback(async () => {

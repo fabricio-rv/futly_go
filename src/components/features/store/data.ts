@@ -304,7 +304,18 @@ export type ChatMessage = {
 	kind: 'system' | 'them' | 'me' | 'typing';
 	senderId?: string | null;
 	text?: string;
+	attachment?: {
+		id: string;
+		kind: 'image' | 'video' | 'audio' | 'document';
+		fileName?: string | null;
+		mimeType?: string | null;
+		url?: string | null;
+		downloadUrl?: string | null;
+		previewUrl?: string | null;
+		durationSec?: number | null;
+	};
 	author?: string;
+	avatarUrl?: string | null;
 	role?: string;
 	time?: string;
 	replyTo?: string;
