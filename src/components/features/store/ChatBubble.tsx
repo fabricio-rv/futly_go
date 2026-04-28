@@ -30,7 +30,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
     return (
       <View className="self-center rounded-full border px-3.5 py-1.5 my-[6px]" style={{ borderColor: 'rgba(212,161,58,0.35)', backgroundColor: 'rgba(212,161,58,0.14)' }}>
         <Text variant="micro" className="text-gold-700 dark:text-goldA font-semibold">
-          {translateSystemMessage(message.text)}
+          {translateSystemMessage(message.text ?? '')}
         </Text>
       </View>
     );

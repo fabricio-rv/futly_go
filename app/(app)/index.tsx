@@ -15,6 +15,7 @@ import {
 import { SkeletonList } from '@/src/components/ui';
 import type { AdvancedFilters } from '@/src/components/features/matches/explore/AdvancedFilterPanel';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
+import { useUnreadChatCount } from '@/src/features/chat/hooks/useUnreadChatCount';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { selectionTick } from '@/src/lib/haptics';
@@ -37,6 +38,7 @@ export default function ExploreMatchesScreen() {
   const theme = useAppColorScheme();
   const router = useRouter();
   const { availableMatches, fetchAvailableMatches, loadingAvailable } = useMatches();
+  const unreadChatCount = useUnreadChatCount();
   const [query, setQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({});
@@ -104,7 +106,7 @@ bounces
         contentContainerStyle={{ paddingBottom: 120 }}
         ListHeaderComponent={(
           <>
-            <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={2} />
+            <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={unreadChatCount} />
 
             <SearchInput
               value={query}

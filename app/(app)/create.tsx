@@ -127,7 +127,6 @@ export default function CreateMatchScreen() {
   const [mode, setMode] = useState<PitchMode>('futsal');
   const [restBreak, setRestBreak] = useState(true);
   const [referee, setReferee] = useState(false);
-  const [externalReserves, setExternalReserves] = useState(true);
   const [description, setDescription] = useState(() =>
     t('form.descriptionDefault'),
   );
@@ -210,7 +209,7 @@ export default function CreateMatchScreen() {
         minAge: 16,
         maxAge: 80,
         acceptedLevels,
-        allowExternalReserves: externalReserves,
+        allowExternalReserves: true,
         restBreak,
         refereeIncluded: referee,
         contactPhone: contactPhone.trim() || null,
@@ -467,12 +466,6 @@ export default function CreateMatchScreen() {
                 subtitle={t('form.refereeSubtitle')}
                 value={referee}
                 onToggle={() => setReferee((v) => !v)}
-              />
-              <ToggleRow
-                title={t('form.externalReservesTitle')}
-                subtitle={t('form.externalReservesSubtitle')}
-                value={externalReserves}
-                onToggle={() => setExternalReserves((v) => !v)}
               />
             </View>
           </Card>

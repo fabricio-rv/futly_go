@@ -1,6 +1,7 @@
 import { MapPin } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
@@ -12,12 +13,15 @@ type MapPreviewCardProps = {
   mapImageUrls?: string[];
   mapEmbedUrl?: string | null;
   onRoutePress?: () => void;
+  showAddressFooter?: boolean;
+  embeddedInCard?: boolean;
 };
 
-export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], mapEmbedUrl, onRoutePress }: MapPreviewCardProps) {
+export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], mapEmbedUrl, onRoutePress, showAddressFooter = true, embeddedInCard = false }: MapPreviewCardProps) {
   const matchTheme = useMatchTheme();
   const theme = useAppColorScheme();
   const isLight = theme === 'light';
+  const isWeb = Platform.OS === 'web';
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
   const Iframe: any = 'iframe';
 
@@ -26,23 +30,38 @@ export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], m
   }, [mapImageUrls]);
 
   const activeMapUrl = mapImageUrls[currentUrlIndex] ?? null;
+  const mapClassName = embeddedInCard
+    ? 'h-64 w-full overflow-hidden rounded-[20px]'
+    : 'h-56 rounded-[18px] border mb-2 overflow-hidden';
 
   return (
-    <View>
+    <View style={embeddedInCard ? { width: '100%' } : undefined}>
       <View
-        className="h-40 rounded-[18px] border mb-2 overflow-hidden"
+        className={mapClassName}
         style={{
           backgroundColor: isLight ? matchTheme.colors.bgSurfaceB : matchTheme.colors.bgBase,
           borderColor: matchTheme.colors.lineStrong,
+          borderWidth: 1,
         }}
       >
-        {Platform.OS === 'web' && mapEmbedUrl ? (
+        {isWeb && mapEmbedUrl ? (
           <Iframe
             src={mapEmbedUrl}
             title="Mapa da partida"
             style={{ width: '100%', height: '100%', border: 0 }}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
+          />
+        ) : !isWeb && mapEmbedUrl ? (
+          <WebView
+            source={{ uri: mapEmbedUrl }}
+            style={{ width: '100%', height: '100%' }}
+            javaScriptEnabled
+            domStorageEnabled
+            scrollEnabled
+            nestedScrollEnabled
+            bounces={false}
+            overScrollMode="never"
           />
         ) : activeMapUrl ? (
           <Image
@@ -70,32 +89,34 @@ export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], m
         )}
       </View>
 
-      <View
-        className="rounded-[16px] border p-3 mb-4 flex-row items-center"
-        style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}
-      >
+      {showAddressFooter ? (
         <View
-          className="w-9 h-9 rounded-[10px] items-center justify-center"
-          style={{ backgroundColor: isLight ? 'rgba(34,183,108,0.18)' : 'rgba(34,183,108,0.14)' }}
+          className="rounded-[16px] border p-3 mb-1 mt-2 flex-row items-center"
+          style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}
         >
-          <MapPin size={14} color={matchTheme.colors.okSoft} />
+          <View
+            className="w-9 h-9 rounded-[10px] items-center justify-center"
+            style={{ backgroundColor: isLight ? 'rgba(34,183,108,0.18)' : 'rgba(34,183,108,0.14)' }}
+          >
+            <MapPin size={14} color={matchTheme.colors.okSoft} />
+          </View>
+          <View className="ml-3 flex-1">
+            <Text variant="label" className="font-semibold" style={{ color: matchTheme.colors.fgPrimary }}>
+              {addressLine}
+            </Text>
+            <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{districtLine}</Text>
+          </View>
+          <Pressable
+            className="h-10 rounded-[10px] border px-3 items-center justify-center"
+            style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: isLight ? '#FFFFFF' : 'transparent' }}
+            onPress={onRoutePress}
+          >
+            <Text variant="body" className="font-semibold" style={{ color: matchTheme.colors.fgPrimary }}>
+              Rota
+            </Text>
+          </Pressable>
         </View>
-        <View className="ml-3 flex-1">
-          <Text variant="label" className="font-semibold" style={{ color: matchTheme.colors.fgPrimary }}>
-            {addressLine}
-          </Text>
-          <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>{districtLine}</Text>
-        </View>
-        <Pressable
-          className="h-10 rounded-[10px] border px-3 items-center justify-center"
-          style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: isLight ? '#FFFFFF' : 'transparent' }}
-          onPress={onRoutePress}
-        >
-          <Text variant="body" className="font-semibold" style={{ color: matchTheme.colors.fgPrimary }}>
-            Rota
-          </Text>
-        </Pressable>
-      </View>
+      ) : null}
     </View>
   );
 }

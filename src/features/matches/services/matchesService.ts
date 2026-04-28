@@ -505,10 +505,6 @@ export async function joinMatch(params: { matchId: string; positionKey: string; 
     throw new Error('O host não pode solicitar a propria partida.');
   }
 
-  if (!match.allow_external_reserves) {
-    throw new Error('Esta partida não aceita reservas externas.');
-  }
-
   if (match.status !== 'publicada') {
     throw new Error('Esta partida não esta com inscricoes abertas.');
   }

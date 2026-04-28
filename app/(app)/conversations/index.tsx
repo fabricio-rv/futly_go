@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { Clock3, Search } from 'lucide-react-native';
-import { useMemo } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Clock3, Search, X } from 'lucide-react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 
@@ -18,21 +18,38 @@ export default function ConversationsListScreen() {
   const { t } = useTranslation('chat');
   const { filter, setFilter, loading, error, summary, visibleActive, visibleArchived } = useChatList();
   const theme = useAppColorScheme();
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const isLight = theme === 'light';
+
+  const filterItems = (items: typeof visibleActive) => {
+    if (!searchQuery.trim()) return items;
+    const q = searchQuery.toLowerCase();
+    return items.filter((item) =>
+      item.title.toLowerCase().includes(q) ||
+      item.message.toLowerCase().includes(q) ||
+      (item.author ?? '').toLowerCase().includes(q)
+    );
+  };
 
   const data = useMemo(() => {
-    if (filter === 'todas' && visibleArchived.length > 0) {
+    const filteredActive = filterItems(visibleActive);
+    const filteredArchived = filterItems(visibleArchived);
+
+    if (filter === 'todas' && filteredArchived.length > 0) {
       return [
-        ...visibleActive.map((item) => ({ type: 'conversation' as const, id: item.id, item })),
+        ...filteredActive.map((item) => ({ type: 'conversation' as const, id: item.id, item })),
         { type: 'archivedHeader' as const, id: 'archived-header' },
-        ...visibleArchived.map((item) => ({ type: 'conversation' as const, id: item.id, item })),
+        ...filteredArchived.map((item) => ({ type: 'conversation' as const, id: item.id, item })),
       ];
     }
 
-    return [...visibleActive, ...visibleArchived].map((item) => ({ type: 'conversation' as const, id: item.id, item }));
-  }, [filter, visibleActive, visibleArchived]);
+    return [...filteredActive, ...filterItems(visibleArchived)].map((item) => ({ type: 'conversation' as const, id: item.id, item }));
+  }, [filter, visibleActive, visibleArchived, searchQuery]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme === 'light' ? '#EEF3FA' : '#060B17' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: isLight ? '#EEF3FA' : '#060B17' }}>
       <FlashList
         data={data}
         keyExtractor={(item) => item.id}
@@ -46,9 +63,53 @@ export default function ConversationsListScreen() {
               title={t('list.title', 'Conversas')}
               subtitle={t('list.subtitle', `${summary.activeCount} ATIVAS - ${summary.unreadCount} NAO LIDAS`, { activeCount: summary.activeCount, unreadCount: summary.unreadCount })}
               rightNode={
-                <IconButton icon={<Search size={18} color={theme === 'light' ? '#3B4A5E' : '#FFFFFF'} strokeWidth={2} />} />
+                <IconButton
+                  icon={<Search size={18} color={showSearch ? '#22B76C' : (isLight ? '#3B4A5E' : '#FFFFFF')} strokeWidth={2} />}
+                  onPress={() => {
+                    setShowSearch((v) => !v);
+                    setSearchQuery('');
+                  }}
+                />
               }
             />
+
+            {showSearch ? (
+              <View
+                style={{
+                  marginHorizontal: 18,
+                  marginBottom: 10,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: isLight ? '#C8D6E8' : 'rgba(255,255,255,0.10)',
+                  backgroundColor: isLight ? '#FFFFFF' : '#0C111E',
+                  paddingHorizontal: 12,
+                  height: 44,
+                }}
+              >
+                <Search size={16} color={isLight ? '#8A9BB0' : '#5A6A80'} strokeWidth={2} style={{ marginRight: 8 }} />
+                <TextInput
+                  autoFocus
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  placeholder="Buscar conversa ou usuário..."
+                  placeholderTextColor={isLight ? '#9BABBF' : '#4A5A6F'}
+                  style={{
+                    flex: 1,
+                    fontSize: 14,
+                    color: isLight ? '#1F2937' : '#E8EDF3',
+                    includeFontPadding: false,
+                    paddingVertical: 0,
+                  }}
+                />
+                {searchQuery.length > 0 ? (
+                  <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+                    <X size={16} color={isLight ? '#8A9BB0' : '#5A6A80'} strokeWidth={2} />
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
 
             <ScrollView
               horizontal
@@ -71,14 +132,14 @@ export default function ConversationsListScreen() {
             <View
               className="mx-[18px] mt-1 mb-2 px-3 py-[10px] border rounded-2xl flex-row items-center gap-2"
               style={{
-                borderColor: theme === 'light' ? '#CFE1D4' : 'rgba(34,183,108,0.30)',
-                backgroundColor: theme === 'light' ? '#E8F6EE' : '#113126',
+                borderColor: isLight ? '#CFE1D4' : 'rgba(34,183,108,0.30)',
+                backgroundColor: isLight ? '#E8F6EE' : '#113126',
               }}
             >
-              <Clock3 size={12} color={theme === 'light' ? '#1A8F57' : '#86E5B4'} strokeWidth={2.2} />
+              <Clock3 size={12} color={isLight ? '#1A8F57' : '#86E5B4'} strokeWidth={2.2} />
               <Text variant="micro" className="text-[#1F2937] dark:text-fg2">
                 {t('list.linkedToMatchHint', 'Cada conversa e vinculada a uma ')}
-                <Text className="text-[#1A8F57] dark:text-[#86E5B4] font-bold">{t('list.scheduledMatch', 'partida marcada')}</Text>
+                <Text variant="micro" className="text-[#1A8F57] dark:text-[#86E5B4] font-bold">{t('list.scheduledMatch', 'partida marcada')}</Text>
                 {t('list.autoArchiveHint', '. Auto-arquiva 7 dias apos o jogo.')}
               </Text>
             </View>
@@ -100,7 +161,11 @@ export default function ConversationsListScreen() {
         )}
         ListEmptyComponent={!loading ? (
           <View className="px-[18px] py-6">
-            <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{t('list.empty', 'Nenhuma conversa encontrada.')}</Text>
+            <Text variant="micro" className="text-[#4B5563] dark:text-fg3">
+              {searchQuery.trim()
+                ? 'Nenhum resultado encontrado.'
+                : t('list.empty', 'Nenhuma conversa encontrada.')}
+            </Text>
           </View>
         ) : null}
         renderItem={({ item }) => {
@@ -125,6 +190,3 @@ export default function ConversationsListScreen() {
     </SafeAreaView>
   );
 }
-
-
-

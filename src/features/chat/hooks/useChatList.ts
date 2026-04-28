@@ -101,7 +101,7 @@ export function useChatList() {
       const checkStatus = unreadCount > 0
         ? undefined
         : row.last_message_sender_id === currentUserId
-          ? 'read'
+          ? row.last_message_receipt_status ?? 'sent'
           : 'sent';
 
       const preview: ConversationPreview = {

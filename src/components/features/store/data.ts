@@ -226,7 +226,7 @@ export type ConversationPreview = {
 	unreadCount?: number;
 	unread?: boolean;
 	privateTag?: string;
-	checkStatus?: 'read' | 'sent';
+	checkStatus?: 'sent' | 'delivered' | 'read';
 	archived?: boolean;
 };
 
@@ -302,10 +302,13 @@ export const archivedConversations: ConversationPreview[] = [
 export type ChatMessage = {
 	id: string;
 	kind: 'system' | 'them' | 'me' | 'typing';
+	senderId?: string | null;
 	text?: string;
 	author?: string;
 	role?: string;
 	time?: string;
+	replyTo?: string;
+	receipt?: 'sent' | 'delivered' | 'read';
 };
 
 export type ConversationDetail = {
