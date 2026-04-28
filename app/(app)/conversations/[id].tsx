@@ -20,7 +20,14 @@ import {
 } from '@/src/components/features/chat';
 import { Text } from '@/src/components/ui';
 import { useConversationThread } from '@/src/features/chat/hooks/useConversationThread';
-import { createChatFileAttachment } from '@/src/features/chat/services/chatService';
+import {
+  addConversationParticipant,
+  createChatFileAttachment,
+  removeConversationParticipant,
+  searchChatProfiles,
+  updateConversationParticipantRole,
+} from '@/src/features/chat/services/chatService';
+import { formatLastSeenBrazil } from '@/src/features/chat/utils/formatters';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import type { ChatMessage } from '@/src/components/features/store/data';
@@ -40,7 +47,6 @@ export default function ConversationDetailScreen() {
   const conversationId = params.id ?? '';
 
   const [draft, setDraft] = useState('');
-  const [menuVisible, setMenuVisible] = useState(false);
   const [attachVisible, setAttachVisible] = useState(false);
   const [emojiVisible, setEmojiVisible] = useState(false);
   const [participantsVisible, setParticipantsVisible] = useState(false);
@@ -76,6 +82,10 @@ export default function ConversationDetailScreen() {
     savedMessageIds,
     typingUserIds,
     onlineUserIds,
+    privatePartner,
+    privatePartnerIsOnline,
+    currentUserId,
+    refresh,
     canSend,
     send,
     markUnread,
@@ -92,19 +102,30 @@ export default function ConversationDetailScreen() {
   const typingNames = useMemo(() => typingUserIds.map((id) => participantNameById.get(id) ?? t('detail.athleteFallback', 'Atleta')), [participantNameById, t, typingUserIds]);
   const onlineCount = onlineUserIds.length;
   const isTyping = typingNames.length > 0;
+  const isPrivateConversation = Boolean(header?.privatePartnerId);
 
   const headerSubtitle = useMemo(() => {
     if (!header) return t('common.loading', 'Carregando...');
     if (isTyping) return t('messages.typing', 'Digitando...');
+    if (isPrivateConversation) {
+      if (privatePartnerIsOnline) return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - online`;
+      const lastSeen = formatLastSeenBrazil(privatePartner?.last_seen_at ?? null);
+      if (lastSeen) return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - offline • visto por último ${lastSeen}`;
+      return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - offline`;
+    }
     if (onlineCount > 0) return `${header.subtitle} - ${onlineCount} online`;
     return header.subtitle;
-  }, [header, isTyping, onlineCount, t]);
+  }, [header, isPrivateConversation, isTyping, onlineCount, privatePartner?.full_name, privatePartner?.last_seen_at, privatePartnerIsOnline, t]);
 
   const roleLabel = useCallback((role: 'host' | 'player' | 'system') => {
     if (role === 'host') return t('roles.host', 'Host');
     if (role === 'player') return t('roles.player', 'Jogador');
     return t('roles.system', 'Sistema');
   }, [t]);
+  const isGroupAdmin = useMemo(
+    () => Boolean(currentUserId && participants.some((p) => p.user_id === currentUserId && p.role === 'host')),
+    [currentUserId, participants],
+  );
 
   const handleBack = useCallback(() => {
     if (typeof router.canGoBack === 'function' && router.canGoBack()) {
@@ -411,10 +432,9 @@ export default function ConversationDetailScreen() {
           title={header?.title ?? t('detail.title', 'Conversa')}
           subtitle={headerSubtitle}
           avatar={header?.avatar ?? 'CH'}
-          isOnline={onlineCount > 0}
+          isOnline={isPrivateConversation ? privatePartnerIsOnline : onlineCount > 0}
           isTyping={isTyping}
           onBack={handleBack}
-          onOpenMenu={() => setMenuVisible(true)}
         />
 
         <ChatContextBanner
@@ -532,7 +552,6 @@ export default function ConversationDetailScreen() {
           enableCategoryChangeAnimation
         />
 
-        <ChatActionSheet visible={menuVisible} title="Conversa" actions={menuActions} onClose={() => setMenuVisible(false)} />
         <ChatActionSheet visible={!!selectedMessage} title="Mensagem" actions={selectedMessageActions} onClose={() => setSelectedMessage(null)} />
         <ChatActionSheet visible={attachVisible} title="Anexar" actions={attachmentActions} onClose={() => setAttachVisible(false)} />
 
@@ -541,6 +560,25 @@ export default function ConversationDetailScreen() {
           title={t('detail.participants', 'Participantes')}
           participants={participants}
           roleLabel={roleLabel}
+          canManage={Boolean(header?.isCustomGroup) && isGroupAdmin}
+          currentUserId={currentUserId}
+          onSearchProfiles={(q) => searchChatProfiles(q)}
+          onAddParticipant={async (userId) => {
+            await addConversationParticipant(conversationId, userId, 'player');
+            await refresh();
+          }}
+          onPromoteToAdmin={async (userId) => {
+            await updateConversationParticipantRole(conversationId, userId, 'host');
+            await refresh();
+          }}
+          onDemoteFromAdmin={async (userId) => {
+            await updateConversationParticipantRole(conversationId, userId, 'player');
+            await refresh();
+          }}
+          onRemoveParticipant={async (userId) => {
+            await removeConversationParticipant(conversationId, userId);
+            await refresh();
+          }}
           onClose={() => setParticipantsVisible(false)}
         />
 

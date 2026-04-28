@@ -14,9 +14,10 @@ import Animated, {
 import { Text } from './Text';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
-type InputSize = 'md' | 'lg';
+type InputSize = 'sm' | 'md' | 'lg';
 
 const sizeHeight: Record<InputSize, number> = {
+  sm: 40,
   md: 48,
   lg: 56,
 };

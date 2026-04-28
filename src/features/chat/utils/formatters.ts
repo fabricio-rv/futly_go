@@ -114,3 +114,39 @@ export function formatRelativeChatTime(isoDate: string | null | undefined, local
 
   return tokens.weekAgo(weeks);
 }
+
+export function formatLastSeenBrazil(isoDate: string | null | undefined, now = new Date()) {
+  if (!isoDate) return '';
+
+  const target = new Date(isoDate);
+  if (Number.isNaN(target.getTime())) return '';
+
+  const zone = 'America/Sao_Paulo';
+  const dateFmt = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: zone,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+  const timeFmt = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: zone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  const todayKey = dateFmt.format(now);
+  const targetKey = dateFmt.format(target);
+  if (todayKey === targetKey) {
+    return `hoje às ${timeFmt.format(target)}`;
+  }
+
+  return `${targetKey} às ${timeFmt.format(target)}`;
+}
+
+export function isOnlineByLastSeen(isoDate: string | null | undefined, now = Date.now(), windowMs = 90_000) {
+  if (!isoDate) return false;
+  const target = new Date(isoDate);
+  if (Number.isNaN(target.getTime())) return false;
+  return now - target.getTime() <= windowMs;
+}

@@ -11,9 +11,10 @@ type PillProps = Omit<PressableProps, 'children'> & {
   tone?: PillTone;
   rightLabel?: string;
   className?: string;
+  size?: 'md' | 'sm';
 };
 
-export function Pill({ label, tone = 'default', rightLabel, className, ...rest }: PillProps) {
+export function Pill({ label, tone = 'default', rightLabel, className, size = 'md', ...rest }: PillProps) {
   const theme = useAppColorScheme();
   const isLight = theme === 'light';
 
@@ -31,15 +32,16 @@ export function Pill({ label, tone = 'default', rightLabel, className, ...rest }
   };
 
   const current = toneStyles[tone];
+  const isSmall = size === 'sm';
 
   return (
     <TouchableScale
       accessibilityRole="button"
-      className={`h-[30px] px-3 rounded-full border flex-row items-center gap-[6px] ${className ?? ''}`.trim()}
+      className={`${isSmall ? 'h-[28px] px-2.5 gap-1.5' : 'h-[30px] px-3 gap-[6px]'} rounded-full border flex-row items-center ${className ?? ''}`.trim()}
       style={{ backgroundColor: current.bg, borderColor: current.border }}
       {...rest}
     >
-      <Text variant="caption" className="font-semibold" style={{ color: current.text }}>
+      <Text variant={isSmall ? 'micro' : 'caption'} className="font-semibold" style={{ color: current.text }}>
         {label}
       </Text>
       {rightLabel ? (

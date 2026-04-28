@@ -30,6 +30,11 @@ export type ChatListRow = {
   match_venue_name: string | null;
   match_date: string | null;
   match_time: string | null;
+  group_name?: string | null;
+  group_description?: string | null;
+  group_avatar_url?: string | null;
+  is_custom_group?: boolean;
+  auto_archive_enabled?: boolean;
   last_message_id: string | null;
   last_message_content: string | null;
   last_message_created_at: string | null;
@@ -38,6 +43,8 @@ export type ChatListRow = {
   last_message_sender_name: string | null;
   private_partner_id: string | null;
   private_partner_name: string | null;
+  private_partner_last_seen_at?: string | null;
+  last_message_metadata?: Record<string, unknown>;
   unread_count: number;
   last_message_receipt_status?: 'sent' | 'delivered' | 'read';
 };
@@ -57,6 +64,13 @@ export type ConversationParticipant = {
   role: ConversationRole;
   full_name: string;
   avatar_url?: string | null;
+  last_seen_at?: string | null;
+};
+
+export type ChatProfileSearchResult = {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
 };
 
 export type MessageReceiptStatus = {
@@ -112,6 +126,12 @@ function isNetworkFetchError(error: unknown) {
   const message = String((error as { message?: unknown }).message ?? '').toLowerCase();
   const name = String((error as { name?: unknown }).name ?? '').toLowerCase();
   return name === 'typeerror' && (message.includes('failed to fetch') || message.includes('network request failed'));
+}
+
+function looksLikeEncryptedPayload(value: string | null | undefined) {
+  const text = String(value ?? '').trim();
+  if (!text) return false;
+  return text.startsWith('e2ee:') || isEncryptedMessage(text);
 }
 
 async function resolveCurrentAuthUserId() {
@@ -193,6 +213,34 @@ export async function fetchChatList() {
   }
 
   const rows = (data ?? []) as ChatListRow[];
+  const lastMessageIds = rows
+    .map((row) => row.last_message_id)
+    .filter((id): id is string => Boolean(id));
+
+  const lastMessageMetadataById = new Map<string, Record<string, unknown> | undefined>();
+  if (lastMessageIds.length > 0) {
+    const { data: lastMessages } = await (supabase as any)
+      .from('messages')
+      .select('id,metadata')
+      .in('id', lastMessageIds);
+    (lastMessages ?? []).forEach((message: { id: string; metadata?: Record<string, unknown> }) => {
+      lastMessageMetadataById.set(message.id, message.metadata);
+    });
+  }
+  const privatePartnerIds = Array.from(new Set(rows
+    .filter((row) => row.conversation_type === 'private' && row.private_partner_id)
+    .map((row) => row.private_partner_id as string)));
+  let privatePartnerLastSeenById = new Map<string, string | null>();
+  if (privatePartnerIds.length > 0) {
+    const { data: privateProfiles } = await (supabase as any)
+      .from('profiles')
+      .select('id,last_seen_at,updated_at')
+      .in('id', privatePartnerIds);
+    privatePartnerLastSeenById = new Map((privateProfiles ?? []).map((profile: any) => [
+      profile.id as string,
+      (profile.last_seen_at ?? profile.updated_at ?? null) as string | null,
+    ]));
+  }
 
   const currentProfileId = await getCurrentProfileId();
   const conversationIds = rows.map((row) => row.conversation_id);
@@ -214,6 +262,28 @@ export async function fetchChatList() {
 
   return Promise.all(
     rows.map(async (row) => {
+      const lastMessageMetadata = row.last_message_id
+        ? lastMessageMetadataById.get(row.last_message_id)
+        : undefined;
+      const attachmentKind = String(lastMessageMetadata?.attachment_kind ?? '').toLowerCase();
+      const attachmentLabel = String(lastMessageMetadata?.attachment_label ?? '').trim();
+      const attachmentName = String(lastMessageMetadata?.attachment_name ?? '').trim();
+      const attachmentDuration = Number(lastMessageMetadata?.attachment_duration_sec ?? 0);
+
+      const attachmentPreview = (() => {
+        if (!attachmentKind) return null;
+        if (attachmentKind === 'audio') return attachmentDuration > 0 ? `[Audio ${attachmentDuration}s]` : '[Audio]';
+        if (attachmentKind === 'image') return '[Imagem]';
+        if (attachmentKind === 'video') return '[Vídeo]';
+        if (attachmentKind === 'document') {
+          if (!attachmentName) return '[Documento]';
+          const extension = attachmentName.includes('.') ? attachmentName.split('.').pop()?.toUpperCase() : '';
+          return extension ? `[Documento ${extension}]` : '[Documento]';
+        }
+        if (attachmentLabel) return `[${attachmentLabel}]`;
+        return '[Anexo]';
+      })();
+
       const receipt = row.last_message_id ? receiptMap[row.last_message_id] : undefined;
       const othersCount = otherParticipantsCountByConversation[row.conversation_id] ?? 0;
       const readByOthersCount = (receipt?.read_by ?? []).filter((profileId) => profileId !== currentProfileId).length;
@@ -224,17 +294,36 @@ export async function fetchChatList() {
 
       const rowWithReceipt = {
         ...row,
+        last_message_content: (
+          (row.last_message_content ?? '').replace(/\u200B/g, '').trim() || attachmentPreview || row.last_message_content
+        ),
         last_message_receipt_status: receiptStatus,
+        private_partner_last_seen_at: row.private_partner_id
+          ? (privatePartnerLastSeenById.get(row.private_partner_id) ?? null)
+          : null,
+        last_message_metadata: lastMessageMetadata,
       };
 
       if (!row.last_message_content || row.last_message_type === 'system') return rowWithReceipt;
-      if (!isEncryptedMessage(row.last_message_content)) return rowWithReceipt;
+      if (!looksLikeEncryptedPayload(row.last_message_content)) {
+        const safeText = String(rowWithReceipt.last_message_content ?? '').trim();
+        if (safeText.startsWith('e2ee:')) {
+          return {
+            ...rowWithReceipt,
+            last_message_content: 'Mensagem protegida',
+          };
+        }
+        return rowWithReceipt;
+      }
 
       const decrypted = await decryptMessage(row.conversation_id, row.last_message_content);
+      const normalizedDecrypted = decrypted.replace(/\u200B/g, '').trim();
 
       return {
         ...rowWithReceipt,
-        last_message_content: isEncryptedMessage(decrypted) ? 'Mensagem protegida' : decrypted,
+        last_message_content: looksLikeEncryptedPayload(decrypted)
+          ? 'Mensagem protegida'
+          : (normalizedDecrypted || rowWithReceipt.last_message_content),
       };
     }),
   );
@@ -289,18 +378,22 @@ export async function fetchConversationParticipants(conversationId: string) {
   const rows = (data ?? []) as Array<{ user_id: string; role: ConversationRole }>;
   const ids = rows.map((row) => row.user_id);
 
-  let profileById = new Map<string, { full_name: string; avatar_url: string | null }>();
+  let profileById = new Map<string, { full_name: string; avatar_url: string | null; last_seen_at: string | null }>();
   if (ids.length > 0) {
-    const { data: profiles, error: profilesError } = await supabase
+    const { data: profiles, error: profilesError } = await (supabase as any)
       .from('profiles')
-      .select('id,full_name,avatar_url')
+      .select('id,full_name,avatar_url,last_seen_at,updated_at')
       .in('id', ids);
 
     if (profilesError) {
       throw new Error(errorMessage('Não foi possível carregar os perfis dos participantes.', profilesError));
     }
 
-    profileById = new Map((profiles ?? []).map((profile) => [profile.id, { full_name: profile.full_name, avatar_url: profile.avatar_url }]));
+    profileById = new Map((profiles ?? []).map((profile: any) => [profile.id, {
+      full_name: profile.full_name,
+      avatar_url: profile.avatar_url,
+      last_seen_at: profile.last_seen_at ?? profile.updated_at ?? null,
+    }]));
   }
 
   return rows.map((row) => ({
@@ -308,7 +401,22 @@ export async function fetchConversationParticipants(conversationId: string) {
     role: row.role,
     full_name: (profileById.get(row.user_id) as { full_name?: string } | undefined)?.full_name ?? 'Atleta',
     avatar_url: (profileById.get(row.user_id) as { avatar_url?: string | null } | undefined)?.avatar_url ?? null,
+    last_seen_at: (profileById.get(row.user_id) as { last_seen_at?: string | null } | undefined)?.last_seen_at ?? null,
   })) as ConversationParticipant[];
+}
+
+export async function touchMyLastSeen() {
+  const userId = await getCurrentProfileId();
+  const now = new Date().toISOString();
+
+  const { error } = await (supabase as any)
+    .from('profiles')
+    .update({ last_seen_at: now })
+    .eq('id', userId);
+
+  if (error) {
+    console.warn('[chat] failed to update last_seen_at:', error.message);
+  }
 }
 
 export async function sendMessage(conversationId: string, content: string, options: SendMessageOptions = {}) {
@@ -904,6 +1012,52 @@ export async function createPrivateConversation(otherUserId: string, initialMess
   }
 
   return data as string;
+}
+
+export async function createCustomGroupConversation(input: {
+  name: string;
+  description?: string | null;
+  avatarUrl?: string | null;
+  memberIds?: string[];
+  autoArchiveEnabled?: boolean;
+}) {
+  const { data, error } = await (supabase as any).rpc('create_custom_group_conversation', {
+    p_name: input.name,
+    p_description: input.description ?? null,
+    p_avatar_url: input.avatarUrl ?? null,
+    p_member_ids: input.memberIds ?? [],
+    p_auto_archive_enabled: input.autoArchiveEnabled ?? false,
+  });
+
+  if (error || !data) {
+    throw new Error(errorMessage('Nao foi possivel criar grupo.', error));
+  }
+
+  return data as string;
+}
+
+export async function searchChatProfiles(query: string, limit = 20) {
+  const q = query.trim();
+  if (!q) return [] as ChatProfileSearchResult[];
+  const me = await getCurrentProfileId();
+
+  const { data, error } = await (supabase as any)
+    .from('profiles')
+    .select('id,full_name,avatar_url')
+    .neq('id', me)
+    .ilike('full_name', `%${q}%`)
+    .order('full_name', { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(errorMessage('Nao foi possivel buscar usuarios.', error));
+  }
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id as string,
+    full_name: (row.full_name ?? 'Atleta') as string,
+    avatar_url: (row.avatar_url ?? null) as string | null,
+  })) as ChatProfileSearchResult[];
 }
 
 export function subscribeConversationMessages(

@@ -1,10 +1,11 @@
-import { ChevronLeft, MoreVertical, Star } from 'lucide-react-native';
+import { ChevronLeft, Star } from 'lucide-react-native';
 import { View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { getChatTokens } from '@/src/lib/chatTokens';
-import { IconButton, Text } from '@/src/components/ui';
+import { Text } from '@/src/components/ui';
+import { Pressable } from 'react-native';
 
 type ConversationHeaderProps = {
   title: string;
@@ -13,7 +14,6 @@ type ConversationHeaderProps = {
   isOnline?: boolean;
   isTyping?: boolean;
   onBack: () => void;
-  onOpenMenu: () => void;
 };
 
 export function ConversationHeader({
@@ -23,7 +23,6 @@ export function ConversationHeader({
   isOnline = false,
   isTyping = false,
   onBack,
-  onOpenMenu,
 }: ConversationHeaderProps) {
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
@@ -39,8 +38,16 @@ export function ConversationHeader({
         borderBottomColor: tk.borderHeader,
       }}
     >
-      <View className="px-3 pb-2 pt-1 flex-row items-center gap-2">
-        <IconButton icon={<ChevronLeft size={18} color={tk.icon.primary} />} onPress={onBack} />
+      <View className="pl-1 pr-3 pb-2 pt-1 flex-row items-center gap-2">
+        <Pressable
+          onPress={onBack}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+          className="px-1 py-1"
+        >
+          <ChevronLeft size={22} color={tk.icon.primary} />
+        </Pressable>
 
         <View className="flex-1 flex-row items-center gap-2">
           <View>
@@ -79,8 +86,6 @@ export function ConversationHeader({
             </Text>
           </View>
         </View>
-
-        <IconButton icon={<MoreVertical size={16} color={tk.icon.primary} />} onPress={onOpenMenu} />
       </View>
     </View>
   );

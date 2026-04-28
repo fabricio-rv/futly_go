@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   fetchChatList,
@@ -7,7 +7,7 @@ import {
   type ChatListFilter,
   type ChatListRow,
 } from '@/src/features/chat/services/chatService';
-import { formatRelativeChatTime, formatWeekdayTime, toInitials } from '@/src/features/chat/utils/formatters';
+import { formatLastSeenBrazil, formatRelativeChatTime, formatWeekdayTime, isOnlineByLastSeen, toInitials } from '@/src/features/chat/utils/formatters';
 import type { ConversationPreview } from '@/src/components/features/store/data';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
@@ -57,15 +57,41 @@ export function useChatList() {
 
   const summary = useMemo(() => {
     const activeRows = rows.filter((row) => !row.is_archived);
+    const archivedRows = rows.filter((row) => row.is_archived);
     const unread = activeRows.filter((row) => (row.unread_count ?? 0) > 0).length;
+    const hostRows = activeRows.filter((row) => row.my_role === 'host');
+    const playerRows = activeRows.filter((row) => row.my_role === 'player');
 
     return {
       activeCount: activeRows.length,
+      allCount: activeRows.length,
+      archivedCount: archivedRows.length,
+      hostCount: hostRows.length,
+      playerCount: playerRows.length,
       unreadCount: unread,
     };
   }, [rows]);
 
   const mapped = useMemo(() => {
+    const parseAttachmentPreview = (rawText: string) => {
+      const text = (rawText ?? '').replace(/\u200B/g, '').trim();
+      const marker = text.match(/^\[(Audio|Foto|Imagem|Image|Video|Vídeo|Arquivo|Documento)(?:\s+([^\]]+))?\]\s*(.*)$/i);
+      if (!marker) return { kind: 'text' as const, label: text || t('messages.noMessagesYet', 'Sem mensagens ainda') };
+
+      const kindRaw = (marker[1] ?? '').toLowerCase();
+      const extraRaw = (marker[2] ?? '').trim();
+      const durationMatch = extraRaw.match(/(\d+)\s*s/i);
+      const durationSec = durationMatch ? Number(durationMatch[1]) : null;
+      const fileName = (marker[3] ?? '').trim();
+
+      if (kindRaw.includes('audio')) return { kind: 'audio' as const, label: durationSec ? `Áudio ${durationSec}s` : 'Áudio' };
+      if (kindRaw.includes('foto') || kindRaw.includes('imagem') || kindRaw.includes('image')) return { kind: 'image' as const, label: 'Imagem' };
+      if (kindRaw.includes('video') || kindRaw.includes('vídeo')) return { kind: 'video' as const, label: 'Vídeo' };
+
+      const extension = extraRaw || (fileName.includes('.') ? fileName.split('.').pop()?.toUpperCase() : '');
+      return { kind: 'document' as const, label: extension ? `Documento (${extension})` : 'Documento' };
+    };
+
     const localizePreviewMessage = (text: string) => {
       const confirmedMatch = text.match(/^(.*)\sconfirmou\s+presen[cç]a\.?$/i);
       if (confirmedMatch) {
@@ -83,7 +109,9 @@ export function useChatList() {
       const matchLabel = formatWeekdayTime(row.match_date, row.match_time, currentLanguage);
       const title = isPrivate
         ? (row.private_partner_name ?? t('detail.privateConversationTitle', 'Conversa privada'))
-        : `${row.match_venue_name ?? row.match_title ?? t('detail.matchFallbackTitle', 'Partida')}${matchLabel ? ` - ${matchLabel}` : ''}`;
+        : row.is_custom_group
+          ? (row.group_name ?? t('detail.matchFallbackTitle', 'Grupo'))
+          : `${row.match_venue_name ?? row.match_title ?? t('detail.matchFallbackTitle', 'Partida')}${matchLabel ? ` - ${matchLabel}` : ''}`;
 
       const author = row.last_message_sender_id
         ? row.last_message_sender_id === currentUserId
@@ -93,21 +121,49 @@ export function useChatList() {
 
       const avatarSource = isPrivate
         ? row.private_partner_name
-        : (row.match_venue_name ?? row.match_title ?? t('detail.matchFallbackTitle', 'Partida'));
+        : (row.is_custom_group
+          ? (row.group_name ?? 'Grupo')
+          : (row.match_venue_name ?? row.match_title ?? t('detail.matchFallbackTitle', 'Partida')));
 
       const timeLabel = formatRelativeChatTime(row.last_message_created_at ?? row.last_message_at ?? row.created_at, currentLanguage);
 
       const unreadCount = Math.max(0, row.unread_count ?? 0);
+      const privateLastSeenAt = row.private_partner_last_seen_at ?? null;
+      const privateIsOnline = isPrivate ? isOnlineByLastSeen(privateLastSeenAt) : false;
       const checkStatus = unreadCount > 0
         ? undefined
         : row.last_message_sender_id === currentUserId
           ? row.last_message_receipt_status ?? 'sent'
           : 'sent';
+      const privateOfflineLastSeenLabel = isPrivate && !privateIsOnline
+        ? formatLastSeenBrazil(privateLastSeenAt)
+        : '';
+
+      const metadataKind = String((row as any).last_message_metadata?.attachment_kind ?? '').toLowerCase();
+      const metadataName = String((row as any).last_message_metadata?.attachment_name ?? '').trim();
+      const metadataDuration = Number((row as any).last_message_metadata?.attachment_duration_sec ?? 0);
+      const metadataPreview = (() => {
+        if (!metadataKind) return null;
+        if (metadataKind === 'audio') return { kind: 'audio' as const, label: metadataDuration > 0 ? `Áudio ${metadataDuration}s` : 'Áudio' };
+        if (metadataKind === 'image') return { kind: 'image' as const, label: 'Imagem' };
+        if (metadataKind === 'video') return { kind: 'video' as const, label: 'Vídeo' };
+        if (metadataKind === 'document') {
+          const extension = metadataName.includes('.') ? metadataName.split('.').pop()?.toUpperCase() : '';
+          return { kind: 'document' as const, label: extension ? `Documento (${extension})` : 'Documento' };
+        }
+        return { kind: 'document' as const, label: 'Anexo' };
+      })();
+
+      const localizedRaw = localizePreviewMessage(row.last_message_content ?? t('messages.noMessagesYet', 'Sem mensagens ainda'));
+      const normalizedPreview = metadataPreview ?? parseAttachmentPreview(localizedRaw);
+      const finalPreview = !metadataPreview && localizedRaw.trim().startsWith('e2ee:')
+        ? { kind: 'text' as const, label: 'Mensagem protegida' }
+        : normalizedPreview;
 
       const preview: ConversationPreview = {
         id: row.conversation_id,
         title,
-        message: localizePreviewMessage(row.last_message_content ?? t('messages.noMessagesYet', 'Sem mensagens ainda')),
+        message: finalPreview.label,
         author,
         time: timeLabel,
         avatar: toInitials(avatarSource),
@@ -123,6 +179,12 @@ export function useChatList() {
         privateTag: isPrivate ? t('messages.privateTag', 'PRIVADO') : undefined,
         checkStatus,
         archived: row.is_archived,
+        presence: isPrivate ? (privateIsOnline ? 'online' : 'offline') : undefined,
+        lastSeenLabel: privateOfflineLastSeenLabel || undefined,
+        privateSeenLabel: isPrivate && !privateIsOnline && privateOfflineLastSeenLabel
+          ? `visto por último ${privateOfflineLastSeenLabel}`
+          : undefined,
+        messageKind: finalPreview.kind,
       };
 
       return {

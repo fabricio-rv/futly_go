@@ -21,6 +21,7 @@ import {
   setConversationArchived,
   subscribeConversationSocialState,
   subscribeConversationMessages,
+  touchMyLastSeen,
   toggleMessageReaction,
   togglePinMessage,
   toggleSaveMessage,
@@ -41,6 +42,8 @@ type HeaderData = {
   bannerSubtitle: string;
   matchId: string | null;
   isArchived: boolean;
+  privatePartnerId: string | null;
+  isCustomGroup: boolean;
 };
 
 function isNetworkFetchError(error: unknown) {
@@ -72,7 +75,7 @@ export function useConversationThread(conversationId: string) {
   const [error, setError] = useState<string | null>(null);
   const [header, setHeader] = useState<HeaderData | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [participants, setParticipants] = useState<Array<{ user_id: string; full_name: string; avatar_url?: string | null; role: 'host' | 'player' | 'system' }>>([]);
+  const [participants, setParticipants] = useState<Array<{ user_id: string; full_name: string; avatar_url?: string | null; role: 'host' | 'player' | 'system'; last_seen_at?: string | null }>>([]);
   const [messageReceipts, setMessageReceipts] = useState<MessageReceiptMap>({});
   const [reactions, setReactions] = useState<Record<string, ReactionGroup[]>>({});
   const [pinnedMessageIds, setPinnedMessageIds] = useState<string[]>([]);
@@ -116,7 +119,9 @@ export function useConversationThread(conversationId: string) {
       const formattedMatch = formatWeekdayTime(current.match_date, current.match_time, currentLanguage);
       const title = current.conversation_type === 'private'
         ? (current.private_partner_name ?? t('detail.privateConversationTitle', 'Conversa privada'))
-        : `${current.match_venue_name ?? current.match_title ?? t('detail.matchFallbackTitle', 'Partida')}${formattedMatch ? ` - ${formattedMatch}` : ''}`;
+        : current.is_custom_group
+          ? (current.group_name ?? t('detail.matchFallbackTitle', 'Grupo'))
+          : `${current.match_venue_name ?? current.match_title ?? t('detail.matchFallbackTitle', 'Partida')}${formattedMatch ? ` - ${formattedMatch}` : ''}`;
 
       const onlineLabel = t('detail.onlineLabel', 'online');
       const athletesLabel = t('detail.athletesLabel', 'atletas');
@@ -127,20 +132,31 @@ export function useConversationThread(conversationId: string) {
             name: current.private_partner_name ?? t('detail.athleteFallback', 'Atleta'),
             online: onlineLabel,
           })
-        : t('detail.groupSubtitle', '{{host}} + {{count}} {{athletes}} - {{online}}', {
-            host: host?.full_name ?? t('roles.host', 'Host'),
-            count: Math.max(participants.length - 1, 0),
-            athletes: athletesLabel,
-            online: onlineLabel,
-          });
+        : current.is_custom_group
+          ? t('detail.groupSubtitle', '{{host}} + {{count}} {{athletes}} - {{online}}', {
+              host: host?.full_name ?? t('roles.host', 'Host'),
+              count: Math.max(participants.length - 1, 0),
+              athletes: athletesLabel,
+              online: onlineLabel,
+            })
+          : t('detail.groupSubtitle', '{{host}} + {{count}} {{athletes}} - {{online}}', {
+              host: host?.full_name ?? t('roles.host', 'Host'),
+              count: Math.max(participants.length - 1, 0),
+              athletes: athletesLabel,
+              online: onlineLabel,
+            });
 
       const bannerTitle = current.conversation_type === 'private'
         ? t('detail.privateConversationTitle', 'Conversa privada')
-        : `${formattedMatch}${current.match_date ? ` - ${current.match_date}` : ''}`;
+        : current.is_custom_group
+          ? (current.group_name ?? t('detail.privateConversationTitle', 'Grupo'))
+          : `${formattedMatch}${current.match_date ? ` - ${current.match_date}` : ''}`;
 
       const bannerSubtitle = current.conversation_type === 'private'
         ? t('detail.privateConversationSubtitle', 'Troca direta entre atletas do Futly Go')
-        : `${current.match_venue_name ?? current.match_title ?? t('detail.matchBannerTitle', 'Partida marcada')} - ${t('detail.autoArchiveShort', 'auto-arquiva 7 dias apos o jogo')}`;
+        : current.is_custom_group
+          ? (current.group_description ?? t('detail.privateConversationSubtitle', 'Grupo personalizado do Futly Go'))
+          : `${current.match_venue_name ?? current.match_title ?? t('detail.matchBannerTitle', 'Partida marcada')} - ${t('detail.autoArchiveShort', 'auto-arquiva 7 dias apos o jogo')}`;
 
       const decryptedMessages = await Promise.all(
         rawMessages.map(async (message) => ({
@@ -267,11 +283,19 @@ export function useConversationThread(conversationId: string) {
       setHeader({
         title,
         subtitle,
-        avatar: toInitials(current.conversation_type === 'private' ? current.private_partner_name : current.match_venue_name ?? current.match_title),
+        avatar: toInitials(
+          current.conversation_type === 'private'
+            ? current.private_partner_name
+            : current.is_custom_group
+              ? current.group_name
+              : (current.match_venue_name ?? current.match_title),
+        ),
         bannerTitle,
         bannerSubtitle,
         matchId: current.match_id,
         isArchived: current.is_archived,
+        privatePartnerId: current.private_partner_id,
+        isCustomGroup: Boolean(current.is_custom_group),
       });
 
       setMessages(chatMessages);
@@ -380,6 +404,7 @@ export function useConversationThread(conversationId: string) {
         if (status === 'SUBSCRIBED') {
           reconnectAttemptRef.current = 0;
           channelSubscribedRef.current = true;
+          void touchMyLastSeen();
           await channel.track({ userId: currentUserId, typing: false, typingExpiresAt: null, onlineAt: new Date().toISOString() });
           syncPresence();
           return;
@@ -437,6 +462,7 @@ export function useConversationThread(conversationId: string) {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         void load();
+        void touchMyLastSeen();
         if (!channelSubscribedRef.current) setPresenceRetryToken((value) => value + 1);
       } else {
         updateTypingState(false);
@@ -448,6 +474,16 @@ export function useConversationThread(conversationId: string) {
       subscription.remove();
     };
   }, [load, updateTypingState]);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    void touchMyLastSeen();
+    const intervalId = setInterval(() => {
+      void touchMyLastSeen();
+    }, 60_000);
+
+    return () => clearInterval(intervalId);
+  }, [currentUserId]);
 
   const notifyComposerChanged = useCallback((value: string) => {
     const typing = value.trim().length > 0;
@@ -607,6 +643,14 @@ export function useConversationThread(conversationId: string) {
   }, [load, messages]);
 
   const canSend = useMemo(() => !loading, [loading]);
+  const privatePartner = useMemo(
+    () => participants.find((participant) => participant.user_id === header?.privatePartnerId) ?? null,
+    [header?.privatePartnerId, participants],
+  );
+  const privatePartnerIsOnline = useMemo(() => {
+    if (!header?.privatePartnerId) return false;
+    return onlineUserIds.includes(header.privatePartnerId);
+  }, [header?.privatePartnerId, onlineUserIds]);
 
   return {
     loading,
@@ -622,6 +666,8 @@ export function useConversationThread(conversationId: string) {
     typingUserIds,
     onlineUserIds,
     canSend,
+    privatePartner,
+    privatePartnerIsOnline,
     refresh: load,
     send,
     markUnread,

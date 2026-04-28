@@ -228,6 +228,10 @@ export type ConversationPreview = {
 	privateTag?: string;
 	checkStatus?: 'sent' | 'delivered' | 'read';
 	archived?: boolean;
+	presence?: 'online' | 'offline';
+	lastSeenLabel?: string;
+	privateSeenLabel?: string;
+	messageKind?: 'text' | 'audio' | 'image' | 'video' | 'document';
 };
 
 export const activeConversations: ConversationPreview[] = [

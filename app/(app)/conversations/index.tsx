@@ -1,7 +1,7 @@
-import { router } from 'expo-router';
-import { Clock3, Search, X } from 'lucide-react-native';
+﻿import { router } from 'expo-router';
+import { Clock3, Plus, Search } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 
@@ -9,7 +9,7 @@ import {
   ConversationListItem,
   HubTopNav,
 } from '@/src/components/features/store';
-import { IconButton, Pill, SkeletonList, Text } from '@/src/components/ui';
+import { Input, Pill, SkeletonList, Text } from '@/src/components/ui';
 import { useChatList } from '@/src/features/chat/hooks/useChatList';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
@@ -18,7 +18,6 @@ export default function ConversationsListScreen() {
   const { t } = useTranslation('chat');
   const { filter, setFilter, loading, error, summary, visibleActive, visibleArchived } = useChatList();
   const theme = useAppColorScheme();
-  const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const isLight = theme === 'light';
@@ -27,9 +26,9 @@ export default function ConversationsListScreen() {
     if (!searchQuery.trim()) return items;
     const q = searchQuery.toLowerCase();
     return items.filter((item) =>
-      item.title.toLowerCase().includes(q) ||
-      item.message.toLowerCase().includes(q) ||
-      (item.author ?? '').toLowerCase().includes(q)
+      item.title.toLowerCase().includes(q)
+      || item.message.toLowerCase().includes(q)
+      || (item.author ?? '').toLowerCase().includes(q)
     );
   };
 
@@ -60,74 +59,46 @@ export default function ConversationsListScreen() {
         ListHeaderComponent={(
           <>
             <HubTopNav
-              title={t('list.title', 'Conversas')}
-              subtitle={t('list.subtitle', `${summary.activeCount} ATIVAS - ${summary.unreadCount} NAO LIDAS`, { activeCount: summary.activeCount, unreadCount: summary.unreadCount })}
-              rightNode={
-                <IconButton
-                  icon={<Search size={18} color={showSearch ? '#22B76C' : (isLight ? '#3B4A5E' : '#FFFFFF')} strokeWidth={2} />}
-                  onPress={() => {
-                    setShowSearch((v) => !v);
-                    setSearchQuery('');
-                  }}
-                />
-              }
+              title=""
+              plainBack
+              centerNode={(
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 2, marginLeft: -10 }}>
+                  <Pill
+                    label={`${t('filters.all', 'Todas')} ${summary.allCount}`}
+                    tone={filter === 'todas' ? 'active' : 'default'}
+                    size="sm"
+                    onPress={() => setFilter('todas')}
+                  />
+                  <Pill size="sm" label={`${t('filters.active', 'Ativas')} ${summary.activeCount}`} tone={filter === 'ativas' ? 'active' : 'default'} onPress={() => setFilter('ativas')} />
+                  <Pill size="sm" label={`${t('filters.asHost', 'Como Host')} ${summary.hostCount}`} tone={filter === 'host' ? 'active' : 'default'} onPress={() => setFilter('host')} />
+                  <Pill size="sm" label={`${t('filters.asPlayer', 'Como Jogador')} ${summary.playerCount}`} tone={filter === 'jogador' ? 'active' : 'default'} onPress={() => setFilter('jogador')} />
+                  <Pill size="sm" label={`${t('filters.archived', 'Arquivadas')} ${summary.archivedCount}`} tone={filter === 'arquivadas' ? 'active' : 'default'} onPress={() => setFilter('arquivadas')} />
+                </View>
+              )}
+              rightNode={(
+                <Pressable
+                  onPress={() => router.push('/(app)/conversations/new')}
+                  hitSlop={12}
+                  className="w-10 h-10 items-end justify-center"
+                >
+                  <Plus size={20} color={isLight ? '#3B4A5E' : '#FFFFFF'} strokeWidth={2.4} />
+                </Pressable>
+              )}
             />
 
-            {showSearch ? (
-              <View
-                style={{
-                  marginHorizontal: 18,
-                  marginBottom: 10,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: isLight ? '#C8D6E8' : 'rgba(255,255,255,0.10)',
-                  backgroundColor: isLight ? '#FFFFFF' : '#0C111E',
-                  paddingHorizontal: 12,
-                  height: 44,
-                }}
-              >
-                <Search size={16} color={isLight ? '#8A9BB0' : '#5A6A80'} strokeWidth={2} style={{ marginRight: 8 }} />
-                <TextInput
-                  autoFocus
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  placeholder="Buscar conversa ou usuário..."
-                  placeholderTextColor={isLight ? '#9BABBF' : '#4A5A6F'}
-                  style={{
-                    flex: 1,
-                    fontSize: 14,
-                    color: isLight ? '#1F2937' : '#E8EDF3',
-                    includeFontPadding: false,
-                    paddingVertical: 0,
-                  }}
-                />
-                {searchQuery.length > 0 ? (
-                  <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-                    <X size={16} color={isLight ? '#8A9BB0' : '#5A6A80'} strokeWidth={2} />
-                  </Pressable>
-                ) : null}
-              </View>
-            ) : null}
-
-            <ScrollView
-              horizontal
-              bounces
-              overScrollMode="always"
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 10, gap: 8 }}
-            >
-              <Pill
-                label={`${t('filters.all', 'Todas')} ${summary.activeCount}`}
-                tone={filter === 'todas' ? 'active' : 'default'}
-                onPress={() => setFilter('todas')}
+            <View style={{ marginHorizontal: 18, marginTop: 0, marginBottom: 12 }}>
+              <Input
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onClear={() => setSearchQuery('')}
+                showClearButton
+                placeholder="Buscar conversa ou usuário..."
+                leftIcon={<Search size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
+                size="sm"
+                containerClassName="border-line2 bg-[#0C111E]"
+                inputClassName="text-fg1"
               />
-              <Pill label={t('filters.active', 'Ativas')} tone={filter === 'ativas' ? 'active' : 'default'} onPress={() => setFilter('ativas')} />
-              <Pill label={t('filters.asHost', 'Como Host')} tone={filter === 'host' ? 'active' : 'default'} onPress={() => setFilter('host')} />
-              <Pill label={t('filters.asPlayer', 'Como Jogador')} tone={filter === 'jogador' ? 'active' : 'default'} onPress={() => setFilter('jogador')} />
-              <Pill label={t('filters.archived', 'Arquivadas')} tone={filter === 'arquivadas' ? 'active' : 'default'} onPress={() => setFilter('arquivadas')} />
-            </ScrollView>
+            </View>
 
             <View
               className="mx-[18px] mt-1 mb-2 px-3 py-[10px] border rounded-2xl flex-row items-center gap-2"
