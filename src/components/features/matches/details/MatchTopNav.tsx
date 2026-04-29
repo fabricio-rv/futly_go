@@ -18,8 +18,8 @@ export function MatchTopNav({ title, subtitle, rightSlot }: MatchTopNavProps) {
   return (
     <View className="px-[18px] pb-2 pt-1">
       <View className="flex-row items-center justify-between">
-        <Pressable onPress={() => router.back()} className="w-10 h-10 rounded-[14px] border items-center justify-center" style={{ backgroundColor: matchTheme.colors.line, borderColor: matchTheme.colors.lineStrong }}>
-          <ChevronLeft color={matchTheme.colors.fgPrimary} size={18} />
+        <Pressable onPress={() => router.back()} hitSlop={12} className="w-10 h-10 items-center justify-center">
+          <ChevronLeft color={matchTheme.colors.fgPrimary} size={22} />
         </Pressable>
 
         <View className="items-center">

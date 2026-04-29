@@ -135,7 +135,7 @@ export function useChatList() {
         ? undefined
         : row.last_message_sender_id === currentUserId
           ? row.last_message_receipt_status ?? 'sent'
-          : 'sent';
+          : undefined;
       const privateOfflineLastSeenLabel = isPrivate && !privateIsOnline
         ? formatLastSeenBrazil(privateLastSeenAt)
         : '';

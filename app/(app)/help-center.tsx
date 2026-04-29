@@ -86,7 +86,7 @@ export default function HelpCenterScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubTopNav title={t('title', 'Help Center')} subtitle={t('subtitle', 'FAQ AND TUTORIALS')} />
+        <HubTopNav plainBack title={t('title', 'Help Center')} subtitle={t('subtitle', 'FAQ AND TUTORIALS')} />
 
         <View className="mx-[18px] mt-6">
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">

@@ -275,10 +275,14 @@ export function useConversationThread(conversationId: string) {
           : `${current.match_venue_name ?? current.match_title ?? t('detail.matchBannerTitle', 'Partida marcada')} - ${t('detail.autoArchiveShort', 'auto-arquiva 7 dias apos o jogo')}`;
 
       const decryptedMessages = await Promise.all(
-        rawMessages.map(async (message) => ({
-          ...message,
-          content: message.message_type === 'system' ? message.content : await decryptMessage(conversationId, message.content),
-        })),
+        rawMessages.map(async (message) => {
+          if (message.message_type === 'system') return message;
+          const decrypted = await decryptMessage(conversationId, message.content);
+          return {
+            ...message,
+            content: decrypted.startsWith('e2ee:') ? 'Mensagem protegida' : decrypted,
+          };
+        }),
       );
 
       const messageIds = decryptedMessages.map((message) => message.id);

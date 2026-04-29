@@ -1,10 +1,11 @@
-import { Bell, CircleDot, Star } from 'lucide-react-native';
+import { Bell, CircleDot, MessageCircle, Star } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { View, Modal, Pressable, TextInput, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
+import { router } from 'expo-router';
 
 import { MatchBottomNav, useMatchTheme } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
@@ -14,6 +15,43 @@ import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type NotificationItem = ReturnType<typeof useNotifications>['notifications'][number];
+
+type DisplayItem = NotificationItem & {
+  chatCount?: number;
+  conversationId?: string;
+  senderName?: string;
+};
+
+function isChatNotif(n: NotificationItem) {
+  return n.metadata?.kind === 'chat_message';
+}
+
+function groupNotifications(notifications: NotificationItem[]): DisplayItem[] {
+  const result: DisplayItem[] = [];
+  const chatSeen = new Map<string, number>();
+
+  for (const n of notifications) {
+    if (!isChatNotif(n)) {
+      result.push(n);
+      continue;
+    }
+
+    const convId: string = n.metadata?.conversationId ?? n.metadata?.conversation_id ?? '';
+    // title é o nome do remetente (definido pelo trigger no DB)
+    const senderName: string = n.title;
+    const key = `${convId}:${senderName}`;
+
+    if (chatSeen.has(key)) {
+      const idx = chatSeen.get(key)!;
+      result[idx] = { ...result[idx], chatCount: (result[idx].chatCount ?? 1) + 1 };
+    } else {
+      chatSeen.set(key, result.length);
+      result.push({ ...n, chatCount: 1, conversationId: convId || undefined, senderName });
+    }
+  }
+
+  return result;
+}
 
 function toRelative(isoDate: string) {
   const date = new Date(isoDate);
@@ -42,6 +80,7 @@ export default function NotificationsScreen() {
   const [ratingData, setRatingData] = useState<{ matchId: string; targetUserId: string; targetRole: 'creator' | 'player' } | null>(null);
 
   const title = useMemo(() => `${t('title', 'Notificacoes')} ${unreadCount > 0 ? `(${unreadCount})` : ''}`.trim(), [unreadCount, t]);
+  const displayNotifications = useMemo(() => groupNotifications(notifications), [notifications]);
   const bgColor = theme === 'light' ? '#F1F5F9' : '#020617';
 
   const handleRequestAction = useCallback(async (requestId: string, action: 'accept' | 'reject') => {
@@ -95,8 +134,8 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <FlashList
-        data={notifications}
-        keyExtractor={(item) => item.id}
+        data={displayNotifications}
+        keyExtractor={(item) => item.conversationId ? `chat:${item.conversationId}:${item.id}` : item.id}
 bounces
         overScrollMode="always"
         showsVerticalScrollIndicator={false}
@@ -150,46 +189,79 @@ bounces
             </BaseCard>
           </View>
         }
-        renderItem={({ item }) => (
+        renderItem={({ item }: { item: DisplayItem }) => (
           <View className="px-[18px]">
-            <BaseCard className="mb-3" style={{ backgroundColor: item.isRead ? matchTheme.colors.bgSurfaceA : 'rgba(34,183,108,0.08)' }}>
-              <View className="flex-row items-start justify-between gap-2">
-                <View className="flex-1">
-                  <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item.title}</Text>
-                  <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">{item.body}</Text>
+            {item.chatCount !== undefined ? (
+              <TouchableScale
+                onPress={() => item.conversationId ? router.push(`/(app)/conversations/${item.conversationId}`) : router.push('/(app)/conversations')}
+              >
+                <BaseCard className="mb-3" style={{ backgroundColor: item.isRead ? matchTheme.colors.bgSurfaceA : 'rgba(34,183,108,0.08)' }}>
+                  <View className="flex-row items-center gap-3">
+                    <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(34,183,108,0.15)', alignItems: 'center', justifyContent: 'center' }}>
+                      <MessageCircle size={18} color="#22B76C" />
+                    </View>
+                    <View className="flex-1">
+                      <View className="flex-row items-center gap-2 flex-wrap">
+                        <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item.senderName}</Text>
+                        {item.metadata?.conversationType === 'private' ? (
+                          <View style={{ backgroundColor: 'rgba(90,177,255,0.18)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                            <Text variant="micro" style={{ color: '#7AC0FF', fontWeight: '700', fontSize: 10 }}>Privada</Text>
+                          </View>
+                        ) : item.metadata?.conversationName ? (
+                          <Text variant="micro" className="text-[#4B5563] dark:text-fg3" numberOfLines={1}>{item.metadata.conversationName}</Text>
+                        ) : null}
+                        {(item.chatCount ?? 0) > 1 ? (
+                          <View style={{ backgroundColor: '#22B76C', borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>
+                            <Text variant="micro" style={{ color: '#05070B', fontWeight: '700', fontSize: 10 }}>{item.chatCount}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-0.5" numberOfLines={1}>{item.body}</Text>
+                    </View>
+                    <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(item.createdAt)}</Text>
+                  </View>
+                </BaseCard>
+              </TouchableScale>
+            ) : (
+              <BaseCard className="mb-3" style={{ backgroundColor: item.isRead ? matchTheme.colors.bgSurfaceA : 'rgba(34,183,108,0.08)' }}>
+                <View className="flex-row items-start justify-between gap-2">
+                  <View className="flex-1">
+                    <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item.title}</Text>
+                    <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">{item.body}</Text>
+                  </View>
+                  <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(item.createdAt)}</Text>
                 </View>
-                <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(item.createdAt)}</Text>
-              </View>
 
-              {item.type === 'participation_requested' && item.metadata && item.metadata.request_id ? (
-                <View className="flex-row gap-2 mt-3">
-                  <TouchableScale
-                    className="rounded-[10px] border border-[#22B76C66] bg-[#22B76C22] px-3 py-2 flex-1"
-                    onPress={() => void handleRequestAction(item.metadata!.request_id, 'accept')}
-                    disabled={submitting}
-                  >
-                    <Text variant="micro" className="text-[#86E5B4] font-semibold text-center">{t('actions.accept', 'Aceitar')}</Text>
-                  </TouchableScale>
-                  <TouchableScale
-                    className="rounded-[10px] border border-[#EF444466] bg-[#EF444422] px-3 py-2 flex-1"
-                    onPress={() => void handleRequestAction(item.metadata!.request_id, 'reject')}
-                    disabled={submitting}
-                  >
-                    <Text variant="micro" className="text-[#FCA5A5] font-semibold text-center">{t('actions.reject', 'Recusar')}</Text>
-                  </TouchableScale>
-                </View>
-              ) : null}
+                {item.type === 'participation_requested' && item.metadata?.request_id ? (
+                  <View className="flex-row gap-2 mt-3">
+                    <TouchableScale
+                      className="rounded-[10px] border border-[#22B76C66] bg-[#22B76C22] px-3 py-2 flex-1"
+                      onPress={() => void handleRequestAction(item.metadata!.request_id, 'accept')}
+                      disabled={submitting}
+                    >
+                      <Text variant="micro" className="text-[#86E5B4] font-semibold text-center">{t('actions.accept', 'Aceitar')}</Text>
+                    </TouchableScale>
+                    <TouchableScale
+                      className="rounded-[10px] border border-[#EF444466] bg-[#EF444422] px-3 py-2 flex-1"
+                      onPress={() => void handleRequestAction(item.metadata!.request_id, 'reject')}
+                      disabled={submitting}
+                    >
+                      <Text variant="micro" className="text-[#FCA5A5] font-semibold text-center">{t('actions.reject', 'Recusar')}</Text>
+                    </TouchableScale>
+                  </View>
+                ) : null}
 
-              {item.type === 'match_rating_available' ? (
-                <TouchableScale
-                  className="mt-3 rounded-[10px] px-3 py-2"
-                  style={{ backgroundColor: matchTheme.colors.ok }}
-                  onPress={() => handleOpenRating(item)}
-                >
-                  <Text variant="micro" className="text-[#111827] dark:text-white font-semibold text-center">{t('actions.rateNow', 'Avaliar agora')}</Text>
-                </TouchableScale>
-              ) : null}
-            </BaseCard>
+                {item.type === 'match_rating_available' ? (
+                  <TouchableScale
+                    className="mt-3 rounded-[10px] px-3 py-2"
+                    style={{ backgroundColor: matchTheme.colors.ok }}
+                    onPress={() => handleOpenRating(item)}
+                  >
+                    <Text variant="micro" className="text-[#111827] dark:text-white font-semibold text-center">{t('actions.rateNow', 'Avaliar agora')}</Text>
+                  </TouchableScale>
+                ) : null}
+              </BaseCard>
+            )}
           </View>
         )}
       />

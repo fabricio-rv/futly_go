@@ -58,7 +58,7 @@ export function ConversationHeader({
               className="h-10 w-10 rounded-full border items-center justify-center"
               style={{ borderColor: tk.brand.green.bg38 }}
             >
-              <Text variant="label" className="font-bold text-white">
+              <Text variant="label" className="font-bold text-white" style={{ fontSize: 15, lineHeight: 17 }}>
                 {avatar}
               </Text>
             </LinearGradient>
@@ -75,17 +75,12 @@ export function ConversationHeader({
 
           <View className="flex-1">
             <View className="flex-row items-center gap-1">
-              <Text
-                variant="label"
-                className="font-semibold"
-                style={{ color: tk.text.primary }}
-                numberOfLines={1}
-              >
+              <Text variant="label" className="font-semibold" style={{ color: tk.text.primary }} numberOfLines={1}>
                 {title}
               </Text>
               <Star size={10} color={tk.brand.gold.primary} fill={tk.brand.gold.primary} strokeWidth={1.6} />
             </View>
-            <Text variant="micro" numberOfLines={1} style={{ color: subtitleColor }}>
+            <Text variant="micro" numberOfLines={1} style={{ color: subtitleColor, marginTop: 1 }}>
               {subtitle}
             </Text>
           </View>

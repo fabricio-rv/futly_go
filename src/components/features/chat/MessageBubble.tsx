@@ -1,5 +1,5 @@
 import { Check, CheckCheck, CornerUpLeft, FileText, Forward, Mic, Pause, Pin, Play, Star } from 'lucide-react-native';
-import { Image, Platform, Pressable, type GestureResponderEvent, View } from 'react-native';
+import { Image, Platform, Pressable, type GestureResponderEvent, View, useWindowDimensions } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
@@ -56,6 +56,7 @@ export function MessageBubble({
     : audioDurationMs;
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
+  const { width: screenWidth } = useWindowDimensions();
 
   if (message.kind === 'system') {
     return (
@@ -76,6 +77,8 @@ export function MessageBubble({
   const isMediaAttachment = message.attachment?.kind === 'image' || message.attachment?.kind === 'video';
   const hasReactionBadge = reactions.length > 0;
   const firstReaction = reactions[0];
+  const mediaWidth = Math.min(330, Math.max(220, screenWidth - 92));
+  const mediaHeight = Math.round(mediaWidth * 1.2);
 
   const receiptIcon = mine
     ? message.receipt === 'read'
@@ -127,7 +130,7 @@ export function MessageBubble({
       onPress={handlePress}
       onLongPress={(event) => !selectMode && openActions(event)}
       delayLongPress={260}
-      className={`flex-row items-end gap-2 mb-[7px] ${mine ? 'flex-row-reverse' : 'flex-row'}`}
+      className={`flex-row items-end gap-2 mb-[11px] ${mine ? 'flex-row-reverse' : 'flex-row'}`}
     >
       {/* Select checkbox */}
       {selectMode && (
@@ -148,12 +151,13 @@ export function MessageBubble({
 
       <View style={{ maxWidth: '82%', position: 'relative', marginBottom: hasReactionBadge ? 14 : 0 }}>
         <View
-          className={`rounded-[16px] ${(isAudioOnly || isDocumentOnly) ? 'px-0 py-0 border-0' : `px-3 py-2 border ${mine ? 'rounded-tr-[4px]' : 'rounded-tl-[4px]'}`}`}
+          className={`rounded-[16px] ${(isAudioOnly || isDocumentOnly || isMediaAttachment) ? 'px-0 py-0 border-0' : `px-3 py-2 border ${mine ? 'rounded-tr-[4px]' : 'rounded-tl-[4px]'}`}`}
           style={{
             backgroundColor: (isAudioOnly || isDocumentOnly) ? (mine ? tk.bubbleOwnBg : tk.bubbleThemBg) : (mine ? tk.bubbleOwnBg : tk.bubbleThemBg),
             borderColor: (isAudioOnly || isDocumentOnly) ? 'transparent' : (mine ? tk.bubbleOwnBorder : tk.bubbleThemBorder),
             opacity: isSelected ? 0.85 : 1,
-            paddingTop: isDocumentOnly ? 12 : undefined,
+            paddingTop: isDocumentOnly ? 12 : (mine && !isAudioOnly && !isMediaAttachment ? 11 : undefined),
+            paddingBottom: isMediaAttachment ? (mine ? 10 : 18) : undefined,
           }}
         >
         {/* Group sender name */}
@@ -161,8 +165,8 @@ export function MessageBubble({
           <Text
             variant="micro"
             numberOfLines={1}
-            style={{ color: tk.brand.gold.primary, marginLeft: isDocumentOnly ? 12 : 0 }}
-            className={`font-bold ${isMediaAttachment ? 'mb-[7px]' : 'mb-[2px]'}`}
+            style={{ color: tk.brand.gold.primary, marginLeft: isDocumentOnly ? 12 : 0, marginTop: 5 }}
+            className={`font-bold ${isMediaAttachment ? 'mb-[8px]' : 'mb-[4px]'}`}
           >
             {message.author}
             {message.role ? ` · ${message.role}` : ''}
@@ -218,10 +222,10 @@ export function MessageBubble({
             {message.attachment.kind === 'image' ? (
               <View
                 style={{
-                  width: 330,
-                  height: 420,
-                  borderRadius: 10,
-                  marginBottom: message.text ? 6 : 0,
+                  width: mediaWidth,
+                  height: mediaHeight,
+                  borderRadius: 14,
+                  marginBottom: message.text ? 8 : 0,
                   backgroundColor: mine ? 'rgba(0,0,0,0.15)' : '#0b1220',
                   overflow: 'hidden',
                   alignItems: 'center',
@@ -235,12 +239,23 @@ export function MessageBubble({
                 />
               </View>
             ) : (
-              <VideoView
-                player={videoPlayer}
-                style={{ width: 330, height: 420, borderRadius: 10, marginBottom: message.text ? 6 : 0 }}
-                nativeControls
-                contentFit="cover"
-              />
+              <View
+                style={{
+                  width: mediaWidth,
+                  height: mediaHeight,
+                  borderRadius: 14,
+                  marginBottom: message.text ? 8 : 0,
+                  backgroundColor: mine ? 'rgba(0,0,0,0.15)' : '#0b1220',
+                  overflow: 'hidden',
+                }}
+              >
+                <VideoView
+                  player={videoPlayer}
+                  style={{ width: '100%', height: '100%' }}
+                  nativeControls
+                  contentFit="cover"
+                />
+              </View>
             )}
           </Pressable>
         ) : null}
@@ -398,7 +413,15 @@ export function MessageBubble({
 
           {/* Footer: pin, save, time, receipt */}
           {!isAudioOnly && !isDocumentOnly ? (
-            <View className="mt-1 flex-row items-center justify-end gap-1.5">
+            <View
+              className="flex-row items-center justify-end gap-1.5"
+              style={{
+                paddingRight: isMediaAttachment ? (mine ? 4 : 10) : 0,
+                paddingBottom: isMediaAttachment && !mine ? 12 : 0,
+                marginTop: isMediaAttachment ? 6 : 4,
+                transform: isMediaAttachment && !mine ? [{ translateY: -6 }] : undefined,
+              }}
+            >
               {isPinned ? (
                 <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
               ) : null}
@@ -408,7 +431,7 @@ export function MessageBubble({
               {message.time ? (
                 <Text
                   variant="micro"
-                  style={{ color: mine ? 'rgba(255,255,255,0.55)' : tk.text.tertiary }}
+                  style={{ color: mine ? 'rgba(255,255,255,0.55)' : tk.text.tertiary, lineHeight: 14, paddingBottom: isMediaAttachment && !mine ? 2 : 0 }}
                 >
                   {message.time}
                 </Text>
@@ -423,8 +446,8 @@ export function MessageBubble({
             onPress={() => firstReaction && onReactionPress?.(firstReaction.emoji)}
             className="absolute flex-row items-center"
             style={{
-              right: mine ? 6 : undefined,
-              left: mine ? undefined : 6,
+              left: 6,
+              right: undefined,
               bottom: -11,
               backgroundColor: theme === 'dark' ? '#2A2A2A' : '#FFFFFF',
               borderRadius: 10,

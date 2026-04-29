@@ -89,7 +89,7 @@ export default function SupportChatScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubTopNav title={t('title', 'Falar com Suporte')} subtitle={t('subtitle', 'CENTRAL DE SUPORTE')} />
+        <HubTopNav plainBack title={t('title', 'Falar com Suporte')} subtitle={t('subtitle', 'CENTRAL DE SUPORTE')} />
 
         <View className="mx-[18px] mt-6 rounded-[18px] border border-[rgba(0,0,0,0.08)] dark:border-line2 bg-[#FAFBFC] dark:bg-[#0C111E] p-[18px] mb-6">
           <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-4">

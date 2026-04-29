@@ -7,16 +7,25 @@ type IconButtonProps = Omit<PressableProps, 'children'> & {
   icon: ReactNode;
   size?: number;
   className?: string;
+  variant?: 'filled' | 'flat';
 };
 
-export function IconButton({ icon, size = 40, className, style, ...rest }: IconButtonProps) {
+export function IconButton({ icon, size = 40, className, style, variant = 'filled', ...rest }: IconButtonProps) {
   const theme = useAppColorScheme();
 
   const baseStyle: ViewStyle = {
     width: size,
     height: size,
-    borderColor: theme === 'light' ? '#D6DFEB' : 'rgba(255,255,255,0.10)',
-    backgroundColor: theme === 'light' ? '#EEF3FA' : 'rgba(255,255,255,0.05)',
+    ...(variant === 'filled' ? {
+      borderColor: theme === 'light' ? '#D6DFEB' : 'rgba(255,255,255,0.10)',
+      backgroundColor: theme === 'light' ? '#EEF3FA' : 'rgba(255,255,255,0.05)',
+    } : variant === 'flat' ? {
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+    } : {
+      borderColor: 'transparent',
+      backgroundColor: 'transparent',
+    }),
   };
 
   const mergedStyle = (state: PressableStateCallbackType): StyleProp<ViewStyle> => {

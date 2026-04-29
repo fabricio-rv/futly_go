@@ -40,7 +40,7 @@ export default function TermsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubTopNav title={t('title', 'Terms and Privacy')} subtitle={t('subtitle', 'POLICY AND TERMS')} />
+        <HubTopNav plainBack title={t('title', 'Terms and Privacy')} subtitle={t('subtitle', 'POLICY AND TERMS')} />
 
         <View className="mx-[18px] mt-6 flex-row gap-2 mb-6">
           <Pill

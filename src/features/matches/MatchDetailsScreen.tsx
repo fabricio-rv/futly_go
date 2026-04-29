@@ -33,6 +33,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const [details, setDetails] = useState<MatchDetails | null>(null);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [mapPreviewUrls, setMapPreviewUrls] = useState<string[]>([]);
+  const [mapCoordinates, setMapCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
 
   const translateStatusLabel = (label: string) => {
     if (label.includes('Criada por') || label.includes('Created by')) return t('statusCreatedByYou', 'Criada por você');
@@ -184,6 +185,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     async function loadMapPreview() {
       if (!locationQuery) {
         setMapPreviewUrls([]);
+        setMapCoordinates(null);
         return;
       }
 
@@ -198,14 +200,20 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
         const first = payload?.[0];
 
         if (!first?.lat || !first?.lon) {
-          if (!cancelled) setMapPreviewUrls([]);
+          if (!cancelled) {
+            setMapPreviewUrls([]);
+            setMapCoordinates(null);
+          }
           return;
         }
 
         const lat = Number(first.lat);
         const lon = Number(first.lon);
         if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-          if (!cancelled) setMapPreviewUrls([]);
+          if (!cancelled) {
+            setMapPreviewUrls([]);
+            setMapCoordinates(null);
+          }
           return;
         }
 
@@ -220,11 +228,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           `&pt=${lon},${lat},pm2rdm`;
 
         if (!cancelled) {
+          setMapCoordinates({ latitude: lat, longitude: lon });
           setMapPreviewUrls([osmStaticUrl, yandexStaticUrl]);
         }
       } catch {
         if (!cancelled) {
           setMapPreviewUrls([]);
+          setMapCoordinates(null);
         }
       }
     }
@@ -308,6 +318,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const availableSlots = details.slots.filter((slot) => slot.open && !slot.occupied);
   const heroGradient = isLight ? (['#1A5B33', '#0E3A23', '#082717'] as const) : (['#0F3A24', '#072314', '#021109'] as const);
   const matchInfoItemWidth = screenWidth >= 900 ? '25%' : '50%';
+  const isCompactScreen = screenWidth <= 390;
+  const heroHorizontalPadding = isCompactScreen ? 16 : 20;
+  const heroVerticalPadding = isCompactScreen ? 16 : 20;
+  const heroDayFontSize = isCompactScreen ? 46 : 56;
+  const heroDayLineHeight = isCompactScreen ? 50 : 60;
+  const heroTimeFontSize = isCompactScreen ? 26 : 30;
+  const heroMetaSpacingTop = isCompactScreen ? 10 : 14;
   const matchDateLabel = (() => {
     if (!match.match_date) return t('details.notInformed', 'Não informado');
 
@@ -342,33 +359,34 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           title={t('details.title')}
           subtitle={`PARTIDA #${match.id.slice(0, 8).toUpperCase()}`}
           rightSlot={
-            <View
-              className="w-10 h-10 rounded-[14px] border items-center justify-center"
-              style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
-            >
-              <Share2 color={matchTheme.colors.fgPrimary} size={16} />
-            </View>
+            <Pressable hitSlop={12} className="w-10 h-10 items-center justify-center">
+              <Share2 color={matchTheme.colors.fgPrimary} size={20} />
+            </Pressable>
           }
         />
 
-        <View className="px-[18px]">
+        <View style={{ paddingHorizontal: isCompactScreen ? 14 : 18, paddingTop: 10 }}>
           {isLight ? (
             <View
-              className="rounded-[20px] p-[18px] mb-[14px]"
+              className="mb-[14px]"
               style={{
                 backgroundColor: matchTheme.colors.bgSurfaceA,
                 borderColor: matchTheme.colors.line,
                 borderWidth: 1,
+                borderRadius: 20,
+                overflow: 'hidden',
+                paddingHorizontal: heroHorizontalPadding,
+                paddingVertical: heroVerticalPadding,
               }}
             >
               <Text variant="micro" className="uppercase tracking-[2px] font-bold" style={{ color: '#22B76C' }}>
                 {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
               </Text>
-              <Text variant="number" className="text-[56px] leading-[50px] mt-1" style={{ color: '#111827' }}>
+              <Text variant="number" className="mt-1" style={{ color: '#111827', fontSize: heroDayFontSize, lineHeight: heroDayLineHeight }}>
                 {card.dateLabel.split(' - ')[0]}
               </Text>
               <View className="flex-row items-end gap-2 mt-1">
-                <Text variant="number" className="text-[30px]" style={{ color: '#D4A13A' }}>
+                <Text variant="number" style={{ color: '#D4A13A', fontSize: heroTimeFontSize }}>
                   {card.timeLabel}
                 </Text>
                 <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: '#4B5563' }}>
@@ -376,12 +394,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 </Text>
               </View>
 
-              <View className="flex-row gap-2 mt-[14px] flex-wrap">
+              <View className="flex-row gap-2 flex-wrap" style={{ marginTop: heroMetaSpacingTop }}>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
                   style={{
                     backgroundColor: '#E0F2FE',
                     borderColor: '#0284C7',
+                    marginLeft: 6,
                   }}
                 >
                   <Text variant="caption" className="text-[10px]" style={{ color: '#0C4A6E' }}>
@@ -408,28 +427,41 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               </View>
             </View>
           ) : (
-            <LinearGradient colors={heroGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} className="rounded-[20px] p-[18px] mb-[14px]">
-              <View className="absolute top-[14px] right-[14px]">
+            <LinearGradient
+              colors={heroGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              className="mb-[14px]"
+              style={{
+                borderRadius: 20,
+                overflow: 'hidden',
+                paddingHorizontal: heroHorizontalPadding,
+                paddingVertical: heroVerticalPadding,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                <Text variant="micro" numberOfLines={2} className="uppercase tracking-[2px] font-bold flex-1" style={{ color: matchTheme.colors.okSoft }}>
+                  {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
+                </Text>
                 <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={translateStatusLabel(card.statusLabel)} />
               </View>
-
-              <Text variant="micro" className="uppercase tracking-[2px] font-bold" style={{ color: matchTheme.colors.okSoft }}>
-                {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
+              <Text variant="number" className="mt-1" style={{ fontSize: heroDayFontSize, lineHeight: heroDayLineHeight }}>
+                {translateDayLabel(card.dateLabel).split(' - ')[0]}
               </Text>
-              <Text variant="number" className="text-[56px] leading-[50px] mt-1">{translateDayLabel(card.dateLabel).split(' - ')[0]}</Text>
               <View className="flex-row items-end gap-2 mt-1">
-                <Text variant="number" className="text-[30px]" style={{ color: matchTheme.colors.goldA }}>{card.timeLabel}</Text>
+                <Text variant="number" style={{ color: matchTheme.colors.goldA, fontSize: heroTimeFontSize }}>{card.timeLabel}</Text>
                 <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: matchTheme.colors.fgSecondary }}>
                   - {translateShiftLabel(card.shiftLabel)} - {match.duration_minutes}min - {matchDateLabel}
                 </Text>
               </View>
 
-              <View className="flex-row gap-2 mt-[14px] flex-wrap">
+              <View className="flex-row gap-2 flex-wrap" style={{ marginTop: heroMetaSpacingTop }}>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
                   style={{
                     backgroundColor: 'rgba(90,177,255,0.14)',
                     borderColor: 'rgba(90,177,255,0.35)',
+                    marginLeft: 6,
                   }}
                 >
                   <Text variant="caption" className="text-[10px]" style={{ color: '#7AC0FF' }}>
@@ -548,6 +580,8 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               districtLine={[match.district, match.city, match.state].filter(Boolean).join(' - ') || t('details.locationNotInformed', 'Location not provided')}
               mapImageUrls={mapPreviewUrls}
               mapEmbedUrl={mapEmbedUrl}
+              latitude={mapCoordinates?.latitude ?? null}
+              longitude={mapCoordinates?.longitude ?? null}
               showAddressFooter
               embeddedInCard
               onRoutePress={() => void handleOpenRoute()}

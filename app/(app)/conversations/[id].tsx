@@ -413,7 +413,7 @@ export default function ConversationDetailScreen() {
     try {
       await AudioModule.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
       await recorder.prepareToRecordAsync();
-      recorder.record();
+      await recorder.record();
       setIsRecording(true);
       setRecordingDuration(0);
       recordingTimerRef.current = setInterval(() => setRecordingDuration((prev) => prev + 1), 1000);
@@ -432,8 +432,10 @@ export default function ConversationDetailScreen() {
     setRecordingDuration(0);
 
     try {
-      await recorder.stop();
-      await AudioModule.setAudioModeAsync({ allowsRecordingIOS: false });
+      if (recorder.isRecording) {
+        await recorder.stop();
+      }
+      await AudioModule.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
       if (cancelled) return;
 
       const uri = recorder.uri;
@@ -793,10 +795,38 @@ export default function ConversationDetailScreen() {
           </View>
         </Modal>
 
-        <Modal visible={!!openedAttachment} transparent animationType="slide" onRequestClose={() => setOpenedAttachment(null)}>
-          <View className="flex-1 bg-black">
-            <View className="px-4 py-3 flex-row items-center justify-between" style={{ backgroundColor: '#0b1220' }}>
-              <Text variant="caption" className="text-white font-bold">
+        <Modal visible={!!openedAttachment} transparent animationType="fade" onRequestClose={() => setOpenedAttachment(null)}>
+          <View style={{ flex: 1, backgroundColor: '#000' }}>
+            {openedAttachment?.kind === 'image' ? (
+              <View className="flex-1 items-center justify-center" style={{ paddingTop: insets.top + 56 }}>
+                <Image source={{ uri: openedAttachment.url }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+              </View>
+            ) : openedAttachment?.kind === 'video' ? (
+              <View className="flex-1 items-center justify-center" style={{ paddingTop: insets.top + 56 }}>
+                <VideoPreview uri={openedAttachment.url} />
+              </View>
+            ) : (
+              <View className="flex-1 items-center justify-center px-6" style={{ paddingTop: insets.top + 56 }}>
+                <Text variant="caption" className="text-white text-center">
+                  Este tipo de arquivo abre no navegador.
+                </Text>
+              </View>
+            )}
+
+            <View
+              className="px-4 py-3 flex-row items-center justify-between"
+              style={{
+                backgroundColor: 'rgba(11,18,32,0.94)',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                paddingTop: insets.top + 6,
+                zIndex: 50,
+                elevation: 50,
+              }}
+            >
+              <Text variant="caption" className="text-white font-bold" numberOfLines={1} style={{ flex: 1, marginRight: 12 }}>
                 {openedAttachment?.kind === 'document'
                   ? (openedAttachment?.fileName ?? 'Documento')
                   : openedAttachment?.kind === 'image'
@@ -811,30 +841,14 @@ export default function ConversationDetailScreen() {
                     <Text variant="caption" className="text-[#22c55e] font-bold">Baixar</Text>
                   </Pressable>
                 ) : null}
-                <Pressable onPress={() => setOpenedAttachment(null)}>
+                <Pressable onPress={() => setOpenedAttachment(null)} hitSlop={12}>
                   <Text variant="caption" className="text-[#22c55e] font-bold">Fechar</Text>
                 </Pressable>
               </View>
             </View>
-            {openedAttachment?.kind === 'image' ? (
-              <View className="flex-1 items-center justify-center">
-                <Image source={{ uri: openedAttachment.url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-              </View>
-            ) : openedAttachment?.kind === 'video' ? (
-              <View className="flex-1 items-center justify-center">
-                <VideoPreview uri={openedAttachment.url} />
-              </View>
-            ) : (
-              <View className="flex-1 items-center justify-center px-6">
-                <Text variant="caption" className="text-white text-center">
-                  Este tipo de arquivo abre no navegador.
-                </Text>
-              </View>
-            )}
           </View>
         </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-

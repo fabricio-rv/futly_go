@@ -149,7 +149,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
       </LinearGradient>
 
       <View className="p-[14px]">
-        <View className="flex-row items-start justify-between mb-1">
+        <View className="flex-row items-stretch justify-between mb-1">
           <View className="flex-1 pr-2">
             <Text variant="body" className="font-semibold text-[16px]" style={{ color: matchTheme.colors.fgPrimary }}>
               {partida.title}
@@ -198,7 +198,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
             </View>
           </View>
 
-          <View style={{ alignItems: 'flex-end', gap: 6 }}>
+          <View style={{ alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <StatBadge label={translateLevelLabel(partida.levelLabel)} tone={levelToneToBadge(partida.levelTone)} />
             {rightAction}
             <View className="flex-row items-center gap-1">

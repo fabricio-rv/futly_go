@@ -1,6 +1,7 @@
 import { MapPin } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, View } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import { WebView } from 'react-native-webview';
 
 import { Text } from '@/src/components/ui';
@@ -12,12 +13,24 @@ type MapPreviewCardProps = {
   districtLine: string;
   mapImageUrls?: string[];
   mapEmbedUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   onRoutePress?: () => void;
   showAddressFooter?: boolean;
   embeddedInCard?: boolean;
 };
 
-export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], mapEmbedUrl, onRoutePress, showAddressFooter = true, embeddedInCard = false }: MapPreviewCardProps) {
+export function MapPreviewCard({
+  addressLine,
+  districtLine,
+  mapImageUrls = [],
+  mapEmbedUrl,
+  latitude = null,
+  longitude = null,
+  onRoutePress,
+  showAddressFooter = true,
+  embeddedInCard = false,
+}: MapPreviewCardProps) {
   const matchTheme = useMatchTheme();
   const theme = useAppColorScheme();
   const isLight = theme === 'light';
@@ -30,6 +43,7 @@ export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], m
   }, [mapImageUrls]);
 
   const activeMapUrl = mapImageUrls[currentUrlIndex] ?? null;
+  const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
   const mapClassName = embeddedInCard
     ? 'h-64 w-full overflow-hidden rounded-[20px]'
     : 'h-56 rounded-[18px] border mb-2 overflow-hidden';
@@ -43,6 +57,7 @@ export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], m
           borderColor: matchTheme.colors.lineStrong,
           borderWidth: 1,
         }}
+        pointerEvents="box-none"
       >
         {isWeb && mapEmbedUrl ? (
           <Iframe
@@ -51,6 +66,38 @@ export function MapPreviewCard({ addressLine, districtLine, mapImageUrls = [], m
             style={{ width: '100%', height: '100%', border: 0 }}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
+          />
+        ) : !isWeb && hasCoordinates ? (
+          <MapView
+            style={{ width: '100%', height: '100%' }}
+            initialRegion={{
+              latitude: latitude as number,
+              longitude: longitude as number,
+              latitudeDelta: 0.008,
+              longitudeDelta: 0.008,
+            }}
+            zoomEnabled
+            zoomTapEnabled
+            scrollEnabled
+            rotateEnabled
+            pitchEnabled
+            showsCompass
+            toolbarEnabled={false}
+            moveOnMarkerPress={false}
+            scrollDuringRotateOrZoomEnabled={false}
+          >
+            <Marker coordinate={{ latitude: latitude as number, longitude: longitude as number }} />
+          </MapView>
+        ) : !isWeb && activeMapUrl ? (
+          <Image
+            source={{ uri: activeMapUrl }}
+            resizeMode="cover"
+            className="w-full h-full"
+            onError={() => {
+              if (currentUrlIndex < mapImageUrls.length - 1) {
+                setCurrentUrlIndex((prev) => prev + 1);
+              }
+            }}
           />
         ) : !isWeb && mapEmbedUrl ? (
           <WebView

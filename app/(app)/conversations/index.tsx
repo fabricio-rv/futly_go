@@ -219,7 +219,7 @@ export default function ConversationsListScreen() {
               title=""
               plainBack
               centerNode={(
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 2, marginLeft: -10 }}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 2 }}>
                   <Pill
                     label={`${t('filters.all', 'Todas')} ${summary.allCount}`}
                     tone={filter === 'todas' ? 'active' : 'default'}
@@ -227,10 +227,10 @@ export default function ConversationsListScreen() {
                     onPress={() => setFilter('todas')}
                   />
                   <Pill size="sm" label={`${t('filters.active', 'Ativas')} ${summary.activeCount}`} tone={filter === 'ativas' ? 'active' : 'default'} onPress={() => setFilter('ativas')} />
-                  <Pill size="sm" label={`${t('filters.asHost', 'Como Host')} ${summary.hostCount}`} tone={filter === 'host' ? 'active' : 'default'} onPress={() => setFilter('host')} />
-                  <Pill size="sm" label={`${t('filters.asPlayer', 'Como Jogador')} ${summary.playerCount}`} tone={filter === 'jogador' ? 'active' : 'default'} onPress={() => setFilter('jogador')} />
+                  <Pill size="sm" label={`HOST ${summary.hostCount}`} tone={filter === 'host' ? 'active' : 'default'} onPress={() => setFilter('host')} />
+                  <Pill size="sm" label={`JOGADOR ${summary.playerCount}`} tone={filter === 'jogador' ? 'active' : 'default'} onPress={() => setFilter('jogador')} />
                   <Pill size="sm" label={`${t('filters.archived', 'Arquivadas')} ${summary.archivedCount}`} tone={filter === 'arquivadas' ? 'active' : 'default'} onPress={() => setFilter('arquivadas')} />
-                </View>
+                </ScrollView>
               )}
               rightNode={(
                 <Pressable

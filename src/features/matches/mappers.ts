@@ -36,7 +36,14 @@ function getStartsInLabel(matchDate: string, matchTime: string) {
   const minutes = totalMinutes % 60;
 
   if (hours === 0) return `${minutes}m`;
-  return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+
+  if (hours < 24) return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  const dayLabel = days === 1 ? '1 dia' : `${days} dias`;
+  if (remainingHours === 0) return dayLabel;
+  return `${dayLabel} e ${remainingHours}h`;
 }
 
 function getLevelTone(price: number): Partida['levelTone'] {

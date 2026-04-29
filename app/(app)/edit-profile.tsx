@@ -63,6 +63,7 @@ export default function EditProfileScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubTopNav
+          plainBack
           title={t('headers.editProfile', 'Editar perfil')}
           subtitle={t('sections.personalInfo', 'DADOS PESSOAIS')}
           rightNode={
@@ -70,6 +71,7 @@ export default function EditProfileScreen() {
               icon={<Check size={16} color={saving ? '#CCCCCC' : '#86E5B4'} />}
               onPress={handleSaveProfile}
               disabled={saving}
+              variant="flat"
             />
           }
         />

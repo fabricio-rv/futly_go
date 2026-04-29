@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icons/Icon-512.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/icons/Icon-512.png",
       "resizeMode": "contain",
@@ -15,13 +15,26 @@
     },
     "ios": {
       "bundleIdentifier": "com.fabricio.futlygo",
+      "usesAppleSignIn": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Precisamos de acesso à câmera para tirar fotos e gravar vídeos no chat.",
+        "NSPhotoLibraryUsageDescription": "Precisamos de acesso à galeria para enviar fotos e vídeos no chat.",
+        "NSPhotoLibraryAddUsageDescription": "Precisamos de acesso para salvar mídias compartilhadas no chat.",
+        "NSMicrophoneUsageDescription": "Precisamos de acesso ao microfone para gravar áudios no chat."
       },
       "supportsTablet": true
     },
     "android": {
       "package": "com.fabricio.futlygo",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/Icon-maskable-512.png",
         "backgroundColor": "#ffffff"

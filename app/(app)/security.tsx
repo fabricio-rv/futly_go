@@ -172,7 +172,7 @@ export default function SecurityScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-        <HubTopNav title={t('security.title', 'Senha e Segurança')} subtitle={t('security.changePassword', 'ALTERAR SENHA')} />
+        <HubTopNav plainBack title={t('security.title', 'Senha e Segurança')} subtitle={t('security.changePassword', 'ALTERAR SENHA')} />
 
         {step === 1 && (
           <View className="mx-[18px] mt-6">
