@@ -7,10 +7,7 @@ import {
 	LogOut,
 	MapPin,
 	MessageCircle,
-	Moon,
-	Star,
-	Store,
-	Sun,
+	// Moon, Star, Store, Sun — removidos temporariamente (ver src/_future/settings-plans-theme.tsx)
 	Trash2,
 	UserRound,
 } from 'lucide-react-native';
@@ -19,7 +16,7 @@ import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthFeedbackModal } from '@/src/components/features/auth';
 import { MatchBottomNav } from '@/src/components/features/matches';
@@ -43,6 +40,7 @@ const LANGUAGE_OPTIONS: Array<{ code: Locale; label: string }> = [
 
 export default function SettingsScreen() {
 	const theme = useAppColorScheme();
+	const insets = useSafeAreaInsets();
 	const { profile, loadProfile } = useProfile();
 	const { settings, loadSettings, updateNotifications, updateLocation, setTheme } = useSettings();
 	const { t, changeLanguage } = useTranslation('common');
@@ -128,25 +126,9 @@ export default function SettingsScreen() {
 			showArrow: true,
 			onPress: () => router.push('/(app)/security'),
 		},
-		{
-			id: 'plan',
-			icon: <Star size={16} color="currentColor" strokeWidth={2} />,
-			iconTone: 'gold',
-			title: t('settings.planPayment', 'Plano e pagamento'),
-			subtitle: t('settings.planPaymentSubtitle', 'Gold - Renova 10/05'),
-			rightLabel: t('actions.manage', 'Gerenciar'),
-			showArrow: true,
-			onPress: () => router.push('/(app)/plan'),
-		},
-		{
-			id: 'store',
-			icon: <Store size={16} color="currentColor" strokeWidth={2} />,
-			iconTone: 'default',
-			title: t('settings.plans', 'Planos'),
-			subtitle: t('settings.plansSubtitle', 'Ver pacotes e benefícios dos planos'),
-			showArrow: true,
-			onPress: () => router.push('/(app)/store'),
-		},
+		// [FUTURAS IMPLEMENTAÇÕES] Plano e pagamento + Planos — ver src/_future/settings-plans-theme.tsx
+		// { id: 'plan', ... },
+		// { id: 'store', ... },
 	];
 
 	const preferenceRows: SettingsRow[] = [
@@ -183,16 +165,8 @@ export default function SettingsScreen() {
 			showArrow: true,
 			onPress: () => setShowLanguageModal(true),
 		},
-		{
-			id: 'theme',
-			icon: settings?.theme === 'dark' ? <Moon size={16} color="currentColor" strokeWidth={2} /> : <Sun size={16} color="currentColor" strokeWidth={2} />,
-			iconTone: 'default',
-			title: t('settings.theme', 'Tema'),
-			subtitle: settings?.theme === 'dark' ? t('dark', 'Escuro') : t('light', 'Claro'),
-			rightLabel: settings?.theme === 'dark' ? t('dark', 'Escuro') : t('light', 'Claro'),
-			showArrow: true,
-			onPress: () => setTheme(settings?.theme === 'dark' ? 'light' : 'dark').catch(() => undefined),
-		},
+		// [FUTURAS IMPLEMENTAÇÕES] Tema claro/escuro — ver src/_future/settings-plans-theme.tsx
+		// { id: 'theme', ... },
 	];
 
 	const supportRows: SettingsRow[] = [
@@ -255,15 +229,15 @@ export default function SettingsScreen() {
 
 	const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 	return (
-		<SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
+		<View style={{ flex: 1, backgroundColor: bgColor, paddingTop: insets.top }}>
 			<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
-				<HubTopNav title={t('settings.title', 'Configuracoes')} subtitle="v 1.4.2" />
+				<HubTopNav title={t('settings.title', 'Configuracoes')} subtitle="v 1.4.2" plainBack />
 
 				<LinearGradient
 					colors={theme === 'dark' ? ['#0F3A24', '#072314'] : ['#E3F5EC', '#D6EEE3']}
 					start={{ x: 0, y: 0 }}
 					end={{ x: 1, y: 1 }}
-					className="mx-[18px] mb-2 rounded-[18px] border border-[#22B76C4D] px-[14px] py-[14px] flex-row items-center gap-3"
+					style={{ marginHorizontal: 18, marginBottom: 8, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(34,183,108,0.30)', paddingHorizontal: 14, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}
 				>
 					<View className="h-[46px] w-[46px] rounded-full border-2 border-goldB dark:bg-[#1B3A5F] bg-[#E3F5EC] items-center justify-center">
 						<Text variant="label" className="font-bold text-white dark:text-white" style={{ color: theme === 'light' ? '#1A7A4A' : '#FFFFFF' }}>
@@ -276,17 +250,11 @@ export default function SettingsScreen() {
 							{profile?.full_name ?? 'Atleta Futly'}
 						</Text>
 						<Text variant="micro" className="mt-0.5 tracking-[0.5px]" style={{ color: theme === 'light' ? '#2F6C54' : '#86E5B4' }}>
-							{profile?.email ?? 'email@example.com'} - Plano Gold
+							{profile?.email ?? 'email@example.com'}
 						</Text>
 					</View>
 
-					<TouchableScale
-						onPress={() => router.push('/(app)/edit-profile')}
-						className="h-9 w-9 rounded-[12px] border items-center justify-center"
-						style={{ borderColor: theme === 'light' ? 'rgba(15,23,42,0.12)' : 'rgba(255,255,255,0.10)', backgroundColor: theme === 'light' ? 'rgba(15,23,42,0.04)' : 'rgba(255,255,255,0.10)' }}
-					>
-						<Text variant="body" className="text-[#1F2937] dark:text-white">&gt;</Text>
-					</TouchableScale>
+					{/* [FUTURAS IMPLEMENTAÇÕES] Botão de atalho para editar perfil no header — ver src/_future/settings-plans-theme.tsx */}
 				</LinearGradient>
 
 				<SettingsGroup title={t('settings.accountGroup', 'Conta')} rows={accountRows} />
@@ -302,7 +270,7 @@ export default function SettingsScreen() {
 				</View>
 			</ScrollView>
 
-			<MatchBottomNav active="none" />
+			{/* navbar removido — settings não faz parte da navegação principal */}
 
 			<AuthFeedbackModal
 				visible={showLogoutModal}
@@ -395,7 +363,7 @@ export default function SettingsScreen() {
 					</Pressable>
 				</Pressable>
 			</Modal>
-		</SafeAreaView>
+		</View>
 	);
 }
 

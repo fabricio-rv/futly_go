@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import { useColorScheme } from 'react-native';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 
 type Theme = 'light' | 'dark';
 
@@ -25,7 +25,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     loadTheme();
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isLoaded) return;
     setColorScheme(theme);
   }, [isLoaded, setColorScheme, theme]);
@@ -34,14 +34,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     try {
       const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
       if (savedTheme === 'light' || savedTheme === 'dark') {
+        setColorScheme(savedTheme);
         setThemeState(savedTheme);
       } else {
-        // Default to system color scheme
         const defaultTheme = (systemColorScheme as Theme) || 'dark';
+        setColorScheme(defaultTheme);
         setThemeState(defaultTheme);
       }
     } catch (error) {
       console.log('Error loading theme:', error);
+      setColorScheme('dark');
       setThemeState('dark');
     } finally {
       setIsLoaded(true);

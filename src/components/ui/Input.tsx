@@ -5,11 +5,6 @@ import {
   View,
   Pressable,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 
 import { Text } from './Text';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
@@ -61,40 +56,24 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
 ) {
   const theme = useAppColorScheme();
   const [isFilled, setIsFilled] = useState(!!rest.value || !!rest.defaultValue);
-
-  const borderColorValue = useSharedValue(theme === 'light' ? '#E4E4E7' : '#3F3F46');
-  const shadowOpacity = useSharedValue(0);
-
-  const animatedBorderStyle = useAnimatedStyle(() => ({
-    borderColor: borderColorValue.value,
-  }));
-
-  const animatedShadowStyle = useAnimatedStyle(() => ({
-    shadowColor: '#10B981',
-    shadowOpacity: shadowOpacity.value,
-    shadowRadius: shadowOpacity.value * 8,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: shadowOpacity.value * 3,
-  }));
+  const [isFocused, setIsFocused] = useState(false);
 
   const isMultiline = !!rest.multiline;
   const placeholderColor = theme === 'light' ? '#A1A1AA' : '#71717A';
 
+  const borderColor = error
+    ? '#EF4444'
+    : isFocused
+      ? (theme === 'light' ? '#10B981' : '#34D399')
+      : (theme === 'light' ? '#DDE2ED' : '#1F2A44');
+
   const handleFocus = (e: any) => {
-    borderColorValue.value = withTiming(
-      theme === 'light' ? '#10B981' : '#34D399',
-      { duration: 200 }
-    );
-    shadowOpacity.value = withTiming(0.15, { duration: 200 });
+    setIsFocused(true);
     onFocus?.(e);
   };
 
   const handleBlur = (e: any) => {
-    borderColorValue.value = withTiming(
-      theme === 'light' ? '#E4E4E7' : '#3F3F46',
-      { duration: 200 }
-    );
-    shadowOpacity.value = withTiming(0, { duration: 200 });
+    setIsFocused(false);
     onBlur?.(e);
   };
 
@@ -122,17 +101,15 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         </Text>
       )}
 
-      <Animated.View
-        style={[
-          animatedBorderStyle,
-          animatedShadowStyle,
-          {
-            borderRadius: 28,
-            borderWidth: 0.9,
-            ...(fixedHeight ? { height: fixedHeight } : {}),
-          },
-        ]}
-        className={`bg-white dark:bg-zinc-800 ${
+      <View
+        style={{
+          borderRadius: 28,
+          borderWidth: 0.5,
+          borderColor,
+          backgroundColor: theme === 'light' ? '#FAFBFC' : '#101626',
+          ...(fixedHeight ? { height: fixedHeight } : {}),
+        }}
+        className={`${
           !editable ? 'opacity-50' : ''
         } ${containerClassName || ''}`.trim()}
       >
@@ -154,9 +131,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             editable={editable}
             accessibilityLabel={accessibilityLabel || label}
             accessibilityState={{ disabled: !editable }}
-            className={`flex-1 font-normal text-base text-zinc-900 dark:text-zinc-50 ${
-              inputClassName || ''
-            }`.trim()}
+            className={`flex-1 ${inputClassName || ''}`.trim()}
             textAlignVertical={isMultiline ? 'top' : 'center'}
             underlineColorAndroid="transparent"
             selectionColor={theme === 'light' ? '#10B981' : '#34D399'}
@@ -165,7 +140,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
                 padding: 0,
                 margin: 0,
                 includeFontPadding: false,
+                lineHeight: undefined,
+                fontSize: 16,
+                fontWeight: '400',
                 textAlignVertical: isMultiline ? 'top' : 'center',
+                color: theme === 'light' ? '#18181B' : '#FAFAFA',
               },
               style,
             ]}
@@ -194,7 +173,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             </View>
           ) : null}
         </View>
-      </Animated.View>
+      </View>
 
       {error ? (
         <Text

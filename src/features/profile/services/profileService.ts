@@ -107,8 +107,15 @@ export async function fetchUsersPositionStats(userIds: string[]): Promise<UserPo
     avg_rating: number | null;
   }>;
 
+  const seen = new Set<string>();
   return rows
     .filter((row) => row.user_id && row.modality && row.position_key && row.position_label)
+    .filter((row) => {
+      const key = `${row.user_id}:${row.modality}:${row.position_key}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
     .map((row) => ({
       userId: row.user_id as string,
       modality: row.modality as string,

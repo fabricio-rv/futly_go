@@ -110,7 +110,7 @@ export function MatchBottomNav({ active }: BottomNavProps) {
           }}
         />
         <TouchableScale
-          className="-mt-1 flex-1 items-center justify-center"
+          className="flex-1 items-center justify-center"
           onPress={() => {
             void selectionTick();
             router.push('/(app)/create');
@@ -120,9 +120,9 @@ export function MatchBottomNav({ active }: BottomNavProps) {
         >
           <View
             className={`h-14 w-14 items-center justify-center rounded-full border ${active === 'new' ? 'bg-ok border-[#9BF0C5]' : ''}`}
-            style={{ borderWidth: 1, backgroundColor: active === 'new' ? undefined : plusBg, borderColor: active === 'new' ? undefined : plusBorder }}
+            style={{ borderWidth: 1, backgroundColor: active === 'new' ? '#22B76C' : plusBg, borderColor: active === 'new' ? '#9BF0C5' : plusBorder }}
           >
-            <Plus size={30} color="#05070B" strokeWidth={2.6} />
+            <Plus size={30} color={active === 'new' ? '#05070B' : 'rgba(34,183,108,0.45)'} strokeWidth={2.6} />
           </View>
         </TouchableScale>
         <NavItem

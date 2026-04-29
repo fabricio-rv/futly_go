@@ -24,9 +24,9 @@ export function StatusStamp({ status, label }: StatusStampProps) {
         colors={['#F6D27A', '#D4A13A']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        className="h-6 px-[9px] rounded-lg border border-[#D4A13A] flex-row items-center gap-[5px]"
+        style={{ height: 28, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1, borderColor: '#D4A13A', flexDirection: 'row', alignItems: 'center' }}
       >
-        <Text variant="micro" className="uppercase tracking-[1px] font-semibold" style={{ color: '#2A1A05' }}>
+        <Text style={{ color: '#2A1A05', fontSize: 13, fontFamily: 'Geist_700Bold', fontWeight: '700' }}>
           {label}
         </Text>
       </LinearGradient>
@@ -37,11 +37,10 @@ export function StatusStamp({ status, label }: StatusStampProps) {
 
   return (
     <View
-      className="h-6 px-[9px] rounded-lg border flex-row items-center gap-[5px]"
-      style={{ backgroundColor: token.bg, borderColor: token.border }}
+      style={{ height: 32, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: token.bg, borderColor: token.border }}
     >
-      {status === 'live' ? <View className="w-[6px] h-[6px] rounded-full" style={{ backgroundColor: token.text }} /> : null}
-      <Text variant="micro" className="uppercase tracking-[1px] font-semibold" style={{ color: token.text }}>
+      {status === 'live' ? <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: token.text }} /> : null}
+      <Text style={{ color: token.text, fontSize: 13, fontFamily: 'Geist_700Bold', fontWeight: '700' }}>
         {label}
       </Text>
     </View>

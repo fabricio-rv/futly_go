@@ -1,5 +1,6 @@
 ﻿import * as DocumentPicker from 'expo-document-picker';
-import { Audio, Video, ResizeMode } from 'expo-av';
+import { useAudioRecorder, RecordingPresets, AudioModule } from 'expo-audio';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -58,6 +59,11 @@ async function readUriAsBlob(uri: string): Promise<Blob> {
   }
 }
 
+function VideoPreview({ uri }: { uri: string }) {
+  const player = useVideoPlayer({ uri }, (p) => { p.loop = false; });
+  return <VideoView player={player} style={{ width: '100%', height: '100%' }} nativeControls contentFit="cover" />;
+}
+
 export default function ConversationDetailScreen() {
   const { t } = useTranslation('chat');
   const insets = useSafeAreaInsets();
@@ -92,7 +98,7 @@ export default function ConversationDetailScreen() {
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const recordingRef = useRef<Audio.Recording | null>(null);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const listRef = useRef<any>(null);
   const hasScrolledToBottomRef = useRef(false);
@@ -398,45 +404,39 @@ export default function ConversationDetailScreen() {
   }, [handleSendAttachment, t]);
 
   const handleStartRecording = useCallback(async () => {
-    const { status } = await Audio.requestPermissionsAsync();
-    if (status !== 'granted') {
+    const { granted } = await AudioModule.requestRecordingPermissionsAsync();
+    if (!granted) {
       Alert.alert(t('errors.micPermissionTitle', 'Permissão necessária'), t('errors.micPermissionMessage', 'Precisamos de acesso ao microfone para gravar áudios.'));
       return;
     }
 
     try {
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      const recording = new Audio.Recording();
-      await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      await recording.startAsync();
-      recordingRef.current = recording;
+      await AudioModule.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+      await recorder.prepareToRecordAsync();
+      recorder.record();
       setIsRecording(true);
       setRecordingDuration(0);
       recordingTimerRef.current = setInterval(() => setRecordingDuration((prev) => prev + 1), 1000);
     } catch {
-      Alert.alert(t('common.error', 'Erro'), t('errors.startRecordingError', 'N\u00e3o foi poss\u00edvel iniciar a grava\u00e7\u00e3o.'));
+      Alert.alert(t('common.error', 'Erro'), t('errors.startRecordingError', 'Não foi possível iniciar a gravação.'));
     }
-  }, [t]);
+  }, [recorder, t]);
 
   const handleStopRecording = useCallback(async (cancelled: boolean) => {
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current);
       recordingTimerRef.current = null;
     }
+    const durationSec = recordingDuration;
     setIsRecording(false);
     setRecordingDuration(0);
 
-    const recording = recordingRef.current;
-    recordingRef.current = null;
-    if (!recording) return;
-
     try {
-      const status = await recording.stopAndUnloadAsync();
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      await recorder.stop();
+      await AudioModule.setAudioModeAsync({ allowsRecordingIOS: false });
       if (cancelled) return;
 
-      const uri = recording.getURI();
-      const durationSec = Math.round((status.durationMillis ?? 0) / 1000);
+      const uri = recorder.uri;
       if (!uri) throw new Error('Nao foi possivel ler o arquivo de audio.');
 
       await handleSendAttachment({
@@ -449,7 +449,7 @@ export default function ConversationDetailScreen() {
     } catch {
       Alert.alert(t('common.error', 'Erro'), t('errors.audioProcessError', 'Não foi possível processar o áudio gravado.'));
     }
-  }, [handleSendAttachment, t]);
+  }, [handleSendAttachment, recorder, recordingDuration, t]);
 
   const attachmentActions = useMemo(() => [
     { key: 'gallery', label: t('detail.gallery', 'Galeria de Fotos e Vídeos'), icon: 'image' as const, onPress: handlePickImage },
@@ -764,13 +764,7 @@ export default function ConversationDetailScreen() {
                 </View>
               ) : pendingAttachment?.kind === 'video' ? (
                 <View style={{ width: '100%', height: 320, borderRadius: 12, backgroundColor: '#0b1220', overflow: 'hidden' }}>
-                  <Video
-                    source={{ uri: pendingAttachment.uri }}
-                    style={{ width: '100%', height: '100%' }}
-                    useNativeControls
-                    resizeMode={ResizeMode.COVER}
-                    isLooping={false}
-                  />
+                  <VideoPreview uri={pendingAttachment.uri} />
                 </View>
               ) : (
                 <View className="rounded-xl border border-[#334155] p-3">
@@ -828,13 +822,7 @@ export default function ConversationDetailScreen() {
               </View>
             ) : openedAttachment?.kind === 'video' ? (
               <View className="flex-1 items-center justify-center">
-                <Video
-                  source={{ uri: openedAttachment.url }}
-                  style={{ width: '100%', height: '100%' }}
-                  useNativeControls
-                  resizeMode={ResizeMode.COVER}
-                  shouldPlay={false}
-                />
+                <VideoPreview uri={openedAttachment.url} />
               </View>
             ) : (
               <View className="flex-1 items-center justify-center px-6">

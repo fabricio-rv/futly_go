@@ -11,7 +11,7 @@ export function MatchPricePill({ price }: MatchPricePillProps) {
     <View
       style={{
         flexDirection: 'row',
-        alignItems: 'flex-end',
+        alignItems: 'center',
         gap: 4,
         paddingHorizontal: 10,
         paddingVertical: 6,
@@ -19,14 +19,13 @@ export function MatchPricePill({ price }: MatchPricePillProps) {
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.10)',
         backgroundColor: 'rgba(5,7,11,0.50)',
-        marginBottom: 2,
       }}
     >
       <Text
         style={{
           fontFamily: 'Geist_400Regular',
-          fontSize: 12,
-          lineHeight: 12,
+          fontSize: 15,
+          lineHeight: 15,
           color: 'rgba(255,255,255,0.45)',
           textTransform: 'none',
           letterSpacing: 0,
@@ -38,8 +37,8 @@ export function MatchPricePill({ price }: MatchPricePillProps) {
       <Text
         style={{
           fontFamily: 'BebasNeue_400Regular',
-          fontSize: 34,
-          lineHeight: 29,
+          fontSize: 24,
+          lineHeight: 24,
           color: '#F5F7FA',
           textTransform: 'none',
           letterSpacing: 0,
@@ -51,8 +50,8 @@ export function MatchPricePill({ price }: MatchPricePillProps) {
       <Text
         style={{
           fontFamily: 'Geist_400Regular',
-          fontSize: 11,
-          lineHeight: 11,
+          fontSize: 14,
+          lineHeight: 14,
           color: 'rgba(255,255,255,0.45)',
           textTransform: 'none',
           letterSpacing: 0,

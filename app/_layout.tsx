@@ -38,7 +38,7 @@ function RootLayoutContent() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: bgColor }}>
       <SafeAreaProvider>
-        <View style={{ flex: 1, backgroundColor: bgColor }}>
+        <View style={{ flex: 1, backgroundColor: bgColor }} className={theme === 'dark' ? 'dark' : ''}>
           <Stack
             screenOptions={{
               headerShown: false,

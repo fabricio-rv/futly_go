@@ -6,7 +6,7 @@
     "scheme": "futlygo",
     "orientation": "portrait",
     "icon": "./assets/icons/Icon-512.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/icons/Icon-512.png",
@@ -47,7 +47,9 @@
       "@react-native-community/datetimepicker",
       "expo-font",
       "expo-notifications",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-audio",
+      "expo-video"
     ],
     "runtimeVersion": {
       "policy": "appVersion"

@@ -3,11 +3,11 @@ import { CalendarClock, ChevronRight, MapPin, Settings, ShieldCheck, Trophy } fr
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MatchBottomNav } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
-import { IconButton, Text } from '@/src/components/ui';
+import { Text } from '@/src/components/ui';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { fetchUsersPositionStats, type UserPositionStat } from '@/src/features/profile/services/profileService';
@@ -18,6 +18,7 @@ export default function ProfileScreen() {
   const { t } = useTranslation('profile');
   const matchT = useTranslation('matches').t;
   const theme = useAppColorScheme();
+  const insets = useSafeAreaInsets();
   const { profile, loadProfile } = useProfile();
   const { agenda, getUserAgenda } = useMatches();
   const [positionStats, setPositionStats] = useState<UserPositionStat[]>([]);
@@ -87,19 +88,24 @@ export default function ProfileScreen() {
   const bgColor = theme === 'light' ? '#F4F6F9' : '#0A0E18';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
+    <View style={{ flex: 1, backgroundColor: bgColor, paddingTop: insets.top }}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <HubTopNav
           title={t('headers.myProfile', 'Perfil')}
           subtitle={t('headers.athlete', 'ATLETA')}
-          rightNode={<IconButton icon={<Settings size={16} color={theme === 'light' ? '#1F2937' : '#FFFFFF'} />} onPress={() => router.push('/(app)/settings')} />}
+          hideBack
+          rightNode={
+            <Pressable onPress={() => router.push('/(app)/settings')} hitSlop={12} className="w-10 h-10 items-center justify-center">
+              <Settings size={20} color={theme === 'light' ? '#1F2937' : '#FFFFFF'} />
+            </Pressable>
+          }
         />
 
         <LinearGradient
           colors={theme === 'light' ? ['#E3F5EC', '#D6EEE3'] : ['#0F3A24', '#072314']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          className="mx-[18px] rounded-[18px] border border-[#22B76C4D] p-[14px]"
+          style={{ marginHorizontal: 18, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(34,183,108,0.30)', padding: 14 }}
         >
           <View className="flex-row items-center gap-3">
             <View className="h-[52px] w-[52px] rounded-full border-2 border-goldB dark:bg-[#1B3A5F] bg-[#E3F5EC] items-center justify-center">
@@ -249,6 +255,6 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <MatchBottomNav active="profile" />
-    </SafeAreaView>
+    </View>
   );
 }

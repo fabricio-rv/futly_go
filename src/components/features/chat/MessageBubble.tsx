@@ -1,8 +1,7 @@
 import { Check, CheckCheck, CornerUpLeft, FileText, Forward, Mic, Pause, Pin, Play, Star } from 'lucide-react-native';
 import { Image, Platform, Pressable, type GestureResponderEvent, View } from 'react-native';
-import { ResizeMode, Video } from 'expo-av';
-import { Audio } from 'expo-av';
-import { useEffect, useRef, useState } from 'react';
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { VideoView, useVideoPlayer } from 'expo-video';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { getChatTokens } from '@/src/lib/chatTokens';
@@ -41,11 +40,20 @@ export function MessageBubble({
   onAttachmentPress,
   onAttachmentDownload,
 }: MessageBubbleProps) {
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [audioDurationMs, setAudioDurationMs] = useState(0);
-  const [audioPositionMs, setAudioPositionMs] = useState(0);
-  const [probedDurationMs, setProbedDurationMs] = useState(0);
+  const audioPlayer = useAudioPlayer(
+    message.attachment?.kind === 'audio' && message.attachment?.url ? { uri: message.attachment.url } : null
+  );
+  const audioStatus = useAudioPlayerStatus(audioPlayer);
+  const videoPlayer = useVideoPlayer(
+    message.attachment?.kind === 'video' && message.attachment?.url ? { uri: message.attachment.url } : null,
+    (p) => { p.loop = false; }
+  );
+  const isPlayingAudio = audioStatus.playing;
+  const audioDurationMs = audioStatus.duration * 1000;
+  const audioPositionMs = audioStatus.currentTime * 1000;
+  const probedDurationMs = message.attachment?.durationSec && message.attachment.durationSec > 0
+    ? message.attachment.durationSec * 1000
+    : audioDurationMs;
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
 
@@ -97,63 +105,12 @@ export function MessageBubble({
       }
     : {};
 
-  useEffect(() => {
-    return () => {
-      if (soundRef.current) {
-        void soundRef.current.unloadAsync();
-        soundRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    const probe = async () => {
-      if (!message.attachment?.url || message.attachment.kind !== 'audio') return;
-      if (message.attachment.durationSec && message.attachment.durationSec > 0) {
-        setProbedDurationMs(message.attachment.durationSec * 1000);
-        return;
-      }
-      try {
-        const { sound, status } = await Audio.Sound.createAsync(
-          { uri: message.attachment.url },
-          { shouldPlay: false },
-        );
-        if (active && status.isLoaded) {
-          setProbedDurationMs(status.durationMillis ?? 0);
-        }
-        await sound.unloadAsync();
-      } catch {
-        if (active) setProbedDurationMs(0);
-      }
-    };
-    void probe();
-    return () => { active = false; };
-  }, [message.attachment?.id, message.attachment?.kind, message.attachment?.url, message.attachment?.durationSec]);
-
-  const toggleAudioPlayback = async () => {
+  const toggleAudioPlayback = () => {
     if (!message.attachment?.url || message.attachment.kind !== 'audio') return;
-    if (!soundRef.current) {
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: message.attachment.url },
-        { shouldPlay: true },
-        (status) => {
-          if (!status.isLoaded) return;
-          setIsPlayingAudio(status.isPlaying);
-          setAudioDurationMs(status.durationMillis ?? 0);
-          setAudioPositionMs(status.positionMillis ?? 0);
-        },
-      );
-      soundRef.current = sound;
-      return;
-    }
-
-    const status = await soundRef.current.getStatusAsync();
-    if (!status.isLoaded) return;
-    if (status.isPlaying) {
-      await soundRef.current.pauseAsync();
+    if (audioStatus.playing) {
+      audioPlayer.pause();
     } else {
-      await soundRef.current.playAsync();
+      audioPlayer.play();
     }
   };
 
@@ -278,12 +235,11 @@ export function MessageBubble({
                 />
               </View>
             ) : (
-              <Video
-                source={{ uri: message.attachment.url }}
+              <VideoView
+                player={videoPlayer}
                 style={{ width: 330, height: 420, borderRadius: 10, marginBottom: message.text ? 6 : 0 }}
-                useNativeControls
-                resizeMode={ResizeMode.COVER}
-                isLooping={false}
+                nativeControls
+                contentFit="cover"
               />
             )}
           </Pressable>

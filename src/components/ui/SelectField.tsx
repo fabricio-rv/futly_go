@@ -72,7 +72,7 @@ export function SelectField<T extends string>({
         className={`h-12 rounded-xl border px-4 flex-row items-center ${
           error ? 'border-danger' : (theme === 'light' ? 'border-[rgba(0,0,0,0.12)]' : 'border-bg-border')
         } ${disabled ? 'opacity-60' : ''}`}
-        style={{ backgroundColor: theme === 'light' ? '#FAFBFC' : undefined }}
+        style={{ backgroundColor: theme === 'light' ? '#FAFBFC' : '#101626' }}
       >
         <View className="flex-1 flex-row items-center">
           {selectedOption ? (
@@ -153,6 +153,7 @@ export function SelectField<T extends string>({
               data={visibleOptions}
               keyboardShouldPersistTaps="handled"
               keyExtractor={(item) => item.value}
+              style={{ backgroundColor: theme === 'light' ? '#FFFFFF' : '#0A0E18' }}
               renderItem={({ item }) => {
                 const active = item.value === value;
 
