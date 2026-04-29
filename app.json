@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icons/Icon-512.png",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/icons/Icon-512.png",
       "resizeMode": "contain",
@@ -16,6 +16,9 @@
     "ios": {
       "bundleIdentifier": "com.fabricio.futlygo",
       "usesAppleSignIn": true,
+      "entitlements": {
+    "aps-environment": "development"
+  },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Precisamos de acesso à câmera para tirar fotos e gravar vídeos no chat.",
