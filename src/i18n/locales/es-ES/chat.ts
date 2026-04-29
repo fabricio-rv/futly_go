@@ -47,7 +47,15 @@ export const esESChat = {
     viewParticipants: 'Ver participantes',
     unarchiveConversation: 'Restaurar conversación',
     archiveConversation: 'Archivar conversación',
-    openMatchDetails: 'Abrir detalles del partido'
+    openMatchDetails: 'Abrir detalles del partido',
+    reply: 'Responder',
+    copy: 'Copiar',
+    forward: 'Reenviar',
+    pin: 'Fijar mensaje',
+    unpin: 'Desfijar mensaje',
+    saveMessage: 'Guardar mensaje',
+    unsaveMessage: 'Quitar de guardados',
+    deleteMessage: 'Eliminar mensaje'
   },
   list: {
     title: 'Conversaciones',
@@ -68,7 +76,16 @@ export const esESChat = {
     conversationNotFound: 'Conversación no encontrada.',
     loadConversationFailed: 'Error al cargar la conversación.',
     markUnreadFailedMessage: 'No se pudo marcar como no leída.',
-    shareItemFailedMessage: 'No se pudo compartir este elemento.'
+    shareItemFailedMessage: 'No se pudo compartir este elemento.',
+    selectFileError: 'No se pudo seleccionar el archivo.',
+    micPermissionTitle: 'Permiso requerido',
+    micPermissionMessage: 'Necesitamos acceso al micr\u00f3fono para grabar mensajes de voz.',
+    galleryPermissionMessage: 'Necesitamos acceso a la galer\u00eda para enviar fotos y v\u00eddeos.',
+    cameraPermissionMessage: 'Necesitamos acceso a la c\u00e1mara.',
+    startRecordingError: 'No se pudo iniciar la grabaci\u00f3n.',
+    audioProcessError: 'No se pudo procesar el audio grabado.',
+    sendAttachmentFailed: 'Error al enviar',
+    sendAttachmentMessage: 'Error al enviar el archivo adjunto.'
   },
   status: {
     updatedTitle: 'Conversación actualizada',
@@ -93,10 +110,15 @@ export const esESChat = {
     matchFallbackTitle: 'Partido',
     athleteFallback: 'Atleta',
     onlineLabel: 'en línea',
+    offlineLabel: 'desconectado',
+    offlineLastSeen: 'desconectado • última vez visto {{lastSeen}}',
     athletesLabel: 'atletas',
     privateSubtitle: '{{name}} - {{online}}',
     groupSubtitle: '{{host}} + {{count}} {{athletes}} - {{online}}',
     autoArchiveShort: 'se archiva automáticamente 7 días después del juego',
+    gallery: 'Fotos y Vídeos',
+    camera: 'Cámara',
+    documentFile: 'Documento / Archivo',
     quickAttachLocation: 'Compartiendo ubicación ahora.',
     quickAttachPix: 'PIX enviado en la tarjeta del partido. Confirmen, por favor.',
     quickAttachPresence: 'Confirmé presencia aquí en el chat.'

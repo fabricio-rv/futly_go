@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {
   deleteOwnMessage,
@@ -25,6 +26,7 @@ import {
   toggleMessageReaction,
   togglePinMessage,
   toggleSaveMessage,
+  type ChatRealtimePayload,
   type MessageReceiptMap,
   type ReactionGroup,
 } from '@/src/features/chat/services/chatService';
@@ -44,6 +46,19 @@ type HeaderData = {
   isArchived: boolean;
   privatePartnerId: string | null;
   isCustomGroup: boolean;
+};
+
+type QueuedOutgoingMessage = {
+  clientMessageId: string;
+  tempId: string;
+  conversationId: string;
+  content: string;
+  createdAt: string;
+  metadata?: Record<string, unknown>;
+  optimisticText?: string;
+  optimisticAttachment?: ChatMessage['attachment'];
+  replyAuthor?: string | null;
+  replyMine?: boolean;
 };
 
 function isNetworkFetchError(error: unknown) {
@@ -69,6 +84,36 @@ function cleanMessageText(text: string) {
   return normalized;
 }
 
+function buildQueueKey(conversationId: string) {
+  return `futly_go_chat_queue:${conversationId}`;
+}
+
+function getClientMessageId(message: { metadata?: Record<string, unknown> }) {
+  const value = message.metadata?.client_message_id;
+  return typeof value === 'string' && value.trim() ? value : null;
+}
+
+function mergeServerAndPendingMessages(serverMessages: ChatMessage[], pendingMessages: ChatMessage[]) {
+  const serverIds = new Set(serverMessages.map((message) => message.id));
+  const serverClientIds = new Set(
+    serverMessages
+      .map((message) => (message as ChatMessage & { clientMessageId?: string }).clientMessageId)
+      .filter((id): id is string => Boolean(id)),
+  );
+
+  const stillPending = pendingMessages.filter((message) => {
+    const clientMessageId = (message as ChatMessage & { clientMessageId?: string }).clientMessageId;
+    return !serverIds.has(message.id) && (!clientMessageId || !serverClientIds.has(clientMessageId));
+  });
+
+  return [...serverMessages, ...stillPending].sort((a, b) => {
+    const aQueuedAt = (a as ChatMessage & { queuedAt?: string }).queuedAt ?? '';
+    const bQueuedAt = (b as ChatMessage & { queuedAt?: string }).queuedAt ?? '';
+    if (!aQueuedAt || !bQueuedAt) return 0;
+    return aQueuedAt.localeCompare(bQueuedAt);
+  });
+}
+
 export function useConversationThread(conversationId: string) {
   const { t, currentLanguage } = useTranslation('chat');
   const [loading, setLoading] = useState(true);
@@ -90,14 +135,88 @@ export function useConversationThread(conversationId: string) {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [presenceRetryToken, setPresenceRetryToken] = useState(0);
   const attachmentUrlCacheRef = useRef<Record<string, { url: string; expiresAt: number }>>({});
+  const mountedRef = useRef(true);
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const loadSequenceRef = useRef(0);
+  const queuedMessagesRef = useRef<QueuedOutgoingMessage[]>([]);
+  const flushingQueueRef = useRef(false);
   type SendOptions = {
     metadata?: Record<string, unknown>;
     optimisticText?: string;
     optimisticAttachment?: ChatMessage['attachment'];
   };
 
+  const persistQueue = useCallback(async (queue: QueuedOutgoingMessage[]) => {
+    queuedMessagesRef.current = queue;
+    try {
+      const key = buildQueueKey(conversationId);
+      if (queue.length === 0) {
+        await AsyncStorage.removeItem(key);
+        return;
+      }
+      await AsyncStorage.setItem(key, JSON.stringify(queue));
+    } catch (storageError) {
+      console.warn('[chat] failed to persist outgoing queue:', storageError);
+    }
+  }, [conversationId]);
+
+  const queueToMessages = useCallback((queue: QueuedOutgoingMessage[]): ChatMessage[] => {
+    return queue.map((item) => {
+      const parsed = parseReplyText(item.content);
+      return {
+        id: item.tempId,
+        kind: 'me',
+        senderId: currentUserId,
+        text: item.optimisticText ?? parsed.text,
+        attachment: item.optimisticAttachment,
+        replyTo: parsed.replyTo,
+        replyAuthor: item.replyAuthor ?? null,
+        replyMine: item.replyMine,
+        time: formatRelativeChatTime(item.createdAt, currentLanguage),
+        receipt: 'sent',
+        clientMessageId: item.clientMessageId,
+        queuedAt: item.createdAt,
+      } as ChatMessage & { clientMessageId: string; queuedAt: string };
+    });
+  }, [currentLanguage, currentUserId]);
+
+  const hydrateQueue = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(buildQueueKey(conversationId));
+      const parsed = raw ? JSON.parse(raw) : [];
+      const queue = Array.isArray(parsed)
+        ? parsed.filter((item): item is QueuedOutgoingMessage => Boolean(item?.clientMessageId && item?.tempId && item?.content))
+        : [];
+      queuedMessagesRef.current = queue;
+      if (queue.length > 0) {
+        setMessages((previous) => mergeServerAndPendingMessages(previous, queueToMessages(queue)));
+      }
+    } catch (storageError) {
+      console.warn('[chat] failed to hydrate outgoing queue:', storageError);
+    }
+  }, [conversationId, queueToMessages]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    let active = true;
+
+    getCurrentUserId()
+      .then((userId) => {
+        if (active) setCurrentUserId(userId);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [conversationId]);
+
   const load = useCallback(async () => {
-    setLoading(true);
+    const loadSequence = ++loadSequenceRef.current;
+    if (messagesRef.current.length === 0) setLoading(true);
     setError(null);
 
     try {
@@ -123,27 +242,24 @@ export function useConversationThread(conversationId: string) {
           ? (current.group_name ?? t('detail.matchFallbackTitle', 'Grupo'))
           : `${current.match_venue_name ?? current.match_title ?? t('detail.matchFallbackTitle', 'Partida')}${formattedMatch ? ` - ${formattedMatch}` : ''}`;
 
-      const onlineLabel = t('detail.onlineLabel', 'online');
       const athletesLabel = t('detail.athletesLabel', 'atletas');
 
       const host = participants.find((participant) => participant.role === 'host');
       const subtitle = current.conversation_type === 'private'
         ? t('detail.privateSubtitle', '{{name}} - {{online}}', {
             name: current.private_partner_name ?? t('detail.athleteFallback', 'Atleta'),
-            online: onlineLabel,
+            online: t('detail.onlineLabel', 'online'),
           })
         : current.is_custom_group
-          ? t('detail.groupSubtitle', '{{host}} + {{count}} {{athletes}} - {{online}}', {
+          ? t('detail.groupSubtitleCompact', '{{host}} + {{count}} {{athletes}}', {
               host: host?.full_name ?? t('roles.host', 'Host'),
               count: Math.max(participants.length - 1, 0),
               athletes: athletesLabel,
-              online: onlineLabel,
             })
-          : t('detail.groupSubtitle', '{{host}} + {{count}} {{athletes}} - {{online}}', {
+          : t('detail.groupSubtitleCompact', '{{host}} + {{count}} {{athletes}}', {
               host: host?.full_name ?? t('roles.host', 'Host'),
               count: Math.max(participants.length - 1, 0),
               athletes: athletesLabel,
-              online: onlineLabel,
             });
 
       const bannerTitle = current.conversation_type === 'private'
@@ -212,6 +328,7 @@ export function useConversationThread(conversationId: string) {
       );
 
       const chatMessages: ChatMessage[] = decryptedMessages.map((message) => {
+        const clientMessageId = getClientMessageId(message);
         if (message.message_type === 'system' || !message.sender_id) {
           return {
             id: message.id,
@@ -266,6 +383,13 @@ export function useConversationThread(conversationId: string) {
           text: attachment ? undefined : cleanedText,
           attachment,
           replyTo: parsed.replyTo,
+          replyAuthor: parsed.replyTo
+            ? String((message.metadata as Record<string, unknown> | undefined)?.reply_author ?? '')
+            : null,
+          replyMine: parsed.replyTo
+            ? Boolean((message.metadata as Record<string, unknown> | undefined)?.reply_mine)
+            : undefined,
+          isForwarded: Boolean((message.metadata as Record<string, unknown> | undefined)?.forwardedFromMessageId),
           author: participant?.full_name ?? t('detail.athleteFallback', 'Atleta'),
           avatarUrl: participant?.avatar_url ?? null,
           role: participant?.role === 'host'
@@ -277,8 +401,12 @@ export function useConversationThread(conversationId: string) {
           receipt: mine
             ? allOthersRead ? 'read' : 'delivered'
             : undefined,
-        };
+          clientMessageId: clientMessageId ?? undefined,
+          queuedAt: message.created_at,
+        } as ChatMessage & { clientMessageId?: string; queuedAt: string };
       }).filter(Boolean) as ChatMessage[];
+
+      if (!mountedRef.current || loadSequence !== loadSequenceRef.current) return;
 
       setHeader({
         title,
@@ -298,7 +426,7 @@ export function useConversationThread(conversationId: string) {
         isCustomGroup: Boolean(current.is_custom_group),
       });
 
-      setMessages(chatMessages);
+      setMessages(mergeServerAndPendingMessages(chatMessages, queueToMessages(queuedMessagesRef.current)));
       setParticipants(participants);
       setMessageReceipts(receiptMap);
       setReactions(reactionMap);
@@ -310,21 +438,86 @@ export function useConversationThread(conversationId: string) {
         markConversationAsRead(conversationId),
       ]);
     } catch (err) {
+      if (!mountedRef.current || loadSequence !== loadSequenceRef.current) return;
       const message = err instanceof Error ? err.message : t('errors.loadConversationFailed', 'Erro ao carregar conversa.');
-      if (messages.length > 0 && isNetworkFetchError(err)) {
+      if (messagesRef.current.length > 0 && isNetworkFetchError(err)) {
         console.warn('[chat] transient fetch error while refreshing conversation:', message);
       } else {
         setError(message);
       }
     } finally {
-      setLoading(false);
+      if (mountedRef.current && loadSequence === loadSequenceRef.current) setLoading(false);
     }
-  }, [conversationId, currentLanguage, messages.length, t]);
+  }, [conversationId, currentLanguage, queueToMessages, t]);
+
+  const flushQueuedMessages = useCallback(async () => {
+    if (!conversationId || flushingQueueRef.current || queuedMessagesRef.current.length === 0) return;
+    flushingQueueRef.current = true;
+
+    try {
+      for (const item of [...queuedMessagesRef.current]) {
+        try {
+          let encryptedContent = item.content;
+          let encryptionStatus: 'encrypted' | 'unsupported' = 'encrypted';
+          try {
+            encryptedContent = await encryptMessage(conversationId, item.content);
+          } catch (encryptionError) {
+            encryptionStatus = 'unsupported';
+            console.warn('Chat E2EE unavailable in this runtime; sending queued plaintext fallback.', encryptionError);
+          }
+
+          const persisted = await sendMessage(conversationId, encryptedContent, {
+            metadata: {
+              ...(item.metadata ?? {}),
+              client_message_id: item.clientMessageId,
+              encryptionStatus,
+            },
+          });
+
+          if (!persisted) continue;
+
+          await persistQueue(queuedMessagesRef.current.filter((queued) => queued.clientMessageId !== item.clientMessageId));
+          setMessages((previous) =>
+            previous.map((message) =>
+              message.id === item.tempId
+                ? ({
+                    ...message,
+                    id: persisted.id,
+                    time: formatRelativeChatTime(persisted.created_at, currentLanguage),
+                    receipt: 'delivered',
+                  } as ChatMessage & { clientMessageId: string; queuedAt: string })
+                : message,
+            ),
+          );
+        } catch {
+          break;
+        }
+      }
+    } finally {
+      flushingQueueRef.current = false;
+    }
+  }, [conversationId, currentLanguage, persistQueue]);
 
   useEffect(() => {
+    mountedRef.current = true;
+    void hydrateQueue().then(() => flushQueuedMessages());
     void load();
 
-    const unsubscribe = subscribeConversationMessages(conversationId, () => {
+    const unsubscribe = subscribeConversationMessages(conversationId, (payload?: ChatRealtimePayload) => {
+      const senderId = typeof payload?.new?.sender_id === 'string' ? payload.new.sender_id : null;
+      const metadata = payload?.new?.metadata && typeof payload.new.metadata === 'object'
+        ? payload.new.metadata as Record<string, unknown>
+        : {};
+      const clientMessageId = typeof metadata.client_message_id === 'string' ? metadata.client_message_id : null;
+      if (
+        payload?.eventType === 'INSERT'
+        && senderId
+        && senderId === currentUserId
+        && clientMessageId
+        && queuedMessagesRef.current.some((message) => message.clientMessageId === clientMessageId)
+      ) {
+        return;
+      }
       void load();
     });
     const unsubscribeSocial = subscribeConversationSocialState(conversationId, () => {
@@ -332,10 +525,12 @@ export function useConversationThread(conversationId: string) {
     });
 
     return () => {
+      mountedRef.current = false;
+      loadSequenceRef.current += 1;
       unsubscribe();
       unsubscribeSocial();
     };
-  }, [conversationId, load]);
+  }, [conversationId, currentUserId, flushQueuedMessages, hydrateQueue, load]);
 
   useEffect(() => {
     if (!currentUserId || messages.length === 0) return;
@@ -462,6 +657,7 @@ export function useConversationThread(conversationId: string) {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         void load();
+        void flushQueuedMessages();
         void touchMyLastSeen();
         if (!channelSubscribedRef.current) setPresenceRetryToken((value) => value + 1);
       } else {
@@ -473,7 +669,7 @@ export function useConversationThread(conversationId: string) {
       updateTypingState(false);
       subscription.remove();
     };
-  }, [load, updateTypingState]);
+  }, [flushQueuedMessages, load, updateTypingState]);
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -497,26 +693,49 @@ export function useConversationThread(conversationId: string) {
 
   const send = useCallback(async (content: string, options: SendOptions = {}) => {
     updateTypingState(false);
-    if (!currentUserId) {
-      await load();
+    const senderId = currentUserId ?? await getCurrentUserId().catch(() => null);
+    if (!senderId) {
       return null;
     }
+    if (!currentUserId) setCurrentUserId(senderId);
 
-    const tempId = `temp-${Date.now()}`;
+    const clientMessageId = `client-${senderId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const tempId = `temp-${clientMessageId}`;
     const now = new Date().toISOString();
     const parsed = parseReplyText(content);
-    const optimisticMessage: ChatMessage = {
+    const optimisticMessage = {
       id: tempId,
       kind: 'me',
-      senderId: currentUserId,
+      senderId,
       text: options.optimisticText ?? parsed.text,
       attachment: options.optimisticAttachment,
       replyTo: parsed.replyTo,
+      replyAuthor: typeof options.metadata?.reply_author === 'string' ? options.metadata.reply_author : null,
+      replyMine: typeof options.metadata?.reply_mine === 'boolean' ? options.metadata.reply_mine : undefined,
+      isForwarded: Boolean(options.metadata?.forwardedFromMessageId),
       time: formatRelativeChatTime(now, currentLanguage),
-      receipt: 'delivered',
-    };
+      receipt: 'sent',
+      clientMessageId,
+      queuedAt: now,
+    } as ChatMessage & { clientMessageId: string; queuedAt: string };
 
     setMessages((previous) => [...previous, optimisticMessage]);
+    const queuedItem: QueuedOutgoingMessage = {
+      clientMessageId,
+      tempId,
+      conversationId,
+      content,
+      createdAt: now,
+      metadata: options.metadata,
+      optimisticText: options.optimisticText,
+      optimisticAttachment: options.optimisticAttachment,
+      replyAuthor: typeof options.metadata?.reply_author === 'string' ? options.metadata.reply_author : null,
+      replyMine: typeof options.metadata?.reply_mine === 'boolean' ? options.metadata.reply_mine : undefined,
+    };
+    const shouldPersistInQueue = !options.optimisticAttachment;
+    if (shouldPersistInQueue) {
+      await persistQueue([...queuedMessagesRef.current, queuedItem]);
+    }
 
     try {
       let encryptedContent = content;
@@ -530,10 +749,14 @@ export function useConversationThread(conversationId: string) {
       const persisted = await sendMessage(conversationId, encryptedContent, {
         metadata: {
           ...(options.metadata ?? {}),
+          client_message_id: clientMessageId,
           encryptionStatus,
         },
       });
       if (persisted) {
+        if (shouldPersistInQueue) {
+          await persistQueue(queuedMessagesRef.current.filter((item) => item.clientMessageId !== clientMessageId));
+        }
         setMessages((previous) =>
           previous.map((message) =>
             message.id === tempId
@@ -541,6 +764,7 @@ export function useConversationThread(conversationId: string) {
                   ...optimisticMessage,
                   id: persisted.id,
                   time: formatRelativeChatTime(persisted.created_at, currentLanguage),
+                  receipt: 'delivered',
                 }
               : message,
           ),
@@ -549,12 +773,20 @@ export function useConversationThread(conversationId: string) {
       }
       await markConversationAsRead(conversationId);
     } catch (error) {
-      setMessages((previous) => previous.filter((message) => message.id !== tempId));
-      await load();
+      setMessages((previous) => {
+        if (shouldPersistInQueue) {
+          return previous.map((message) =>
+            message.id === tempId ? { ...message, receipt: 'sent' } : message,
+          );
+        }
+
+        return previous.filter((message) => message.id !== tempId);
+      });
+      if (!shouldPersistInQueue) await load();
       throw error;
     }
     return null;
-  }, [conversationId, currentLanguage, currentUserId, load, updateTypingState]);
+  }, [conversationId, currentLanguage, currentUserId, load, persistQueue, updateTypingState]);
 
   const markUnread = useCallback(async () => {
     await markConversationAsUnread(conversationId);
@@ -642,7 +874,7 @@ export function useConversationThread(conversationId: string) {
     }
   }, [load, messages]);
 
-  const canSend = useMemo(() => !loading, [loading]);
+  const canSend = useMemo(() => Boolean(conversationId && currentUserId), [conversationId, currentUserId]);
   const privatePartner = useMemo(
     () => participants.find((participant) => participant.user_id === header?.privatePartnerId) ?? null,
     [header?.privatePartnerId, participants],

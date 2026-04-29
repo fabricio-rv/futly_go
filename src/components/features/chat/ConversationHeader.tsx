@@ -13,6 +13,7 @@ type ConversationHeaderProps = {
   avatar: string;
   isOnline?: boolean;
   isTyping?: boolean;
+  showPresenceDot?: boolean;
   onBack: () => void;
 };
 
@@ -22,6 +23,7 @@ export function ConversationHeader({
   avatar,
   isOnline = false,
   isTyping = false,
+  showPresenceDot = true,
   onBack,
 }: ConversationHeaderProps) {
   const theme = useAppColorScheme();
@@ -60,13 +62,15 @@ export function ConversationHeader({
                 {avatar}
               </Text>
             </LinearGradient>
-            <View
-              className="absolute right-0 bottom-0 h-3 w-3 rounded-full border-2"
-              style={{
-                borderColor: tk.onlineDotBorder,
-                backgroundColor: isOnline ? tk.onlineDot : tk.offlineDot,
-              }}
-            />
+            {showPresenceDot ? (
+              <View
+                className="absolute right-0 bottom-0 h-3 w-3 rounded-full border-2"
+                style={{
+                  borderColor: tk.onlineDotBorder,
+                  backgroundColor: isOnline ? tk.onlineDot : tk.offlineDot,
+                }}
+              />
+            ) : null}
           </View>
 
           <View className="flex-1">

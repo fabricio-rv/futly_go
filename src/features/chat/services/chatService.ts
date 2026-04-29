@@ -11,6 +11,13 @@ let profileIdPromise: Promise<string> | null = null;
 let cachedAuthUserId: string | null = null;
 let cachedProfileId: string | null = null;
 
+export function resetChatIdentityCache() {
+  authUserIdPromise = null;
+  profileIdPromise = null;
+  cachedAuthUserId = null;
+  cachedProfileId = null;
+}
+
 function nextRealtimeTopic(base: string) {
   realtimeTopicSequence += 1;
   return `${base}:${Date.now()}:${realtimeTopicSequence}`;
@@ -43,6 +50,7 @@ export type ChatListRow = {
   last_message_sender_name: string | null;
   private_partner_id: string | null;
   private_partner_name: string | null;
+  private_partner_avatar_url?: string | null;
   private_partner_last_seen_at?: string | null;
   last_message_metadata?: Record<string, unknown>;
   unread_count: number;
@@ -231,14 +239,19 @@ export async function fetchChatList() {
     .filter((row) => row.conversation_type === 'private' && row.private_partner_id)
     .map((row) => row.private_partner_id as string)));
   let privatePartnerLastSeenById = new Map<string, string | null>();
+  let privatePartnerAvatarById = new Map<string, string | null>();
   if (privatePartnerIds.length > 0) {
     const { data: privateProfiles } = await (supabase as any)
       .from('profiles')
-      .select('id,last_seen_at,updated_at')
+      .select('id,avatar_url,last_seen_at,updated_at')
       .in('id', privatePartnerIds);
     privatePartnerLastSeenById = new Map((privateProfiles ?? []).map((profile: any) => [
       profile.id as string,
       (profile.last_seen_at ?? profile.updated_at ?? null) as string | null,
+    ]));
+    privatePartnerAvatarById = new Map((privateProfiles ?? []).map((profile: any) => [
+      profile.id as string,
+      (profile.avatar_url ?? null) as string | null,
     ]));
   }
 
@@ -300,6 +313,9 @@ export async function fetchChatList() {
         last_message_receipt_status: receiptStatus,
         private_partner_last_seen_at: row.private_partner_id
           ? (privatePartnerLastSeenById.get(row.private_partner_id) ?? null)
+          : null,
+        private_partner_avatar_url: row.private_partner_id
+          ? (privatePartnerAvatarById.get(row.private_partner_id) ?? null)
           : null,
         last_message_metadata: lastMessageMetadata,
       };
@@ -461,6 +477,8 @@ export async function forwardMessage(targetConversationId: string, messageId: st
   const source = await getConversationMessageById(messageId);
   if (!source?.content) return null;
 
+  const sourceAttachments = await fetchAttachmentsForMessages([messageId]);
+  const firstAttachment = sourceAttachments[messageId]?.[0];
   const plainContent = source.message_type === 'system'
     ? source.content
     : await decryptMessage(source.conversation_id, source.content);
@@ -468,12 +486,46 @@ export async function forwardMessage(targetConversationId: string, messageId: st
     ? plainContent
     : await encryptMessage(targetConversationId, plainContent);
 
-  await sendMessage(targetConversationId, nextContent, {
+  const forwarded = await sendMessage(targetConversationId, nextContent, {
     metadata: {
+      ...(source.metadata ?? {}),
       forwardedFromMessageId: source.id,
       forwardedFromConversationId: source.conversation_id,
     },
   });
+
+  if (forwarded && firstAttachment) {
+    const profileId = await getCurrentProfileId();
+    const extension = firstAttachment.file_name?.includes('.')
+      ? firstAttachment.file_name.split('.').pop()
+      : firstAttachment.storage_path.split('.').pop() ?? 'bin';
+    const nextPath = `${targetConversationId}/${forwarded.id}/${Date.now()}.${extension}`;
+
+    const { error: copyError } = await supabase.storage
+      .from(firstAttachment.storage_bucket)
+      .copy(firstAttachment.storage_path, nextPath);
+
+    if (copyError) {
+      throw new Error(errorMessage('Nao foi possivel encaminhar anexo.', copyError));
+    }
+
+    const { error: attachmentError } = await db
+      .from('chat_file_attachments')
+      .insert({
+        message_id: forwarded.id,
+        created_by: profileId,
+        storage_bucket: firstAttachment.storage_bucket,
+        storage_path: nextPath,
+        file_name: firstAttachment.file_name,
+        mime_type: firstAttachment.mime_type,
+        file_size: firstAttachment.file_size,
+      });
+
+    if (attachmentError) {
+      throw new Error(errorMessage('Nao foi possivel vincular anexo encaminhado.', attachmentError));
+    }
+  }
+
   return targetConversationId;
 }
 
@@ -1036,6 +1088,33 @@ export async function createCustomGroupConversation(input: {
   return data as string;
 }
 
+export async function uploadCustomGroupAvatar(input: {
+  fileName: string;
+  mimeType: string;
+  bytes: ArrayBuffer | Blob;
+}) {
+  const profileId = await getCurrentProfileId();
+  const extension = input.fileName.includes('.') ? input.fileName.split('.').pop() : 'jpg';
+  const storagePath = `group-avatars/${profileId}/${Date.now()}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from('chat-attachments')
+    .upload(storagePath, input.bytes, {
+      contentType: input.mimeType,
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(errorMessage('Nao foi possivel enviar foto do grupo.', error));
+  }
+
+  const { data } = supabase.storage
+    .from('chat-attachments')
+    .getPublicUrl(storagePath);
+
+  return data.publicUrl;
+}
+
 export async function searchChatProfiles(query: string, limit = 20) {
   const q = query.trim();
   if (!q) return [] as ChatProfileSearchResult[];
@@ -1060,9 +1139,15 @@ export async function searchChatProfiles(query: string, limit = 20) {
   })) as ChatProfileSearchResult[];
 }
 
+export type ChatRealtimePayload = {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
+  new?: Record<string, unknown>;
+  old?: Record<string, unknown>;
+};
+
 export function subscribeConversationMessages(
   conversationId: string,
-  onChange: () => void,
+  onChange: (payload?: ChatRealtimePayload) => void,
 ) {
   const channel = supabase
     .channel(nextRealtimeTopic(`messages:${conversationId}`))
@@ -1074,7 +1159,7 @@ export function subscribeConversationMessages(
         table: 'messages',
         filter: `conversation_id=eq.${conversationId}`,
       },
-      onChange,
+      (payload) => onChange(payload as ChatRealtimePayload),
     )
     .subscribe();
 
@@ -1102,6 +1187,11 @@ export function subscribeConversationSocialState(
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'pinned_messages', filter: `conversation_id=eq.${conversationId}` },
+      onChange,
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'chat_file_attachments' },
       onChange,
     )
     .subscribe();

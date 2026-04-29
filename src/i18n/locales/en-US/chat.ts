@@ -47,7 +47,15 @@ export const enUSChat = {
     viewParticipants: 'View participants',
     unarchiveConversation: 'Restore conversation',
     archiveConversation: 'Archive conversation',
-    openMatchDetails: 'Open match details'
+    openMatchDetails: 'Open match details',
+    reply: 'Reply',
+    copy: 'Copy',
+    forward: 'Forward',
+    pin: 'Pin message',
+    unpin: 'Unpin message',
+    saveMessage: 'Save message',
+    unsaveMessage: 'Remove from saved',
+    deleteMessage: 'Delete message'
   },
   list: {
     title: 'Conversations',
@@ -68,7 +76,16 @@ export const enUSChat = {
     conversationNotFound: 'Conversation not found.',
     loadConversationFailed: 'Error loading conversation.',
     markUnreadFailedMessage: 'Unable to mark as unread.',
-    shareItemFailedMessage: 'Unable to share this item.'
+    shareItemFailedMessage: 'Unable to share this item.',
+    selectFileError: 'Could not select the file.',
+    micPermissionTitle: 'Permission required',
+    micPermissionMessage: 'We need microphone access to record audio messages.',
+    galleryPermissionMessage: 'We need gallery access to send photos and videos.',
+    cameraPermissionMessage: 'We need camera access.',
+    startRecordingError: 'Could not start recording.',
+    audioProcessError: 'Could not process the recorded audio.',
+    sendAttachmentFailed: 'Failed to send',
+    sendAttachmentMessage: 'Failed to send attachment.'
   },
   status: {
     updatedTitle: 'Conversation updated',
@@ -93,10 +110,15 @@ export const enUSChat = {
     matchFallbackTitle: 'Match',
     athleteFallback: 'Player',
     onlineLabel: 'online',
+    offlineLabel: 'offline',
+    offlineLastSeen: 'offline \u2022 last seen {{lastSeen}}',
     athletesLabel: 'players',
     privateSubtitle: '{{name}} - {{online}}',
     groupSubtitle: '{{host}} + {{count}} {{athletes}} - {{online}}',
     autoArchiveShort: 'auto-archives 7 days after the game',
+    gallery: 'Photos & Videos',
+    camera: 'Camera',
+    documentFile: 'Document / File',
     quickAttachLocation: 'Sharing location now.',
     quickAttachPix: 'PIX sent in the match card. Please confirm.',
     quickAttachPresence: 'I confirmed attendance here in chat.'

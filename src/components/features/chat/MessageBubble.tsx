@@ -1,5 +1,5 @@
-import { Check, CheckCheck, CornerUpLeft, FileText, Forward, Pause, Pin, Play, Star } from 'lucide-react-native';
-import { Image, Pressable, View } from 'react-native';
+import { Check, CheckCheck, CornerUpLeft, FileText, Forward, Mic, Pause, Pin, Play, Star } from 'lucide-react-native';
+import { Image, Platform, Pressable, type GestureResponderEvent, View } from 'react-native';
 import { ResizeMode, Video } from 'expo-av';
 import { Audio } from 'expo-av';
 import { useEffect, useRef, useState } from 'react';
@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { getChatTokens } from '@/src/lib/chatTokens';
 import { Text } from '@/src/components/ui';
+import { Twemoji, TwemojiRichText } from '@/src/components/ui/emoji';
 import type { ChatMessage } from '@/src/components/features/store/data';
 
 type MessageBubbleProps = {
@@ -18,7 +19,7 @@ type MessageBubbleProps = {
   selectMode?: boolean;
   isSelected?: boolean;
   reactions?: Array<{ emoji: string; count: number; reactedByMe: boolean }>;
-  onLongPress?: (message: ChatMessage) => void;
+  onLongPress?: (message: ChatMessage, anchor?: { x: number; y: number }) => void;
   onReactionPress?: (emoji: string) => void;
   onToggleSelect?: (messageId: string) => void;
   onAttachmentPress?: (message: ChatMessage) => void;
@@ -64,6 +65,9 @@ export function MessageBubble({
   const mine = message.kind === 'me';
   const isAudioOnly = message.attachment?.kind === 'audio' && !message.text && !message.replyTo;
   const isDocumentOnly = message.attachment?.kind === 'document' && !message.text && !message.replyTo;
+  const isMediaAttachment = message.attachment?.kind === 'image' || message.attachment?.kind === 'video';
+  const hasReactionBadge = reactions.length > 0;
+  const firstReaction = reactions[0];
 
   const receiptIcon = mine
     ? message.receipt === 'read'
@@ -76,6 +80,22 @@ export function MessageBubble({
   const handlePress = () => {
     if (selectMode) onToggleSelect?.(message.id);
   };
+
+  const openActions = (event?: GestureResponderEvent | { nativeEvent?: { pageX?: number; pageY?: number; clientX?: number; clientY?: number } }) => {
+    const nativeEvent = event?.nativeEvent as { pageX?: number; pageY?: number; clientX?: number; clientY?: number } | undefined;
+    const x = nativeEvent?.pageX ?? nativeEvent?.clientX;
+    const y = nativeEvent?.pageY ?? nativeEvent?.clientY;
+    onLongPress?.(message, typeof x === 'number' && typeof y === 'number' ? { x, y } : undefined);
+  };
+
+  const webContextMenuProps = Platform.OS === 'web'
+    ? {
+        onContextMenu: (event: { preventDefault?: () => void; nativeEvent?: { pageX?: number; pageY?: number; clientX?: number; clientY?: number } }) => {
+          event.preventDefault?.();
+          if (!selectMode) openActions(event);
+        },
+      }
+    : {};
 
   useEffect(() => {
     return () => {
@@ -146,8 +166,9 @@ export function MessageBubble({
 
   return (
     <Pressable
+      {...webContextMenuProps}
       onPress={handlePress}
-      onLongPress={() => !selectMode && onLongPress?.(message)}
+      onLongPress={(event) => !selectMode && openActions(event)}
       delayLongPress={260}
       className={`flex-row items-end gap-2 mb-[7px] ${mine ? 'flex-row-reverse' : 'flex-row'}`}
     >
@@ -168,21 +189,23 @@ export function MessageBubble({
         </View>
       )}
 
-      <View
-        className={`max-w-[82%] rounded-[16px] ${(isAudioOnly || isDocumentOnly) ? 'px-0 py-0 border-0' : `px-3 py-2 border ${mine ? 'rounded-tr-[4px]' : 'rounded-tl-[4px]'}`}`}
-        style={{
-          backgroundColor: (isAudioOnly || isDocumentOnly) ? (mine ? tk.bubbleOwnBg : tk.bubbleThemBg) : (mine ? tk.bubbleOwnBg : tk.bubbleThemBg),
-          borderColor: (isAudioOnly || isDocumentOnly) ? 'transparent' : (mine ? tk.bubbleOwnBorder : tk.bubbleThemBorder),
-          opacity: isSelected ? 0.85 : 1,
-        }}
-      >
+      <View style={{ maxWidth: '82%', position: 'relative', marginBottom: hasReactionBadge ? 14 : 0 }}>
+        <View
+          className={`rounded-[16px] ${(isAudioOnly || isDocumentOnly) ? 'px-0 py-0 border-0' : `px-3 py-2 border ${mine ? 'rounded-tr-[4px]' : 'rounded-tl-[4px]'}`}`}
+          style={{
+            backgroundColor: (isAudioOnly || isDocumentOnly) ? (mine ? tk.bubbleOwnBg : tk.bubbleThemBg) : (mine ? tk.bubbleOwnBg : tk.bubbleThemBg),
+            borderColor: (isAudioOnly || isDocumentOnly) ? 'transparent' : (mine ? tk.bubbleOwnBorder : tk.bubbleThemBorder),
+            opacity: isSelected ? 0.85 : 1,
+            paddingTop: isDocumentOnly ? 12 : undefined,
+          }}
+        >
         {/* Group sender name */}
         {showSenderName && !mine && message.author ? (
           <Text
             variant="micro"
             numberOfLines={1}
-            style={{ color: tk.brand.gold.primary }}
-            className="font-bold mb-[2px]"
+            style={{ color: tk.brand.gold.primary, marginLeft: isDocumentOnly ? 12 : 0 }}
+            className={`font-bold ${isMediaAttachment ? 'mb-[7px]' : 'mb-[2px]'}`}
           >
             {message.author}
             {message.role ? ` · ${message.role}` : ''}
@@ -190,7 +213,7 @@ export function MessageBubble({
         ) : null}
 
         {/* Forwarded badge */}
-        {isForwarded ? (
+        {(isForwarded || message.isForwarded) ? (
           <View className="flex-row items-center gap-1 mb-1 opacity-70">
             <Forward size={10} color={mine ? tk.replyTextOwn : tk.replyTextThem} />
             <Text variant="micro" style={{ color: mine ? tk.replyTextOwn : tk.replyTextThem }}>
@@ -200,26 +223,38 @@ export function MessageBubble({
         ) : null}
 
         {/* Reply quote */}
-        {message.replyTo ? (
-          <View
-            className="mb-1.5 rounded-[8px] border-l-2 px-2 py-1"
-            style={{
-              borderLeftColor: mine ? tk.replyOwnBorder : tk.replyThemBorder,
-              backgroundColor: mine ? tk.replyOwnBg : tk.replyThemBg,
-            }}
-          >
-            <View className="flex-row items-center gap-1">
-              <CornerUpLeft size={10} color={mine ? tk.replyArrowOwn : tk.replyArrowThem} />
-              <Text
-                variant="micro"
-                numberOfLines={1}
-                style={{ color: mine ? tk.replyTextOwn : tk.replyTextThem }}
-              >
-                {message.replyTo}
-              </Text>
+          {message.replyTo ? (
+            <View
+              className="mb-1.5 rounded-[8px] overflow-hidden"
+              style={{ backgroundColor: mine ? 'rgba(0,0,0,0.16)' : 'rgba(255,255,255,0.06)' }}
+            >
+              <View className="flex-row">
+                <View style={{ width: 4, backgroundColor: mine ? '#22c55e' : tk.brand.gold.primary }} />
+                <View className="flex-1 px-2.5 py-1.5">
+                  <Text
+                    variant="micro"
+                    numberOfLines={1}
+                    style={{ color: mine ? '#4ade80' : tk.brand.gold.primary }}
+                    className="font-bold"
+                  >
+                    {message.replyMine ? 'Você' : (message.replyAuthor || 'Mensagem')}
+                  </Text>
+                  <View className="flex-row items-center gap-1 mt-[1px]">
+                    {message.replyTo.toLowerCase().includes('audio') ? (
+                      <Mic size={11} color={mine ? '#4ade80' : tk.text.secondary} />
+                    ) : null}
+                    <Text
+                      variant="micro"
+                      numberOfLines={1}
+                      style={{ color: mine ? 'rgba(255,255,255,0.72)' : tk.text.secondary }}
+                    >
+                      {message.replyTo}
+                    </Text>
+                  </View>
+                </View>
+              </View>
             </View>
-          </View>
-        ) : null}
+          ) : null}
 
         {(message.attachment?.kind === 'image' || message.attachment?.kind === 'video') && message.attachment.url ? (
           <Pressable onPress={() => onAttachmentPress?.(message)}>
@@ -239,7 +274,7 @@ export function MessageBubble({
                 <Image
                   source={{ uri: message.attachment.url }}
                   style={{ width: '100%', height: '100%' }}
-                  resizeMode="contain"
+                  resizeMode="cover"
                 />
               </View>
             ) : (
@@ -247,7 +282,7 @@ export function MessageBubble({
                 source={{ uri: message.attachment.url }}
                 style={{ width: 330, height: 420, borderRadius: 10, marginBottom: message.text ? 6 : 0 }}
                 useNativeControls
-                resizeMode={ResizeMode.CONTAIN}
+                resizeMode={ResizeMode.COVER}
                 isLooping={false}
               />
             )}
@@ -313,6 +348,12 @@ export function MessageBubble({
                 {formatAudioTime(audioDurationMs || probedDurationMs || ((message.attachment?.durationSec ?? 0) * 1000) || audioPositionMs)}
               </Text>
               <View className="flex-row items-center gap-1.5" style={{ marginTop: 10 }}>
+                {isPinned ? (
+                  <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
+                ) : null}
+                {isSaved ? (
+                  <Star size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} fill={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
+                ) : null}
                 {message.time ? (
                   <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.72)' : tk.text.tertiary }}>
                     {message.time}
@@ -330,19 +371,38 @@ export function MessageBubble({
             className="rounded-xl overflow-hidden mb-0"
             style={{ backgroundColor: mine ? tk.bubbleOwnBg : tk.bubbleThemBg }}
           >
-            <View className="px-3 py-2 flex-row items-center gap-2" style={{ backgroundColor: mine ? tk.bubbleOwnBg : tk.bubbleThemBg }}>
+            <View
+              className="px-3 py-2 flex-row items-center gap-2"
+              style={{
+                width: 330,
+                maxWidth: '100%',
+                minHeight: 58,
+                backgroundColor: mine ? tk.bubbleOwnBg : tk.bubbleThemBg,
+                position: 'relative',
+                paddingRight: 64,
+              }}
+            >
               <View className="h-8 w-8 rounded items-center justify-center" style={{ backgroundColor: '#e11d48' }}>
                 <FileText size={16} color="#fff" />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text variant="caption" numberOfLines={1} style={{ color: mine ? '#e5e7eb' : tk.text.primary, fontWeight: '700' }}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ color: mine ? '#e5e7eb' : tk.text.primary, fontWeight: '700' }}>
                   {message.attachment.fileName ?? 'Documento.pdf'}
                 </Text>
                 <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.72)' : tk.text.secondary }}>
                   PDF
                 </Text>
               </View>
-              <View className="flex-row items-center gap-1.5 self-end" style={{ marginBottom: -2 }}>
+              <View
+                className="flex-row items-center gap-1.5"
+                style={{ position: 'absolute', right: 12, bottom: 8 }}
+              >
+                {isPinned ? (
+                  <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
+                ) : null}
+                {isSaved ? (
+                  <Star size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} fill={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
+                ) : null}
                 {message.time ? (
                   <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.72)' : tk.text.tertiary }}>
                     {message.time}
@@ -372,63 +432,65 @@ export function MessageBubble({
 
         {/* Message text */}
         {message.text ? (
-          <Text
-            variant="caption"
-            style={{ lineHeight: 18, color: mine ? '#FFFFFF' : tk.text.primary }}
-          >
-            {message.text}
-          </Text>
+          <TwemojiRichText
+            text={message.text}
+            color={mine ? '#FFFFFF' : tk.text.primary}
+            fontSize={14}
+            lineHeight={18}
+          />
         ) : null}
 
-        {/* Footer: pin, save, time, receipt */}
-        {!isAudioOnly && !isDocumentOnly ? (
-          <View className="mt-1 flex-row items-center justify-end gap-1.5">
-            {isPinned ? (
-              <Pin size={10} color={mine ? tk.brand.green.faint : tk.brand.gold.primary} />
-            ) : null}
-            {isSaved ? (
-              <Star size={10} color={tk.brand.gold.primary} fill={tk.brand.gold.primary} />
-            ) : null}
-            {message.time ? (
-              <Text
-                variant="micro"
-                style={{ color: mine ? 'rgba(255,255,255,0.55)' : tk.text.tertiary }}
-              >
-                {message.time}
-              </Text>
-            ) : null}
-            {receiptIcon}
-          </View>
-        ) : null}
-
-        {/* Reaction chips */}
-        {reactions.length > 0 ? (
-          <View className={`mt-1.5 flex-row flex-wrap gap-1 ${mine ? 'justify-end' : 'justify-start'}`}>
-            {reactions.map((reaction) => (
-              <Pressable
-                key={reaction.emoji}
-                className="rounded-full border px-2 py-0.5 flex-row items-center gap-1"
-                style={{
-                  borderColor: reaction.reactedByMe
-                    ? tk.reactionActiveBorder
-                    : tk.reactionInactiveBorder,
-                  backgroundColor: reaction.reactedByMe
-                    ? tk.reactionActiveBg
-                    : mine
-                      ? tk.reactionOwnInactiveBg
-                      : tk.reactionThemInactiveBg,
-                }}
-                onPress={() => onReactionPress?.(reaction.emoji)}
-              >
+          {/* Footer: pin, save, time, receipt */}
+          {!isAudioOnly && !isDocumentOnly ? (
+            <View className="mt-1 flex-row items-center justify-end gap-1.5">
+              {isPinned ? (
+                <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
+              ) : null}
+              {isSaved ? (
+                <Star size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} fill={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
+              ) : null}
+              {message.time ? (
                 <Text
                   variant="micro"
-                  style={{ color: mine ? '#FFFFFF' : tk.text.primary }}
+                  style={{ color: mine ? 'rgba(255,255,255,0.55)' : tk.text.tertiary }}
                 >
-                  {reaction.emoji} {reaction.count}
+                  {message.time}
                 </Text>
-              </Pressable>
-            ))}
-          </View>
+              ) : null}
+              {receiptIcon}
+            </View>
+          ) : null}
+        </View>
+
+        {hasReactionBadge ? (
+          <Pressable
+            onPress={() => firstReaction && onReactionPress?.(firstReaction.emoji)}
+            className="absolute flex-row items-center"
+            style={{
+              right: mine ? 6 : undefined,
+              left: mine ? undefined : 6,
+              bottom: -11,
+              backgroundColor: theme === 'dark' ? '#2A2A2A' : '#FFFFFF',
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: theme === 'dark' ? '#3A3A3A' : '#E5E7EB',
+              paddingHorizontal: 5,
+              paddingVertical: 2,
+              gap: 3,
+              shadowColor: '#000',
+              shadowOpacity: 0.15,
+              shadowRadius: 2,
+              shadowOffset: { width: 0, height: 1 },
+              elevation: 3,
+            }}
+          >
+            {firstReaction?.emoji ? <Twemoji emoji={firstReaction.emoji} size={14} /> : null}
+            {(firstReaction?.count ?? 0) > 1 ? (
+              <Text variant="micro" style={{ color: theme === 'dark' ? '#D1D5DB' : '#374151', fontSize: 11, lineHeight: 14 }} className="font-semibold">
+                {firstReaction?.count}
+              </Text>
+            ) : null}
+          </Pressable>
         ) : null}
       </View>
     </Pressable>

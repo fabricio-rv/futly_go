@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/icons/Icon-512.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/icons/Icon-512.png",
       "resizeMode": "contain",
@@ -52,15 +52,15 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "2395764d-a3b8-4bff-8311-91f19670dffd"
-      }
-    },
-    "owner": "suporte04atsd",
     "updates": {
-      "url": "https://u.expo.dev/2395764d-a3b8-4bff-8311-91f19670dffd"
-    }
+      "enabled": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ea29ea84-2421-4733-ba4a-2146c6bcb0e8"
+      },
+      "router": {}
+    },
+    "owner": "fabricio_rv"
   }
 }

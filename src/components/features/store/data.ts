@@ -222,6 +222,7 @@ export type ConversationPreview = {
 	author?: string;
 	time: string;
 	avatar: string;
+	avatarUrl?: string | null;
 	avatarTone: 'ok' | 'blue' | 'brown' | 'wine' | 'gold';
 	unreadCount?: number;
 	unread?: boolean;
@@ -323,6 +324,9 @@ export type ChatMessage = {
 	role?: string;
 	time?: string;
 	replyTo?: string;
+	replyAuthor?: string | null;
+	replyMine?: boolean;
+	isForwarded?: boolean;
 	receipt?: 'sent' | 'delivered' | 'read';
 };
 

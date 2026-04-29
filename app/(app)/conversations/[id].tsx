@@ -1,43 +1,62 @@
-import * as DocumentPicker from 'expo-document-picker';
+﻿import * as DocumentPicker from 'expo-document-picker';
 import { Audio, Video, ResizeMode } from 'expo-av';
+import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Image, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
-import EmojiKeyboard from 'rn-emoji-keyboard';
-import type { EmojiType } from 'rn-emoji-keyboard';
 
-import { ChatContextBanner } from '@/src/components/features/store';
 import {
   ChatActionSheet,
   ComposerBar,
   ConversationHeader,
   MessageBubble,
   ParticipantsSheet,
+  TwemojiPicker,
   TypingIndicator,
 } from '@/src/components/features/chat';
 import { Text } from '@/src/components/ui';
+import { Pin, Star } from 'lucide-react-native';
 import { useConversationThread } from '@/src/features/chat/hooks/useConversationThread';
 import {
   addConversationParticipant,
   createChatFileAttachment,
+  forwardMessage,
   removeConversationParticipant,
   searchChatProfiles,
   updateConversationParticipantRole,
 } from '@/src/features/chat/services/chatService';
+import { useChatList } from '@/src/features/chat/hooks/useChatList';
 import { formatLastSeenBrazil } from '@/src/features/chat/utils/formatters';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
+import { DEFAULT_REACTION_EMOJIS } from '@/src/lib/emoji/twemoji';
 import type { ChatMessage } from '@/src/components/features/store/data';
 
 type MessageAction = {
   key: string;
   label: string;
-  icon: 'reply' | 'pin' | 'save' | 'reaction' | 'delete';
+  icon: 'reply' | 'pin' | 'save' | 'reaction' | 'delete' | 'copy' | 'forward';
   onPress: () => void;
 };
+
+async function readUriAsBlob(uri: string): Promise<Blob> {
+  try {
+    const response = await fetch(uri);
+    return await response.blob();
+  } catch {
+    return await new Promise<Blob>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onerror = () => reject(new Error('Nao foi possivel ler o arquivo selecionado.'));
+      xhr.onload = () => resolve(xhr.response as Blob);
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+  }
+}
 
 export default function ConversationDetailScreen() {
   const { t } = useTranslation('chat');
@@ -49,8 +68,13 @@ export default function ConversationDetailScreen() {
   const [draft, setDraft] = useState('');
   const [attachVisible, setAttachVisible] = useState(false);
   const [emojiVisible, setEmojiVisible] = useState(false);
+  const [reactionEmojiVisible, setReactionEmojiVisible] = useState(false);
+  const [reactionEmojiMessage, setReactionEmojiMessage] = useState<ChatMessage | null>(null);
+  const [reactionEmojiAnchor, setReactionEmojiAnchor] = useState<{ x: number; y: number } | undefined>(undefined);
   const [participantsVisible, setParticipantsVisible] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<ChatMessage | null>(null);
+  const [selectedMessageAnchor, setSelectedMessageAnchor] = useState<{ x: number; y: number } | undefined>(undefined);
+  const [forwardingMessage, setForwardingMessage] = useState<ChatMessage | null>(null);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [sending, setSending] = useState(false);
   const [pendingAttachment, setPendingAttachment] = useState<{
@@ -70,6 +94,8 @@ export default function ConversationDetailScreen() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingRef = useRef<Audio.Recording | null>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const listRef = useRef<any>(null);
+  const hasScrolledToBottomRef = useRef(false);
 
   const {
     loading,
@@ -81,15 +107,12 @@ export default function ConversationDetailScreen() {
     pinnedMessageIds,
     savedMessageIds,
     typingUserIds,
-    onlineUserIds,
     privatePartner,
     privatePartnerIsOnline,
     currentUserId,
     refresh,
     canSend,
     send,
-    markUnread,
-    setArchived,
     toggleReaction,
     togglePin,
     toggleSave,
@@ -97,25 +120,105 @@ export default function ConversationDetailScreen() {
     notifyComposerChanged,
     updateTypingState,
   } = useConversationThread(conversationId);
+  const { visibleActive: forwardActiveConversations, visibleArchived: forwardArchivedConversations } = useChatList();
+
+  useEffect(() => {
+    if (!loading && messages.length > 0 && !hasScrolledToBottomRef.current) {
+      hasScrolledToBottomRef.current = true;
+      setTimeout(() => {
+        listRef.current?.scrollToEnd?.({ animated: false });
+      }, 50);
+    }
+  }, [loading, messages.length]);
 
   const participantNameById = useMemo(() => new Map(participants.map((p) => [p.user_id, p.full_name])), [participants]);
   const typingNames = useMemo(() => typingUserIds.map((id) => participantNameById.get(id) ?? t('detail.athleteFallback', 'Atleta')), [participantNameById, t, typingUserIds]);
-  const onlineCount = onlineUserIds.length;
   const isTyping = typingNames.length > 0;
   const isPrivateConversation = Boolean(header?.privatePartnerId);
+  const forwardTargets = useMemo(
+    () => [...forwardActiveConversations, ...forwardArchivedConversations].filter((item) => item.id !== conversationId),
+    [conversationId, forwardActiveConversations, forwardArchivedConversations],
+  );
+  const messageIndexById = useMemo(() => new Map(messages.map((message, index) => [message.id, index])), [messages]);
+
+  const getMessagePreview = useCallback((message: ChatMessage | null) => {
+    if (!message) return '';
+    if (message.text?.trim()) return message.text.trim();
+    if (message.attachment?.kind === 'image') return 'Imagem';
+    if (message.attachment?.kind === 'video') return 'Video';
+    if (message.attachment?.kind === 'audio') return message.attachment.durationSec ? `Audio ${message.attachment.durationSec}s` : 'Audio';
+    if (message.attachment?.fileName) return message.attachment.fileName;
+    return 'Mensagem';
+  }, []);
+
+  const getReplyAuthor = useCallback((message: ChatMessage | null) => {
+    if (!message) return null;
+    if (message.kind === 'me') return t('messages.you', 'Você');
+    return message.author ?? (message.senderId ? participantNameById.get(message.senderId) : undefined) ?? 'Mensagem';
+  }, [participantNameById]);
+
+  const resolveReplyAuthor = useCallback((message: ChatMessage) => {
+    if (!message.replyTo) return message.replyAuthor ?? null;
+    if (message.replyMine) return t('messages.you', 'Você');
+    if (message.replyAuthor && message.replyAuthor !== 'Mensagem') return message.replyAuthor;
+
+    const quotedMessage = messages.find((candidate) => (
+      candidate.id !== message.id
+      && getMessagePreview(candidate) === message.replyTo
+    ));
+
+    return getReplyAuthor(quotedMessage ?? null) ?? message.replyAuthor ?? 'Mensagem';
+  }, [getMessagePreview, getReplyAuthor, messages]);
+
+  const getDisplayMessage = useCallback((message: ChatMessage) => {
+    const replyAuthor = resolveReplyAuthor(message);
+    if (!replyAuthor || replyAuthor === message.replyAuthor) return message;
+    return {
+      ...message,
+      replyAuthor,
+      replyMine: replyAuthor === t('messages.you', 'Você') ? true : message.replyMine,
+    };
+  }, [resolveReplyAuthor]);
+
+  const getTrackedPreview = useCallback((message: ChatMessage) => {
+    const base = getMessagePreview(message);
+    return message.author ? `${message.author}: ${base}` : base;
+  }, [getMessagePreview]);
+
+  const trackedMessages = useMemo(() => {
+    const orderedIds = Array.from(new Set([...pinnedMessageIds, ...savedMessageIds]));
+    return orderedIds
+      .map((id) => {
+        const message = messages.find((item) => item.id === id);
+        if (!message) return null;
+        return {
+          id,
+          message,
+          pinned: pinnedMessageIds.includes(id),
+          saved: savedMessageIds.includes(id),
+          preview: getTrackedPreview(message),
+        };
+      })
+      .filter((item): item is { id: string; message: ChatMessage; pinned: boolean; saved: boolean; preview: string } => Boolean(item));
+  }, [getTrackedPreview, messages, pinnedMessageIds, savedMessageIds]);
+
+  const scrollToMessage = useCallback((messageId: string) => {
+    const index = messageIndexById.get(messageId);
+    if (index === undefined) return;
+    listRef.current?.scrollToIndex?.({ index, animated: true, viewPosition: 0.5 });
+  }, [messageIndexById]);
 
   const headerSubtitle = useMemo(() => {
     if (!header) return t('common.loading', 'Carregando...');
     if (isTyping) return t('messages.typing', 'Digitando...');
     if (isPrivateConversation) {
-      if (privatePartnerIsOnline) return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - online`;
+      if (privatePartnerIsOnline) return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - ${t('detail.onlineLabel', 'online')}`;
       const lastSeen = formatLastSeenBrazil(privatePartner?.last_seen_at ?? null);
-      if (lastSeen) return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - offline • visto por último ${lastSeen}`;
-      return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - offline`;
+      if (lastSeen) return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - ${t('detail.offlineLastSeen', 'offline • visto por último {{lastSeen}}', { lastSeen })}`;
+      return `${privatePartner?.full_name ?? t('detail.athleteFallback', 'Atleta')} - ${t('detail.offlineLabel', 'offline')}`;
     }
-    if (onlineCount > 0) return `${header.subtitle} - ${onlineCount} online`;
     return header.subtitle;
-  }, [header, isPrivateConversation, isTyping, onlineCount, privatePartner?.full_name, privatePartner?.last_seen_at, privatePartnerIsOnline, t]);
+  }, [header, isPrivateConversation, isTyping, privatePartner?.full_name, privatePartner?.last_seen_at, privatePartnerIsOnline, t]);
 
   const roleLabel = useCallback((role: 'host' | 'player' | 'system') => {
     if (role === 'host') return t('roles.host', 'Host');
@@ -142,25 +245,29 @@ export default function ConversationDetailScreen() {
 
   const handleSend = useCallback(async () => {
     const message = draft.trim();
-    if (!message || sending || !canSend) return;
+    if (!message || !canSend) return;
 
-    const text = replyTo?.text ? `> ${replyTo.text}\n${message}` : message;
+    const replyPreview = getMessagePreview(replyTo);
+    const text = replyPreview ? `> ${replyPreview}\n${message}` : message;
+    const metadata = replyTo
+      ? {
+          reply_author: getReplyAuthor(replyTo),
+          reply_mine: replyTo.kind === 'me',
+        }
+      : undefined;
     setDraft('');
     setReplyTo(null);
-    setSending(true);
 
     try {
-      await send(text);
+      await send(text, metadata ? { metadata } : undefined);
     } catch {
       setDraft(message);
       Alert.alert(
         t('errors.sendFailedTitle', 'Falha ao enviar'),
         t('errors.sendFailedMessage', 'Nao foi possivel enviar a mensagem agora.'),
       );
-    } finally {
-      setSending(false);
     }
-  }, [canSend, draft, replyTo, send, sending, t]);
+  }, [canSend, draft, getMessagePreview, getReplyAuthor, replyTo, send, t]);
 
   const handleSendAttachment = useCallback(async (input: {
     uri: string;
@@ -189,7 +296,8 @@ export default function ConversationDetailScreen() {
           kind: input.kind,
           fileName: input.fileName,
           mimeType: input.mimeType,
-          url: input.kind === 'image' ? input.uri : null,
+          url: input.kind === 'image' || input.kind === 'video' || input.kind === 'audio' ? input.uri : null,
+          durationSec: input.durationSec ?? null,
         },
         metadata: {
           attachment_kind: input.kind,
@@ -202,8 +310,7 @@ export default function ConversationDetailScreen() {
 
       if (!messageId) throw new Error('Nao foi possivel criar a mensagem do anexo.');
 
-      const response = await fetch(input.uri);
-      const blob = await response.blob();
+      const blob = await readUriAsBlob(input.uri);
       await createChatFileAttachment({
         conversationId,
         messageId,
@@ -211,9 +318,10 @@ export default function ConversationDetailScreen() {
         mimeType: input.mimeType,
         bytes: blob,
       });
+      await refresh();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Falha ao enviar anexo.';
-      Alert.alert('Falha ao enviar', message);
+      const message = err instanceof Error ? err.message : t('errors.sendAttachmentMessage', 'Falha ao enviar anexo.');
+      Alert.alert(t('errors.sendAttachmentFailed', 'Falha ao enviar'), message);
     } finally {
       setSending(false);
     }
@@ -222,7 +330,7 @@ export default function ConversationDetailScreen() {
   const handlePickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permissao necessaria', 'Precisamos de acesso a sua galeria para enviar fotos e videos.');
+      Alert.alert(t('errors.micPermissionTitle', 'Permissão necessária'), t('errors.galleryPermissionMessage', 'Precisamos de acesso à sua galeria para enviar fotos e vídeos.'));
       return;
     }
 
@@ -242,12 +350,12 @@ export default function ConversationDetailScreen() {
         kind: asset.type === 'video' ? 'video' : 'image',
       });
     }
-  }, [handleSendAttachment]);
+  }, [handleSendAttachment, t]);
 
   const handleOpenCamera = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permissao necessaria', 'Precisamos de acesso a camera.');
+      Alert.alert(t('errors.micPermissionTitle', 'Permissão necessária'), t('errors.cameraPermissionMessage', 'Precisamos de acesso à câmera.'));
       return;
     }
 
@@ -265,7 +373,7 @@ export default function ConversationDetailScreen() {
         kind: asset.type === 'video' ? 'video' : 'image',
       });
     }
-  }, [handleSendAttachment]);
+  }, [handleSendAttachment, t]);
 
   const handlePickDocument = useCallback(async () => {
     try {
@@ -285,14 +393,14 @@ export default function ConversationDetailScreen() {
         });
       }
     } catch {
-      Alert.alert('Erro', 'Nao foi possivel selecionar o arquivo.');
+      Alert.alert(t('common.error', 'Erro'), t('errors.selectFileError', 'Não foi possível selecionar o arquivo.'));
     }
-  }, [handleSendAttachment]);
+  }, [handleSendAttachment, t]);
 
   const handleStartRecording = useCallback(async () => {
     const { status } = await Audio.requestPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permissao necessaria', 'Precisamos de acesso ao microfone para gravar audios.');
+      Alert.alert(t('errors.micPermissionTitle', 'Permissão necessária'), t('errors.micPermissionMessage', 'Precisamos de acesso ao microfone para gravar áudios.'));
       return;
     }
 
@@ -306,9 +414,9 @@ export default function ConversationDetailScreen() {
       setRecordingDuration(0);
       recordingTimerRef.current = setInterval(() => setRecordingDuration((prev) => prev + 1), 1000);
     } catch {
-      Alert.alert('Erro', 'Nao foi possivel iniciar a gravacao.');
+      Alert.alert(t('common.error', 'Erro'), t('errors.startRecordingError', 'N\u00e3o foi poss\u00edvel iniciar a grava\u00e7\u00e3o.'));
     }
-  }, []);
+  }, [t]);
 
   const handleStopRecording = useCallback(async (cancelled: boolean) => {
     if (recordingTimerRef.current) {
@@ -339,89 +447,58 @@ export default function ConversationDetailScreen() {
         durationSec,
       });
     } catch {
-      Alert.alert('Erro', 'Nao foi possivel processar o audio gravado.');
+      Alert.alert(t('common.error', 'Erro'), t('errors.audioProcessError', 'Não foi possível processar o áudio gravado.'));
     }
-  }, [handleSendAttachment]);
-
-  const handleBannerPress = useCallback(() => {
-    if (!header?.matchId) {
-      Alert.alert(
-        t('errors.noMatchLinkedTitle', 'Sem partida vinculada'),
-        t('errors.noMatchLinkedMessage', 'Esta conversa nao possui partida vinculada.'),
-      );
-      return;
-    }
-    router.push(`/(app)/${header.matchId}`);
-  }, [header?.matchId, t]);
-
-  const handleArchiveToggle = useCallback(async () => {
-    try {
-      await setArchived(!(header?.isArchived ?? false));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Nao foi possivel atualizar o status da conversa.';
-      Alert.alert(t('errors.archiveFailedTitle', 'Falha ao arquivar'), message);
-    }
-  }, [header?.isArchived, setArchived, t]);
-
-  const handleMarkUnread = useCallback(async () => {
-    try {
-      await markUnread();
-      Alert.alert(
-        t('status.updatedTitle', 'Conversa atualizada'),
-        t('status.markedUnreadMessage', 'Marcamos esta conversa como nao lida.'),
-      );
-    } catch (err) {
-      const message = err instanceof Error ? err.message : t('errors.markUnreadFailedMessage', 'Nao foi possivel marcar como nao lida.');
-      Alert.alert(t('errors.updateFailedTitle', 'Falha ao atualizar'), message);
-    }
-  }, [markUnread, t]);
-
-  const menuActions = useMemo(() => [
-    { key: 'unread', label: t('actions.markUnread', 'Marcar como nao lida'), icon: 'unread' as const, onPress: handleMarkUnread },
-    { key: 'participants', label: t('actions.viewParticipants', 'Ver participantes'), icon: 'users' as const, onPress: () => setParticipantsVisible(true) },
-    {
-      key: 'archive',
-      label: header?.isArchived
-        ? t('actions.unarchiveConversation', 'Restaurar conversa')
-        : t('actions.archiveConversation', 'Arquivar conversa'),
-      icon: 'archive' as const,
-      onPress: handleArchiveToggle,
-    },
-    { key: 'match', label: t('actions.openMatchDetails', 'Abrir detalhes da partida'), icon: 'pin' as const, onPress: handleBannerPress },
-  ], [handleArchiveToggle, handleBannerPress, handleMarkUnread, header?.isArchived, t]);
+  }, [handleSendAttachment, t]);
 
   const attachmentActions = useMemo(() => [
-    { key: 'gallery', label: 'Galeria de Fotos e Videos', icon: 'image' as const, onPress: handlePickImage },
-    { key: 'camera', label: 'Camera', icon: 'camera' as const, onPress: handleOpenCamera },
-    { key: 'document', label: 'Documento / Arquivo', icon: 'document' as const, onPress: handlePickDocument },
-  ], [handleOpenCamera, handlePickDocument, handlePickImage]);
+    { key: 'gallery', label: t('detail.gallery', 'Galeria de Fotos e Vídeos'), icon: 'image' as const, onPress: handlePickImage },
+    { key: 'camera', label: t('detail.camera', 'Câmera'), icon: 'camera' as const, onPress: handleOpenCamera },
+    { key: 'document', label: t('detail.documentFile', 'Documento / Arquivo'), icon: 'document' as const, onPress: handlePickDocument },
+  ], [handleOpenCamera, handlePickDocument, handlePickImage, t]);
 
   const selectedMessageActions = useMemo(() => {
     if (!selectedMessage) return [];
+    const copyableText = selectedMessage.text ?? selectedMessage.attachment?.url ?? selectedMessage.attachment?.fileName ?? '';
 
     const actions: MessageAction[] = [
-      { key: 'reply', label: 'Responder', icon: 'reply', onPress: () => setReplyTo(selectedMessage) },
-      { key: 'react-ok', label: 'Reagir com OK', icon: 'reaction', onPress: () => void toggleReaction(selectedMessage.id, 'OK') },
+      { key: 'reply', label: t('actions.reply', 'Responder'), icon: 'reply', onPress: () => setReplyTo(selectedMessage) },
+      {
+        key: 'copy',
+        label: t('actions.copy', 'Copiar'),
+        icon: 'copy',
+        onPress: () => {
+          if (copyableText) void Clipboard.setStringAsync(copyableText);
+        },
+      },
+      {
+        key: 'forward',
+        label: t('actions.forward', 'Encaminhar'),
+        icon: 'forward',
+        onPress: () => {
+          setForwardingMessage(selectedMessage);
+        },
+      },
       {
         key: 'pin',
-        label: pinnedMessageIds.includes(selectedMessage.id) ? 'Desfixar mensagem' : 'Fixar mensagem',
+        label: pinnedMessageIds.includes(selectedMessage.id) ? t('actions.unpin', 'Desfixar mensagem') : t('actions.pin', 'Fixar mensagem'),
         icon: 'pin',
         onPress: () => void togglePin(selectedMessage.id),
       },
       {
         key: 'save',
-        label: savedMessageIds.includes(selectedMessage.id) ? 'Remover dos salvos' : 'Salvar mensagem',
+        label: savedMessageIds.includes(selectedMessage.id) ? t('actions.unsaveMessage', 'Remover dos salvos') : t('actions.saveMessage', 'Salvar mensagem'),
         icon: 'save',
         onPress: () => void toggleSave(selectedMessage.id),
       },
     ];
 
     if (selectedMessage.kind === 'me') {
-      actions.push({ key: 'delete', label: 'Apagar mensagem', icon: 'delete', onPress: () => void deleteMessage(selectedMessage.id) });
+      actions.push({ key: 'delete', label: t('actions.deleteMessage', 'Apagar mensagem'), icon: 'delete', onPress: () => void deleteMessage(selectedMessage.id) });
     }
 
     return actions;
-  }, [deleteMessage, pinnedMessageIds, savedMessageIds, selectedMessage, togglePin, toggleReaction, toggleSave]);
+  }, [deleteMessage, pinnedMessageIds, savedMessageIds, selectedMessage, t, togglePin, toggleReaction, toggleSave]);
 
   const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 
@@ -432,20 +509,44 @@ export default function ConversationDetailScreen() {
           title={header?.title ?? t('detail.title', 'Conversa')}
           subtitle={headerSubtitle}
           avatar={header?.avatar ?? 'CH'}
-          isOnline={isPrivateConversation ? privatePartnerIsOnline : onlineCount > 0}
+          isOnline={isPrivateConversation ? privatePartnerIsOnline : false}
           isTyping={isTyping}
+          showPresenceDot={isPrivateConversation}
           onBack={handleBack}
         />
 
-        <ChatContextBanner
-          title={header?.bannerTitle ?? t('detail.matchBannerTitle', 'Partida marcada')}
-          subtitle={header?.bannerSubtitle ?? t('detail.matchBannerSubtitle', 'Aguarde enquanto carregamos os detalhes')}
-          onPress={handleBannerPress}
-        />
+        {trackedMessages.length > 0 ? (
+          <View
+            className="mx-3 mt-2 mb-1 rounded-xl border overflow-hidden"
+            style={{
+              borderColor: theme === 'light' ? '#D1DCEB' : 'rgba(255,255,255,0.10)',
+              backgroundColor: theme === 'light' ? '#FFFFFF' : '#151A1D',
+            }}
+          >
+            {trackedMessages.map((item, index) => (
+              <Pressable
+                key={item.id}
+                onPress={() => scrollToMessage(item.id)}
+                className="px-3 py-2 flex-row items-center gap-2"
+                style={{
+                  borderTopWidth: index > 0 ? 1 : 0,
+                  borderTopColor: theme === 'light' ? '#E2E8F0' : 'rgba(255,255,255,0.08)',
+                }}
+              >
+                {item.pinned ? <Pin size={15} color={theme === 'light' ? '#64748B' : '#A3A3A3'} /> : null}
+                {item.saved ? <Star size={15} color="#EAB308" fill="#EAB308" /> : null}
+                <Text variant="caption" numberOfLines={1} style={{ flex: 1, color: theme === 'light' ? '#475569' : '#A7B0B8' }}>
+                  {item.preview}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
 
         <FlashList
+          ref={listRef}
           data={messages}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => (item as ChatMessage & { clientMessageId?: string }).clientMessageId ?? item.id}
           bounces
           overScrollMode="always"
           showsVerticalScrollIndicator={false}
@@ -468,62 +569,70 @@ export default function ConversationDetailScreen() {
             </>
           )}
           ListFooterComponent={<TypingIndicator names={typingNames} />}
-          renderItem={({ item }) => (
-            <MessageBubble
-              message={item}
-              showSenderName
-              isPinned={pinnedMessageIds.includes(item.id)}
-              isSaved={savedMessageIds.includes(item.id)}
-              reactions={reactions[item.id]}
-              onLongPress={(message) => setSelectedMessage(message)}
-              onReactionPress={(emoji) => void toggleReaction(item.id, emoji)}
-              onAttachmentPress={(message) => {
-                const url = message.attachment?.url;
-                if (!url) return;
-                if (message.attachment?.kind === 'document') {
+          renderItem={({ item }) => {
+            const displayMessage = getDisplayMessage(item);
+
+            return (
+              <MessageBubble
+                message={displayMessage}
+                showSenderName
+                isPinned={pinnedMessageIds.includes(item.id)}
+                isSaved={savedMessageIds.includes(item.id)}
+                isForwarded={Boolean(item.isForwarded)}
+                reactions={reactions[item.id]}
+                onLongPress={(message, anchor) => {
+                  setSelectedMessage(message);
+                  setSelectedMessageAnchor(anchor);
+                }}
+                onReactionPress={(emoji) => void toggleReaction(item.id, emoji)}
+                onAttachmentPress={(message) => {
+                  const url = message.attachment?.url;
+                  if (!url) return;
+                  if (message.attachment?.kind === 'document') {
+                    void Linking.openURL(url);
+                    return;
+                  }
+                  setOpenedAttachment({
+                    kind: message.attachment?.kind ?? 'document',
+                    url,
+                    fileName: message.attachment?.fileName,
+                  });
+                }}
+                onAttachmentDownload={(message) => {
+                  const url = message.attachment?.downloadUrl ?? message.attachment?.url;
+                  if (!url) return;
+                  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+                    void (async () => {
+                      try {
+                        const response = await fetch(url);
+                        const blob = await response.blob();
+                        const objectUrl = URL.createObjectURL(blob);
+                        const anchor = document.createElement('a');
+                        anchor.href = objectUrl;
+                        anchor.download = message.attachment?.fileName ?? 'arquivo';
+                        anchor.rel = 'noopener noreferrer';
+                        document.body.appendChild(anchor);
+                        anchor.click();
+                        document.body.removeChild(anchor);
+                        URL.revokeObjectURL(objectUrl);
+                      } catch {
+                        void Linking.openURL(url);
+                      }
+                    })();
+                    return;
+                  }
                   void Linking.openURL(url);
-                  return;
-                }
-                setOpenedAttachment({
-                  kind: message.attachment?.kind ?? 'document',
-                  url,
-                  fileName: message.attachment?.fileName,
-                });
-              }}
-              onAttachmentDownload={(message) => {
-                const url = message.attachment?.downloadUrl ?? message.attachment?.url;
-                if (!url) return;
-                if (Platform.OS === 'web' && typeof document !== 'undefined') {
-                  void (async () => {
-                    try {
-                      const response = await fetch(url);
-                      const blob = await response.blob();
-                      const objectUrl = URL.createObjectURL(blob);
-                      const anchor = document.createElement('a');
-                      anchor.href = objectUrl;
-                      anchor.download = message.attachment?.fileName ?? 'arquivo';
-                      anchor.rel = 'noopener noreferrer';
-                      document.body.appendChild(anchor);
-                      anchor.click();
-                      document.body.removeChild(anchor);
-                      URL.revokeObjectURL(objectUrl);
-                    } catch {
-                      void Linking.openURL(url);
-                    }
-                  })();
-                  return;
-                }
-                void Linking.openURL(url);
-              }}
-            />
-          )}
+                }}
+              />
+            );
+          }}
         />
 
         <ComposerBar
           text={draft}
           placeholder={t('detail.messagePlaceholder', 'Mensagem...')}
-          replyTo={replyTo?.text ?? null}
-          replySender={replyTo?.author ?? null}
+          replyTo={getMessagePreview(replyTo) || null}
+          replySender={getReplyAuthor(replyTo)}
           replyLabel={t('detail.replyingTo', 'Respondendo a')}
           isSending={sending}
           isRecording={isRecording}
@@ -540,20 +649,84 @@ export default function ConversationDetailScreen() {
           onFocus={() => updateTypingState(draft.trim().length > 0)}
           onBlur={() => updateTypingState(false)}
         />
-
-        <EmojiKeyboard
-          onEmojiSelected={(emoji: EmojiType) => setDraft((prev) => prev + emoji.emoji)}
-          open={emojiVisible}
+        <TwemojiPicker
+          visible={emojiVisible}
+          title={t('detail.chooseEmoji', 'Escolha um emoji')}
+          onSelect={(emoji) => setDraft((prev) => prev + emoji)}
           onClose={() => setEmojiVisible(false)}
-          defaultHeight={420}
-          expandable={false}
-          hideHeader={false}
-          enableSearchBar
-          enableCategoryChangeAnimation
         />
-
-        <ChatActionSheet visible={!!selectedMessage} title="Mensagem" actions={selectedMessageActions} onClose={() => setSelectedMessage(null)} />
+        <ChatActionSheet
+          visible={!!selectedMessage}
+          title="Mensagem"
+          actions={selectedMessageActions}
+          quickReactions={DEFAULT_REACTION_EMOJIS}
+          anchor={selectedMessageAnchor}
+          onQuickReaction={(emoji) => {
+            if (selectedMessage) void toggleReaction(selectedMessage.id, emoji);
+          }}
+          onMoreReactions={() => {
+            if (!selectedMessage) return;
+            setReactionEmojiMessage(selectedMessage);
+            setReactionEmojiAnchor(selectedMessageAnchor);
+            setSelectedMessage(null);
+            setSelectedMessageAnchor(undefined);
+            setReactionEmojiVisible(true);
+          }}
+          onClose={() => {
+            setSelectedMessage(null);
+            setSelectedMessageAnchor(undefined);
+          }}
+        />
+        <TwemojiPicker
+          visible={reactionEmojiVisible}
+          title={t('detail.chooseEmoji', 'Escolha um emoji')}
+          anchor={reactionEmojiAnchor}
+          compact
+          onSelect={(emoji) => {
+            if (reactionEmojiMessage) void toggleReaction(reactionEmojiMessage.id, emoji);
+          }}
+          onClose={() => {
+            setReactionEmojiVisible(false);
+            setReactionEmojiMessage(null);
+            setReactionEmojiAnchor(undefined);
+          }}
+        />
         <ChatActionSheet visible={attachVisible} title="Anexar" actions={attachmentActions} onClose={() => setAttachVisible(false)} />
+
+        <Modal visible={!!forwardingMessage} transparent animationType="fade" onRequestClose={() => setForwardingMessage(null)}>
+          <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setForwardingMessage(null)}>
+            <Pressable className="rounded-t-2xl border-t px-4 py-4" style={{ backgroundColor: theme === 'light' ? '#FFFFFF' : '#111827', borderTopColor: theme === 'light' ? '#D1DCEB' : 'rgba(255,255,255,0.10)' }}>
+              <Text variant="caption" className="font-bold text-fg1 mb-3">Encaminhar para</Text>
+              <View style={{ maxHeight: 360 }}>
+                <FlashList
+                  data={forwardTargets}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => (
+                    <Pressable
+                      className="rounded-xl border px-3 py-3 mb-2"
+                      style={{ borderColor: theme === 'light' ? '#D1DCEB' : 'rgba(255,255,255,0.10)' }}
+                      onPress={() => {
+                        if (!forwardingMessage) return;
+                        const targetId = item.id;
+                        setForwardingMessage(null);
+                        void forwardMessage(targetId, forwardingMessage.id).catch((error) => {
+                          const message = error instanceof Error ? error.message : 'Nao foi possivel encaminhar.';
+                          Alert.alert('Falha ao encaminhar', message);
+                        });
+                      }}
+                    >
+                      <Text variant="caption" className="font-semibold text-fg1">{item.title}</Text>
+                      <Text variant="micro" className="text-fg3" numberOfLines={1}>{item.message}</Text>
+                    </Pressable>
+                  )}
+                  ListEmptyComponent={(
+                    <Text variant="micro" className="text-fg3">Nenhuma conversa disponivel.</Text>
+                  )}
+                />
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
 
         <ParticipantsSheet
           visible={participantsVisible}
@@ -587,7 +760,7 @@ export default function ConversationDetailScreen() {
             <View className="w-full rounded-2xl p-4" style={{ backgroundColor: theme === 'light' ? '#fff' : '#111827' }}>
               {pendingAttachment?.kind === 'image' ? (
                 <View style={{ width: '100%', height: 320, borderRadius: 12, backgroundColor: '#0b1220', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-                  <Image source={{ uri: pendingAttachment.uri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                  <Image source={{ uri: pendingAttachment.uri }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
                 </View>
               ) : pendingAttachment?.kind === 'video' ? (
                 <View style={{ width: '100%', height: 320, borderRadius: 12, backgroundColor: '#0b1220', overflow: 'hidden' }}>
@@ -595,7 +768,7 @@ export default function ConversationDetailScreen() {
                     source={{ uri: pendingAttachment.uri }}
                     style={{ width: '100%', height: '100%' }}
                     useNativeControls
-                    resizeMode={ResizeMode.CONTAIN}
+                    resizeMode={ResizeMode.COVER}
                     isLooping={false}
                   />
                 </View>
@@ -635,7 +808,7 @@ export default function ConversationDetailScreen() {
                   : openedAttachment?.kind === 'image'
                     ? 'Imagem'
                     : openedAttachment?.kind === 'video'
-                      ? 'Vídeo'
+                      ? 'VÃ­deo'
                       : 'Preview'}
               </Text>
               <View className="flex-row items-center gap-5">
@@ -651,7 +824,7 @@ export default function ConversationDetailScreen() {
             </View>
             {openedAttachment?.kind === 'image' ? (
               <View className="flex-1 items-center justify-center">
-                <Image source={{ uri: openedAttachment.url }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+                <Image source={{ uri: openedAttachment.url }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
               </View>
             ) : openedAttachment?.kind === 'video' ? (
               <View className="flex-1 items-center justify-center">
@@ -659,7 +832,7 @@ export default function ConversationDetailScreen() {
                   source={{ uri: openedAttachment.url }}
                   style={{ width: '100%', height: '100%' }}
                   useNativeControls
-                  resizeMode={ResizeMode.CONTAIN}
+                  resizeMode={ResizeMode.COVER}
                   shouldPlay={false}
                 />
               </View>
@@ -676,3 +849,4 @@ export default function ConversationDetailScreen() {
     </SafeAreaView>
   );
 }
+

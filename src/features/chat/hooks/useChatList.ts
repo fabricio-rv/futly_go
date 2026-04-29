@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   fetchChatList,
@@ -18,39 +18,40 @@ export function useChatList() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  const loadSequenceRef = useRef(0);
 
   const load = useCallback(async () => {
+    const loadSequence = ++loadSequenceRef.current;
     setLoading(true);
     setError(null);
 
     try {
       const [list, userId] = await Promise.all([fetchChatList(), getCurrentUserId()]);
+      if (!mountedRef.current || loadSequence !== loadSequenceRef.current) return;
       setRows(list);
       setCurrentUserId(userId);
     } catch (err) {
+      if (!mountedRef.current || loadSequence !== loadSequenceRef.current) return;
       const message = err instanceof Error ? err.message : 'Erro ao carregar conversas.';
       setError(message);
     } finally {
-      setLoading(false);
+      if (mountedRef.current && loadSequence === loadSequenceRef.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let active = true;
+    mountedRef.current = true;
 
-    const boot = async () => {
-      await load();
-      if (!active) return;
-    };
-
-    void boot();
+    void load();
 
     const unsubscribe = subscribeChatList(() => {
       void load();
     });
 
     return () => {
-      active = false;
+      mountedRef.current = false;
+      loadSequenceRef.current += 1;
       unsubscribe();
     };
   }, [load]);
@@ -167,6 +168,7 @@ export function useChatList() {
         author,
         time: timeLabel,
         avatar: toInitials(avatarSource),
+        avatarUrl: isPrivate ? row.private_partner_avatar_url ?? null : row.group_avatar_url ?? null,
         avatarTone: row.is_archived
           ? 'gold'
           : row.my_role === 'host'
@@ -225,3 +227,5 @@ export function useChatList() {
     refresh: load,
   };
 }
+
+

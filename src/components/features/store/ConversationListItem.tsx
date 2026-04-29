@@ -1,5 +1,5 @@
 import { Check, CheckCheck, FileText, Image as ImageIcon, Mic, Video } from 'lucide-react-native';
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 
@@ -85,11 +85,20 @@ export function ConversationListItem({ item, onPress }: ConversationListItemProp
               justifyContent: 'center',
               borderWidth: 1,
               borderColor: tk.borderAvatar,
+              overflow: 'hidden',
             }}
           >
-            <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 }}>
-              {item.avatar}
-            </Text>
+            {item.avatarUrl ? (
+              <Image
+                source={{ uri: item.avatarUrl }}
+                style={{ width: 50, height: 50, borderRadius: 25 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 }}>
+                {item.avatar}
+              </Text>
+            )}
           </LinearGradient>
           {item.presence ? (
             <View
