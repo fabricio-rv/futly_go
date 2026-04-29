@@ -191,12 +191,23 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
       try {
         const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(locationQuery)}`;
-        const response = await fetch(geocodeUrl, {
+        let response = await fetch(geocodeUrl, {
           headers: {
             Accept: 'application/json',
+            'User-Agent': 'FutlyGo/1.0 (mobile app geocoding)',
           },
         });
-        const payload = (await response.json()) as Array<{ lat?: string; lon?: string }>;
+        let payload = (await response.json()) as Array<{ lat?: string; lon?: string }>;
+        if (!Array.isArray(payload) || payload.length === 0) {
+          const fallbackUrl = `https://geocode.maps.co/search?q=${encodeURIComponent(locationQuery)}`;
+          response = await fetch(fallbackUrl, {
+            headers: {
+              Accept: 'application/json',
+              'User-Agent': 'FutlyGo/1.0 (mobile app geocoding)',
+            },
+          });
+          payload = (await response.json()) as Array<{ lat?: string; lon?: string }>;
+        }
         const first = payload?.[0];
 
         if (!first?.lat || !first?.lon) {

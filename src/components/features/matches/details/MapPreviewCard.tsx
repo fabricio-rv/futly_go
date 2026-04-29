@@ -2,7 +2,6 @@ import { MapPin } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
-import { WebView } from 'react-native-webview';
 
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
@@ -98,17 +97,6 @@ export function MapPreviewCard({
                 setCurrentUrlIndex((prev) => prev + 1);
               }
             }}
-          />
-        ) : !isWeb && mapEmbedUrl ? (
-          <WebView
-            source={{ uri: mapEmbedUrl }}
-            style={{ width: '100%', height: '100%' }}
-            javaScriptEnabled
-            domStorageEnabled
-            scrollEnabled
-            nestedScrollEnabled
-            bounces={false}
-            overScrollMode="never"
           />
         ) : activeMapUrl ? (
           <Image

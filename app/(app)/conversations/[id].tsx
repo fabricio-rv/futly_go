@@ -1,4 +1,5 @@
-﻿import * as DocumentPicker from 'expo-document-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { useAudioRecorder, RecordingPresets, AudioModule } from 'expo-audio';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Clipboard from 'expo-clipboard';
@@ -48,14 +49,20 @@ async function readUriAsBlob(uri: string): Promise<Blob> {
     const response = await fetch(uri);
     return await response.blob();
   } catch {
-    return await new Promise<Blob>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onerror = () => reject(new Error('Nao foi possivel ler o arquivo selecionado.'));
-      xhr.onload = () => resolve(xhr.response as Blob);
-      xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
-      xhr.send(null);
-    });
+    try {
+      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+      const response = await fetch(`data:application/octet-stream;base64,${base64}`);
+      return await response.blob();
+    } catch {
+      return await new Promise<Blob>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.onerror = () => reject(new Error('Nao foi possivel ler o arquivo selecionado.'));
+        xhr.onload = () => resolve(xhr.response as Blob);
+        xhr.responseType = 'blob';
+        xhr.open('GET', uri, true);
+        xhr.send(null);
+      });
+    }
   }
 }
 
@@ -411,6 +418,9 @@ export default function ConversationDetailScreen() {
     }
 
     try {
+      if (recorder.isRecording) {
+        await recorder.stop();
+      }
       await AudioModule.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
       await recorder.prepareToRecordAsync();
       await recorder.record();
@@ -852,3 +862,4 @@ export default function ConversationDetailScreen() {
     </SafeAreaView>
   );
 }
+
