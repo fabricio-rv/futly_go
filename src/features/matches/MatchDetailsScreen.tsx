@@ -19,22 +19,20 @@ import {
   SectionTitle,
   StatBadge,
   StatusStamp,
-  useMatchTheme,
+  matchTheme as fixedDarkMatchTheme,
 } from "@/src/components/features/matches";
 import { TacticalPitch } from "@/src/components/fifa/TacticalPitch";
 import { Button, Card, Screen, Text } from "@/src/components/ui";
 import { useMatches } from "@/src/features/matches/hooks/useMatches";
 import type { MatchDetails } from "@/src/features/matches/services/matchesService";
 import { supabase } from "@/src/lib/supabase";
-import { useAppColorScheme } from "@/src/contexts/ThemeContext";
 import { useTranslation } from "@/src/i18n/hooks/useTranslation";
 
 export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const { t } = useTranslation("matches");
-  const matchTheme = useMatchTheme();
-  const theme = useAppColorScheme();
+  const matchTheme = fixedDarkMatchTheme;
   const { width: screenWidth } = useWindowDimensions();
-  const isLight = theme === "light";
+  const isLight = false;
   const router = useRouter();
   const {
     getMatchDetails,
@@ -98,12 +96,6 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     }
     return dayLabel;
   };
-    return (
-      levelMap[levelName.toLowerCase()] ||
-      levelName.charAt(0).toUpperCase() + levelName.slice(1)
-    );
-  };
-
   const loadDetails = useCallback(async () => {
     try {
       const data = await getMatchDetails(matchId);
@@ -133,8 +125,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   }, [loadDetails]);
 
   useEffect(() => {
+    const channelName = `match-details:${matchId}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+
+    // Em dev (React StrictMode), o effect pode montar/desmontar rapidamente
+    // e deixar um canal anterior ativo com o mesmo nome.
+    // Garantimos limpeza antes de registrar callbacks + subscribe.
     const channel = supabase
-      .channel(`match-details:${matchId}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
@@ -412,7 +409,11 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
   if (!details) {
     return (
-      <Screen padded={false} showBackground={false}>
+      <Screen padded={false} showBackground={false} style={{ backgroundColor: "#05070B" }}>
+        <View
+          pointerEvents="none"
+          style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "#05070B" }}
+        />
         <MatchBackground />
         <View className="flex-1 items-center justify-center px-6">
           <Text
@@ -474,11 +475,17 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   }
 
   return (
-    <Screen padded={false} showBackground={false}>
+    <Screen padded={false} showBackground={false} style={{ backgroundColor: "#05070B" }}>
+      <View
+        pointerEvents="none"
+        style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, backgroundColor: "#05070B" }}
+      />
       <MatchBackground />
       <ScrollView
+        style={{ backgroundColor: "#05070B" }}
+        bounces={false}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 120, backgroundColor: "#05070B" }}
       >
         <MatchTopNav
           title={t("details.title")}

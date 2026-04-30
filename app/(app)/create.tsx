@@ -138,6 +138,7 @@ export default function CreateMatchScreen() {
   const [minAge, setMinAge] = useState(16);
   const [maxAge, setMaxAge] = useState(80);
   const [activeStep, setActiveStep] = useState<CreateStep>("1");
+  const [isDraggingAgeRange, setIsDraggingAgeRange] = useState(false);
 
   const [acceptedLevels, setAcceptedLevels] = useState<MinLevelValue[]>([]);
 
@@ -261,6 +262,7 @@ export default function CreateMatchScreen() {
     <Screen padded={false} showBackground={false}>
       <MatchBackground />
       <ScrollView
+        scrollEnabled={!isDraggingAgeRange}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 152 }}
       >
@@ -406,6 +408,7 @@ export default function CreateMatchScreen() {
                 setMinAge(safeMin);
                 setMaxAge(safeMax);
               }}
+              onAgeDragStateChange={setIsDraggingAgeRange}
               onToggleRestBreak={() => setRestBreak((value) => !value)}
               onToggleReferee={() => setReferee((value) => !value)}
               onToggleLevel={toggleLevel}

@@ -6,12 +6,12 @@
     "scheme": "futlygo",
     "orientation": "portrait",
     "icon": "./assets/icons/Icon-512.png",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/icons/Icon-512.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#05070B"
     },
     "ios": {
       "bundleIdentifier": "com.fabricio.futlygo",
@@ -42,7 +42,7 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/Icon-maskable-512.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#05070B"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false

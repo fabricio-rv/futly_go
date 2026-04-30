@@ -1,6 +1,8 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useMemo, useRef, useState } from "react";
-import { PanResponder, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { runOnJS } from "react-native-reanimated";
 
 import { Text } from "@/src/components/ui";
 import { useMatchTheme } from "../shared/theme";
@@ -11,6 +13,7 @@ type RangeSelectorProps = {
   min: number;
   max: number;
   onChange: (nextMin: number, nextMax: number) => void;
+  onDragStateChange?: (dragging: boolean) => void;
 };
 
 export function RangeSelector({
@@ -19,11 +22,19 @@ export function RangeSelector({
   min,
   max,
   onChange,
+  onDragStateChange,
 }: RangeSelectorProps) {
   const matchTheme = useMatchTheme();
   const [trackWidth, setTrackWidth] = useState(1);
   const minStartRef = useRef(min);
   const maxStartRef = useRef(max);
+  const minRef = useRef(min);
+  const maxRef = useRef(max);
+
+  useEffect(() => {
+    minRef.current = min;
+    maxRef.current = max;
+  }, [min, max]);
 
   const span = Math.max(1, maxLimit - minLimit);
   const minPercent = ((min - minLimit) / span) * 100;
@@ -31,53 +42,57 @@ export function RangeSelector({
 
   const pxToSteps = (dx: number) => {
     if (trackWidth <= 0) return 0;
-    return Math.round((dx / trackWidth) * span);
+    // Menos sensivel: precisa arrastar mais pixels para trocar 1 ano.
+    const smoothing = 0.65;
+    return Math.round((dx / trackWidth) * span * smoothing);
   };
 
-  const minPan = useMemo(
+  const minGesture = useMemo(
     () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: () => {
-          minStartRef.current = min;
-        },
-        onPanResponderMove: (_, gesture) => {
-          const steps = pxToSteps(gesture.dx);
+      Gesture.Pan()
+        .shouldCancelWhenOutside(false)
+        .onBegin(() => {
+          minStartRef.current = minRef.current;
+          if (onDragStateChange) runOnJS(onDragStateChange)(true);
+        })
+        .onUpdate((event) => {
+          const steps = pxToSteps(event.translationX);
           const nextMin = Math.max(
             minLimit,
-            Math.min(minStartRef.current + steps, max - 1),
+            Math.min(minStartRef.current + steps, maxRef.current - 1),
           );
-
-          if (nextMin !== min) {
-            onChange(nextMin, max);
+          if (nextMin !== minRef.current) {
+            runOnJS(onChange)(nextMin, maxRef.current);
           }
-        },
-      }),
-    [max, min, minLimit, onChange, trackWidth],
+        })
+        .onFinalize(() => {
+          if (onDragStateChange) runOnJS(onDragStateChange)(false);
+        }),
+    [minLimit, onChange, onDragStateChange, trackWidth],
   );
 
-  const maxPan = useMemo(
+  const maxGesture = useMemo(
     () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onMoveShouldSetPanResponder: () => true,
-        onPanResponderGrant: () => {
-          maxStartRef.current = max;
-        },
-        onPanResponderMove: (_, gesture) => {
-          const steps = pxToSteps(gesture.dx);
+      Gesture.Pan()
+        .shouldCancelWhenOutside(false)
+        .onBegin(() => {
+          maxStartRef.current = maxRef.current;
+          if (onDragStateChange) runOnJS(onDragStateChange)(true);
+        })
+        .onUpdate((event) => {
+          const steps = pxToSteps(event.translationX);
           const nextMax = Math.min(
             maxLimit,
-            Math.max(maxStartRef.current + steps, min + 1),
+            Math.max(maxStartRef.current + steps, minRef.current + 1),
           );
-
-          if (nextMax !== max) {
-            onChange(min, nextMax);
+          if (nextMax !== maxRef.current) {
+            runOnJS(onChange)(minRef.current, nextMax);
           }
-        },
-      }),
-    [max, maxLimit, min, onChange, trackWidth],
+        })
+        .onFinalize(() => {
+          if (onDragStateChange) runOnJS(onDragStateChange)(false);
+        }),
+    [maxLimit, onChange, onDragStateChange, trackWidth],
   );
 
   return (
@@ -132,26 +147,30 @@ export function RangeSelector({
             width: `${Math.max(0, maxPercent - minPercent)}%`,
           }}
         />
-        <View
-          className="absolute w-[18px] h-[18px] rounded-full border-[3px] border-[#22B76C]"
-          style={{
-            backgroundColor: matchTheme.colors.bgSurfaceA,
-            left: `${minPercent}%`,
-            top: -6,
-            marginLeft: -9,
-          }}
-          {...minPan.panHandlers}
-        />
-        <View
-          className="absolute w-[18px] h-[18px] rounded-full border-[3px] border-[#D4A13A]"
-          style={{
-            backgroundColor: matchTheme.colors.bgSurfaceA,
-            left: `${maxPercent}%`,
-            top: -6,
-            marginLeft: -9,
-          }}
-          {...maxPan.panHandlers}
-        />
+        <GestureDetector gesture={minGesture}>
+          <View
+            className="absolute w-[28px] h-[28px] items-center justify-center"
+            style={{ left: `${minPercent}%`, top: -11, marginLeft: -14 }}
+            collapsable={false}
+          >
+            <View
+              className="w-[18px] h-[18px] rounded-full border-[3px] border-[#22B76C]"
+              style={{ backgroundColor: matchTheme.colors.bgSurfaceA }}
+            />
+          </View>
+        </GestureDetector>
+        <GestureDetector gesture={maxGesture}>
+          <View
+            className="absolute w-[28px] h-[28px] items-center justify-center"
+            style={{ left: `${maxPercent}%`, top: -11, marginLeft: -14 }}
+            collapsable={false}
+          >
+            <View
+              className="w-[18px] h-[18px] rounded-full border-[3px] border-[#D4A13A]"
+              style={{ backgroundColor: matchTheme.colors.bgSurfaceA }}
+            />
+          </View>
+        </GestureDetector>
       </View>
     </View>
   );

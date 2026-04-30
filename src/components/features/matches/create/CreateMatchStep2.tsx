@@ -44,6 +44,7 @@ type CreateMatchStep2Props = {
   onPricePerPersonChange: (value: string) => void;
   onDurationMinutesChange: (value: string) => void;
   onAgeRangeChange: (nextMin: number, nextMax: number) => void;
+  onAgeDragStateChange?: (dragging: boolean) => void;
   onToggleRestBreak: () => void;
   onToggleReferee: () => void;
   onToggleLevel: (value: MinLevelValue) => void;
@@ -111,6 +112,7 @@ export function CreateMatchStep2({
   onPricePerPersonChange,
   onDurationMinutesChange,
   onAgeRangeChange,
+  onAgeDragStateChange,
   onToggleRestBreak,
   onToggleReferee,
   onToggleLevel,
@@ -170,6 +172,7 @@ export function CreateMatchStep2({
               min={minAge}
               max={maxAge}
               onChange={onAgeRangeChange}
+              onDragStateChange={onAgeDragStateChange}
             />
           </View>
           <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>

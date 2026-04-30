@@ -1,6 +1,5 @@
-﻿import '@/global.css';
+import '@/global.css';
 import { AppProviders } from '@/src/components/layout/AppProviders';
-import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
 import {
   Geist_400Regular,
@@ -32,13 +31,12 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
 function RootLayoutContent() {
-  const theme = useAppColorScheme();
-  const bgColor = theme === 'light' ? '#F1F5F9' : '#020617';
+  const bgColor = '#020617';
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: bgColor }}>
       <SafeAreaProvider>
-        <View style={{ flex: 1, backgroundColor: bgColor }} className={theme === 'dark' ? 'dark' : ''}>
+        <View style={{ flex: 1, backgroundColor: bgColor }} className="dark">
           <Stack
             screenOptions={{
               headerShown: false,

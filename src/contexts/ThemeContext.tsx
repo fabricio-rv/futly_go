@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
-import { useColorScheme } from 'react-native';
-import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 type Theme = 'light' | 'dark';
 
@@ -15,53 +14,24 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = 'futly_theme';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const systemColorScheme = useColorScheme();
   const { setColorScheme } = useNativeWindColorScheme();
-  const [theme, setThemeState] = useState<Theme>('dark');
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [theme] = useState<Theme>('dark');
 
-  // Load theme from AsyncStorage on mount
   useEffect(() => {
-    loadTheme();
-  }, []);
-
-  useLayoutEffect(() => {
-    if (!isLoaded) return;
-    setColorScheme(theme);
-  }, [isLoaded, setColorScheme, theme]);
-
-  async function loadTheme() {
-    try {
-      const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-      if (savedTheme === 'light' || savedTheme === 'dark') {
-        setColorScheme(savedTheme);
-        setThemeState(savedTheme);
-      } else {
-        const defaultTheme = (systemColorScheme as Theme) || 'dark';
-        setColorScheme(defaultTheme);
-        setThemeState(defaultTheme);
-      }
-    } catch (error) {
-      console.log('Error loading theme:', error);
-      setColorScheme('dark');
-      setThemeState('dark');
-    } finally {
-      setIsLoaded(true);
-    }
-  }
+    // Forca dark imediatamente para evitar qualquer flicker para light.
+    setColorScheme('dark');
+    void AsyncStorage.setItem(THEME_STORAGE_KEY, 'dark');
+  }, [setColorScheme]);
 
   async function setTheme(newTheme: Theme) {
     try {
-      setThemeState(newTheme);
-      setColorScheme(newTheme);
-      await AsyncStorage.setItem(THEME_STORAGE_KEY, newTheme);
+      // API mantida por compatibilidade; tema permanece fixo em dark neste release.
+      void newTheme;
+      setColorScheme('dark');
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, 'dark');
     } catch (error) {
       console.log('Error saving theme:', error);
     }
-  }
-
-  if (!isLoaded) {
-    return null; // or a splash screen
   }
 
   return (
