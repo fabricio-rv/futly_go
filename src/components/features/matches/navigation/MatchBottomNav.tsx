@@ -15,6 +15,7 @@ import { TouchableScale } from '@/src/components/ui/TouchableScale';
 
 type BottomNavProps = {
   active: 'buscar' | 'agenda' | 'new' | 'notifications' | 'profile' | 'none';
+  compactBottomInset?: boolean;
 };
 
 function NavItem({
@@ -44,7 +45,7 @@ function NavItem({
   );
 }
 
-export function MatchBottomNav({ active }: BottomNavProps) {
+export function MatchBottomNav({ active, compactBottomInset = false }: BottomNavProps) {
   const insets = useSafeAreaInsets();
   const theme = useAppColorScheme();
   const [unreadNotifications, setUnreadNotifications] = useState(0);
@@ -85,8 +86,8 @@ export function MatchBottomNav({ active }: BottomNavProps) {
     <View
       className="absolute bottom-0 left-0 right-0 border-t px-2"
       style={{
-        height: 72 + insets.bottom,
-        paddingBottom: Math.max(insets.bottom, 8),
+        height: compactBottomInset ? 72 : 72 + insets.bottom,
+        paddingBottom: compactBottomInset ? 8 : Math.max(insets.bottom, 8),
         paddingTop: 6,
         backgroundColor: barBg,
         borderTopColor: barBorder,

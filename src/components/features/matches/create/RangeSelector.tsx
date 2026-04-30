@@ -1,5 +1,5 @@
 ﻿import { LinearGradient } from 'expo-linear-gradient';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
@@ -9,9 +9,22 @@ type RangeSelectorProps = {
   max: number;
   minPercent: number;
   maxPercent: number;
+  onDecreaseMin: () => void;
+  onIncreaseMin: () => void;
+  onDecreaseMax: () => void;
+  onIncreaseMax: () => void;
 };
 
-export function RangeSelector({ min, max, minPercent, maxPercent }: RangeSelectorProps) {
+export function RangeSelector({
+  min,
+  max,
+  minPercent,
+  maxPercent,
+  onDecreaseMin,
+  onIncreaseMin,
+  onDecreaseMax,
+  onIncreaseMax,
+}: RangeSelectorProps) {
   const matchTheme = useMatchTheme();
   return (
     <View>
@@ -39,6 +52,41 @@ export function RangeSelector({ min, max, minPercent, maxPercent }: RangeSelecto
           <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
             Max
           </Text>
+        </View>
+      </View>
+
+      <View className="flex-row justify-between mt-2">
+        <View className="flex-row gap-2">
+          <Pressable
+            onPress={onDecreaseMin}
+            className="h-7 w-7 items-center justify-center rounded-full border"
+            style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
+          >
+            <Text variant="caption" style={{ color: matchTheme.colors.fgPrimary }}>-</Text>
+          </Pressable>
+          <Pressable
+            onPress={onIncreaseMin}
+            className="h-7 w-7 items-center justify-center rounded-full border"
+            style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
+          >
+            <Text variant="caption" style={{ color: matchTheme.colors.fgPrimary }}>+</Text>
+          </Pressable>
+        </View>
+        <View className="flex-row gap-2">
+          <Pressable
+            onPress={onDecreaseMax}
+            className="h-7 w-7 items-center justify-center rounded-full border"
+            style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
+          >
+            <Text variant="caption" style={{ color: matchTheme.colors.fgPrimary }}>-</Text>
+          </Pressable>
+          <Pressable
+            onPress={onIncreaseMax}
+            className="h-7 w-7 items-center justify-center rounded-full border"
+            style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
+          >
+            <Text variant="caption" style={{ color: matchTheme.colors.fgPrimary }}>+</Text>
+          </Pressable>
         </View>
       </View>
 

@@ -1,79 +1,86 @@
-import { useRef, useState } from 'react';
-import { router } from 'expo-router';
-import { ScrollView, Pressable, View, Modal, Alert, useWindowDimensions } from 'react-native';
+import { useRef, useState } from "react";
+import { router } from "expo-router";
+import {
+  ScrollView,
+  Pressable,
+  View,
+  Modal,
+  Alert,
+  useWindowDimensions,
+} from "react-native";
 
 import {
-  DateTimeField,
-  FacilityCheckCard,
   MatchBackground,
   MatchBottomNav,
-  RangeSelector,
-  SectionTitle,
   SegmentedControl,
+  SectionTitle,
   StepIndicator,
-  ToggleRow,
   useMatchTheme,
-} from '@/src/components/features/matches';
-import { TacticalPitch, type PitchMode } from '@/src/components/fifa';
-import { Button, Card, Input, Screen, SelectField, Text } from '@/src/components/ui';
-import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
-import { fetchAddressByCep, formatCep } from '@/src/features/location/cep';
-import { useMatches } from '@/src/features/matches/hooks/useMatches';
-import { useAppColorScheme } from '@/src/contexts/ThemeContext';
-import { useTranslation } from '@/src/i18n/hooks/useTranslation';
+} from "@/src/components/features/matches";
+import { type PitchMode } from "@/src/components/fifa";
+import { Button, Screen, Text } from "@/src/components/ui";
+import { BRAZIL_STATE_OPTIONS } from "@/src/features/auth/constants";
+import { fetchAddressByCep, formatCep } from "@/src/features/location/cep";
+import { useMatches } from "@/src/features/matches/hooks/useMatches";
+import { useAppColorScheme } from "@/src/contexts/ThemeContext";
+import { useTranslation } from "@/src/i18n/hooks/useTranslation";
+import { CreateMatchStep1 } from "@/src/components/features/matches/create/CreateMatchStep1";
+import { CreateMatchStep2 } from "@/src/components/features/matches/create/CreateMatchStep2";
+import { CreateMatchStep3 } from "@/src/components/features/matches/create/CreateMatchStep3";
 
 type MinLevelValue =
-  | 'pereba'
-  | 'resenha'
-  | 'casual'
-  | 'intermediario'
-  | 'avancado'
-  | 'competitivo'
-  | 'semi_amador'
-  | 'amador'
-  | 'ex_profissional';
+  | "resenha"
+  | "casual"
+  | "intermediario"
+  | "avancado"
+  | "competitivo"
+  | "semi_amador"
+  | "amador"
+  | "ex_profissional";
 
 const MIN_LEVEL_OPTIONS: Array<{ value: MinLevelValue }> = [
-  { value: 'pereba' },
-  { value: 'resenha' },
-  { value: 'casual' },
-  { value: 'intermediario' },
-  { value: 'avancado' },
-  { value: 'competitivo' },
-  { value: 'semi_amador' },
-  { value: 'amador' },
-  { value: 'ex_profissional' },
+  { value: "resenha" },
+  { value: "casual" },
+  { value: "intermediario" },
+  { value: "avancado" },
+  { value: "competitivo" },
+  { value: "semi_amador" },
+  { value: "amador" },
+  { value: "ex_profissional" },
 ];
 
 const TURNO_OPTIONS = [
-  { value: 'manha' },
-  { value: 'tarde' },
-  { value: 'noite' },
+  { value: "manha" },
+  { value: "tarde" },
+  { value: "noite" },
 ] as const;
 
+type CreateStep = "1" | "2" | "3";
+type TurnoValue = (typeof TURNO_OPTIONS)[number]["value"] | "";
+
 function formatDateField(value: Date) {
-  const day = String(value.getDate()).padStart(2, '0');
-  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, "0");
+  const month = String(value.getMonth() + 1).padStart(2, "0");
   const year = value.getFullYear();
   return `${day}/${month}/${year}`;
 }
 
 function formatTimeField(value: Date) {
-  const hour = String(value.getHours()).padStart(2, '0');
-  const minute = String(value.getMinutes()).padStart(2, '0');
+  const hour = String(value.getHours()).padStart(2, "0");
+  const minute = String(value.getMinutes()).padStart(2, "0");
   return `${hour}:${minute}`;
 }
 
 function toIsoDate(value: Date) {
   const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
 
 function toIsoTime(value: Date) {
-  const hour = String(value.getHours()).padStart(2, '0');
-  const minute = String(value.getMinutes()).padStart(2, '0');
+  const hour = String(value.getHours()).padStart(2, "0");
+  const minute = String(value.getMinutes()).padStart(2, "0");
   return `${hour}:${minute}:00`;
 }
 
@@ -81,63 +88,29 @@ function daysInMonth(year: number, monthIndex: number) {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
 
-function MinLevelCheckbox({
-  label,
-  selected,
-  onPress,
-  theme,
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-  theme: ReturnType<typeof useMatchTheme>;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="w-[48.5%] rounded-[14px] border px-[12px] py-[10px] flex-row items-center gap-2"
-      style={{
-        backgroundColor: theme.colors.bgSurfaceB,
-        borderColor: selected ? theme.colors.ok : theme.colors.lineStrong,
-      }}
-    >
-      <View
-        className="w-4 h-4 rounded-[4px] border"
-        style={{
-          backgroundColor: selected ? theme.colors.ok : 'transparent',
-          borderColor: selected ? theme.colors.ok : theme.colors.lineStrong,
-        }}
-      />
-      <Text variant="label" style={{ color: theme.colors.fgPrimary }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 export default function CreateMatchScreen() {
-  const { t, currentLanguage } = useTranslation('create');
+  const { t, currentLanguage } = useTranslation("create");
   const theme = useAppColorScheme();
   const matchTheme = useMatchTheme();
   const { width: screenWidth } = useWindowDimensions();
   const { createMatch, submitting } = useMatches();
   const creatingRef = useRef(false);
 
-  const [mode, setMode] = useState<PitchMode>('futsal');
-  const [restBreak, setRestBreak] = useState(true);
+  const [mode, setMode] = useState<PitchMode>("futsal");
+  const [restBreak, setRestBreak] = useState(false);
   const [referee, setReferee] = useState(false);
-  const [description, setDescription] = useState(() =>
-    t('form.descriptionDefault'),
-  );
-  const [selectedPositionIndexes, setSelectedPositionIndexes] = useState<number[]>([]);
+  const [description, setDescription] = useState("");
+  const [selectedPositionIndexes, setSelectedPositionIndexes] = useState<
+    number[]
+  >([]);
 
-  const [stateCode, setStateCode] = useState('RS');
-  const [city, setCity] = useState('Porto Alegre');
-  const [address, setAddress] = useState('R. dos Andradas, 1234');
-  const [district, setDistrict] = useState('Cidade Baixa');
-  const [cep, setCep] = useState('90020-300');
-  const [venueName, setVenueName] = useState('Arena Central - Quadra B');
-  const [contactPhone, setContactPhone] = useState('(51) 3221-0455');
+  const [stateCode, setStateCode] = useState("");
+  const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
+  const [district, setDistrict] = useState("");
+  const [cep, setCep] = useState("");
+  const [venueName, setVenueName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
 
   const [matchDate, setMatchDate] = useState(() => {
     const initialDate = new Date();
@@ -150,20 +123,21 @@ export default function CreateMatchScreen() {
     initialTime.setHours(19, 30, 0, 0);
     return initialTime;
   });
+  const [hasSelectedDate, setHasSelectedDate] = useState(false);
+  const [hasSelectedTime, setHasSelectedTime] = useState(false);
   const [showWebDateModal, setShowWebDateModal] = useState(false);
   const [showWebTimeModal, setShowWebTimeModal] = useState(false);
-  const [webDateCursor, setWebDateCursor] = useState(() => new Date(matchDate.getFullYear(), matchDate.getMonth(), 1));
+  const [webDateCursor, setWebDateCursor] = useState(
+    () => new Date(matchDate.getFullYear(), matchDate.getMonth(), 1),
+  );
   const [webHour, setWebHour] = useState(matchTime.getHours());
   const [webMinute, setWebMinute] = useState(matchTime.getMinutes());
-  const [turno, setTurno] = useState<(typeof TURNO_OPTIONS)[number]['value']>('noite');
-  const [pricePerPerson, setPricePerPerson] = useState('25');
-  const [durationMinutes, setDurationMinutes] = useState('60');
+  const [turno, setTurno] = useState<TurnoValue>("");
+  const [pricePerPerson, setPricePerPerson] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState("");
+  const [activeStep, setActiveStep] = useState<CreateStep>("1");
 
-  const [acceptedLevels, setAcceptedLevels] = useState<MinLevelValue[]>([
-    'resenha',
-    'intermediario',
-    'amador',
-  ]);
+  const [acceptedLevels, setAcceptedLevels] = useState<MinLevelValue[]>([]);
 
   const stateOptions = BRAZIL_STATE_OPTIONS.map((state) => ({
     value: state.value,
@@ -173,36 +147,54 @@ export default function CreateMatchScreen() {
 
   const toggleLevel = (value: MinLevelValue) => {
     setAcceptedLevels((prev) =>
-      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value],
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value],
     );
   };
 
   const togglePosition = (index: number) => {
     setSelectedPositionIndexes((prev) =>
-      prev.includes(index) ? prev.filter((item) => item !== index) : [...prev, index].sort((a, b) => a - b),
+      prev.includes(index)
+        ? prev.filter((item) => item !== index)
+        : [...prev, index].sort((a, b) => a - b),
     );
   };
 
+  const goToStep = (step: CreateStep) => setActiveStep(step);
+
+  const goToNextStep = () => {
+    if (activeStep === "1") return setActiveStep("2");
+    if (activeStep === "2") return setActiveStep("3");
+    return setActiveStep("3");
+  };
+
+  const goToPreviousStep = () => {
+    if (activeStep === "3") return setActiveStep("2");
+    if (activeStep === "2") return setActiveStep("1");
+    return setActiveStep("1");
+  };
+
   const handlePricePerPersonChange = (value: string) => {
-    setPricePerPerson(value.replace(/[^\d]/g, ''));
+    setPricePerPerson(value.replace(/[^\d]/g, ""));
   };
 
   const handleDurationMinutesChange = (value: string) => {
-    setDurationMinutes(value.replace(/[^\d]/g, ''));
+    setDurationMinutes(value.replace(/[^\d]/g, ""));
   };
 
-  async function handleCreateMatch(status: 'publicada' | 'rascunho') {
+  async function handleCreateMatch(status: "publicada" | "rascunho") {
     if (creatingRef.current) return;
     creatingRef.current = true;
 
     try {
       await createMatch({
-        title: venueName.trim() || t('form.untitledMatch'),
+        title: venueName.trim() || t("form.untitledMatch"),
         description: description.trim(),
         modality: mode,
         matchDate: toIsoDate(matchDate),
         matchTime: toIsoTime(matchTime),
-        turno,
+        turno: (turno || "noite") as (typeof TURNO_OPTIONS)[number]["value"],
         durationMinutes: Number(durationMinutes) || 60,
         pricePerPerson: Number(pricePerPerson) || 0,
         minAge: 16,
@@ -221,33 +213,37 @@ export default function CreateMatchScreen() {
         selectedPositionIndexes,
         status,
         facilities: [
-          { label: t('form.facilityLockerRoom'), selected: true },
-          { label: t('form.facilityShower'), selected: true },
-          { label: t('form.facilityParking'), selected: true },
-          { label: t('form.facilitySnackBar'), selected: false },
+          { label: t("form.facilityLockerRoom"), selected: true },
+          { label: t("form.facilityShower"), selected: true },
+          { label: t("form.facilityParking"), selected: true },
+          { label: t("form.facilitySnackBar"), selected: false },
         ],
       });
 
       const successMessage =
-        status === 'rascunho'
-          ? t('form.draftSavedMessage')
-          : t('form.matchPublishedMessage');
+        status === "rascunho"
+          ? t("form.draftSavedMessage")
+          : t("form.matchPublishedMessage");
 
-      Alert.alert(t('form.matchCreatedTitle'), successMessage, [
+      Alert.alert(t("form.matchCreatedTitle"), successMessage, [
         {
-          text: t('common.confirm', 'Confirm'),
-          onPress: () => router.replace('/(app)'),
+          text: t("common.confirm", "Confirm"),
+          onPress: () => router.replace("/(app)"),
         },
       ]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('form.createFailedMessage');
-      Alert.alert(t('form.createFailedTitle'), message);
+      const message =
+        error instanceof Error ? error.message : t("form.createFailedMessage");
+      Alert.alert(t("form.createFailedTitle"), message);
     } finally {
       creatingRef.current = false;
     }
   }
 
-  const monthYearLabel = webDateCursor.toLocaleDateString(currentLanguage, { month: 'long', year: 'numeric' });
+  const monthYearLabel = webDateCursor.toLocaleDateString(currentLanguage, {
+    month: "long",
+    year: "numeric",
+  });
   const currentYear = webDateCursor.getFullYear();
   const currentMonth = webDateCursor.getMonth();
   const firstWeekday = new Date(currentYear, currentMonth, 1).getDay();
@@ -260,320 +256,248 @@ export default function CreateMatchScreen() {
   return (
     <Screen padded={false} showBackground={false}>
       <MatchBackground />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 152 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 152 }}
+      >
         <View className="px-[18px] pt-4 pb-1">
-          <SectionTitle title={t('title')} badge="2 / 4" />
+          <SectionTitle title={t("title")} badge={`${activeStep} / 3`} />
         </View>
 
-        <StepIndicator total={4} current={3} />
+        <StepIndicator total={3} current={Number(activeStep)} solidCurrent />
+
+        <View className="px-[18px] pb-2">
+          <SegmentedControl
+            options={[
+              { id: "1", label: "Informa\u00e7\u00f5es" },
+              { id: "2", label: "Detalhes" },
+              { id: "3", label: "Escala\u00e7\u00e3o" },
+            ]}
+            activeId={activeStep}
+            onChange={(value) => goToStep(value as CreateStep)}
+            appearance="flat"
+            radius={28}
+            containerColor={matchTheme.colors.bgSurfaceA}
+            borderColor="rgba(34,183,108,0.35)"
+          />
+        </View>
 
         <View className="px-[18px] gap-[14px]">
-          <Card
-            className="p-4"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
-          >
-            <SectionTitle title={t('title')} />
-            <View className="gap-3 mt-2">
-              <Input
-                label={t('form.cep')}
-                value={cep}
-                onChangeText={async (value) => {
-                  const formatted = formatCep(value);
-                  setCep(formatted);
+          {activeStep === "1" ? (
+            <CreateMatchStep1
+              matchTheme={matchTheme}
+              labels={{
+                cep: t("form.cep"),
+                district: t("form.district"),
+                districtPlaceholder: t("form.districtPlaceholder"),
+                venueName: t("form.venueName"),
+                venueNamePlaceholder: t("form.venueNamePlaceholder"),
+                state: t("form.state"),
+                selectState: t("form.selectState"),
+                city: t("form.city"),
+                cityPlaceholder: t("form.cityPlaceholder"),
+                address: t("form.address"),
+                addressPlaceholder: t("form.addressPlaceholder"),
+                date: t("filters.date", "Data"),
+                selectDate: t("filters.date", "Data"),
+                time: t("filters.time", "Hor\u00e1rio"),
+                selectTime: t("filters.time", "Hor\u00e1rio"),
+                shift: t("filters.shift", "Turno"),
+                contactPhone: t("form.contactPhone"),
+                contactPhonePlaceholder: "(00) 00000-0000",
+              }}
+              stateOptions={stateOptions}
+              shiftOptions={TURNO_OPTIONS.map((item) => ({
+                value: item.value,
+                label:
+                  item.value === "manha"
+                    ? t("filters.shiftMorning", "Manha")
+                    : item.value === "tarde"
+                      ? t("filters.shiftAfternoon", "Tarde")
+                      : t("filters.shiftNight", "Noite"),
+              }))}
+              cep={cep}
+              district={district}
+              venueName={venueName}
+              stateCode={stateCode}
+              city={city}
+              address={address}
+              contactPhone={contactPhone}
+              dateValue={hasSelectedDate ? formatDateField(matchDate) : ""}
+              timeValue={hasSelectedTime ? formatTimeField(matchTime) : ""}
+              turno={turno}
+              onCepChange={async (value) => {
+                const formatted = formatCep(value);
+                setCep(formatted);
 
-                  const cleanCep = formatted.replace(/\D/g, '');
-                  if (cleanCep.length !== 8) return;
+                const cleanCep = formatted.replace(/\D/g, "");
+                if (cleanCep.length !== 8) return;
 
-                  const addressData = await fetchAddressByCep(cleanCep);
-                  if (!addressData) return;
+                const addressData = await fetchAddressByCep(cleanCep);
+                if (!addressData) return;
 
-                  setAddress(addressData.street || address);
-                  setCity(addressData.city);
-                  setDistrict(addressData.district || district);
-                  setStateCode(addressData.state);
-                }}
-                keyboardType="number-pad"
-                placeholder="00000-000"
-              />
+                setAddress(addressData.street || address);
+                setCity(addressData.city);
+                setDistrict(addressData.district || district);
+                setStateCode(addressData.state);
+              }}
+              onDistrictChange={setDistrict}
+              onVenueNameChange={setVenueName}
+              onStateChange={setStateCode}
+              onCityChange={setCity}
+              onAddressChange={setAddress}
+              onOpenDateModal={() => {
+                setWebDateCursor(
+                  new Date(matchDate.getFullYear(), matchDate.getMonth(), 1),
+                );
+                setShowWebDateModal(true);
+              }}
+              onOpenTimeModal={() => {
+                setWebHour(matchTime.getHours());
+                setWebMinute(matchTime.getMinutes());
+                setShowWebTimeModal(true);
+              }}
+              onTurnoChange={(value) => setTurno(value as TurnoValue)}
+              onContactPhoneChange={setContactPhone}
+            />
+          ) : null}
 
-              <Input
-                label={t('form.district')}
-                value={district}
-                onChangeText={setDistrict}
-                placeholder={t('form.districtPlaceholder')}
-              />
+          {activeStep === "2" ? (
+            <CreateMatchStep2
+              matchTheme={matchTheme}
+              titles={{ gameLevel: "N\u00edvel do Jogo" }}
+              labels={{
+                pricePerPerson: t("form.pricePerPerson"),
+                durationMinutes: t("form.durationMinutes"),
+                ageRestrictions: t("form.ageRestrictions"),
+                ageRestrictionsHint: t("form.ageRestrictionsHint"),
+                minimumLevelsAccepted: t("form.minimumLevelsAccepted"),
+                restBreakTitle: t("form.restBreakTitle"),
+                restBreakSubtitle: t("form.restBreakSubtitle"),
+                refereeTitle: t("form.refereeTitle"),
+                refereeSubtitle: t("form.refereeSubtitle"),
+                levelOptionLabel: (value) => t(`form.levelOptions.${value}`),
+              }}
+              pricePerPerson={pricePerPerson}
+              durationMinutes={durationMinutes}
+              restBreak={restBreak}
+              referee={referee}
+              acceptedLevels={acceptedLevels}
+              minLevelOptions={MIN_LEVEL_OPTIONS}
+              onPricePerPersonChange={handlePricePerPersonChange}
+              onDurationMinutesChange={handleDurationMinutesChange}
+              onToggleRestBreak={() => setRestBreak((value) => !value)}
+              onToggleReferee={() => setReferee((value) => !value)}
+              onToggleLevel={toggleLevel}
+            />
+          ) : null}
 
-              <Input
-                label={t('form.venueName')}
-                value={venueName}
-                onChangeText={setVenueName}
-                placeholder={t('form.venueNamePlaceholder')}
-              />
+          {activeStep === "3" ? (
+            <CreateMatchStep3
+              matchTheme={matchTheme}
+              titles={{ descriptionOptional: "Descri\u00e7\u00e3o (opcional)" }}
+              labels={{
+                positionsHint: t("form.positionsHint"),
+                hostPosition: t("form.hostPosition"),
+                confirmedCount: t("form.confirmedCount"),
+                openSlotsCount: t("form.openSlotsCount"),
+                blockedSlotCount: t("form.blockedSlotCount"),
+                modalityFutsal: t("form.modalityFutsal"),
+                modalitySociety: t("form.modalitySociety"),
+                modalityCampo: t("form.modalityCampo"),
+              }}
+              mode={mode}
+              selectedPositionIndexes={selectedPositionIndexes}
+              pitchWidth={pitchWidth}
+              pitchOffsetTop={pitchOffsetTop}
+              description={description}
+              onModeChange={setMode}
+              onTogglePosition={togglePosition}
+              onDescriptionChange={setDescription}
+            />
+          ) : null}
 
-              <View className="flex-row gap-2">
-                <View className="flex-1">
-                  <SelectField
-                    label={t('form.state')}
-                    value={stateCode}
-                    options={stateOptions}
-                    searchable
-                    placeholder={t('form.selectState')}
-                    onChange={setStateCode}
-                  />
-                </View>
-                <View className="flex-1">
-                  <Input
-                    label={t('form.city')}
-                    value={city}
-                    onChangeText={setCity}
-                    placeholder={t('form.cityPlaceholder')}
-                  />
-                </View>
-              </View>
+          {activeStep === "1" ? (
+            <Button label="Próxima" fullWidth onPress={goToNextStep} />
+          ) : null}
 
-              <Input
-                label={t('form.address')}
-                value={address}
-                onChangeText={setAddress}
-                placeholder={t('form.addressPlaceholder')}
-              />
-            </View>
-          </Card>
-
-          <Card
-            className="p-4"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
-          >
-            <SectionTitle title={t('title')} />
-            <View className="gap-3 mt-2">
-              <View className="flex-row gap-2">
-                <View className="flex-1">
-                  <DateTimeField
-                    label={t('filters.date', 'Data')}
-                    value={formatDateField(matchDate)}
-                    placeholder={t('filters.selectDate', 'Selecione a data')}
-                    onPress={() => {
-                      setWebDateCursor(new Date(matchDate.getFullYear(), matchDate.getMonth(), 1));
-                      setShowWebDateModal(true);
-                    }}
-                  />
-                </View>
-                <View className="flex-1">
-                  <DateTimeField
-                    label={t('filters.time', 'Horário')}
-                    value={formatTimeField(matchTime)}
-                    placeholder={t('filters.selectTime', 'Selecione o horário')}
-                    onPress={() => {
-                      setWebHour(matchTime.getHours());
-                      setWebMinute(matchTime.getMinutes());
-                      setShowWebTimeModal(true);
-                    }}
-                  />
-                </View>
-                <View className="flex-1">
-                  <SelectField
-                    label={t('filters.shift', 'Turno')}
-                    value={turno}
-                    options={TURNO_OPTIONS.map((item) => ({
-                      value: item.value,
-                      label:
-                        item.value === 'manha'
-                          ? t('filters.shiftMorning', 'Manha')
-                          : item.value === 'tarde'
-                            ? t('filters.shiftAfternoon', 'Tarde')
-                            : t('filters.shiftNight', 'Noite'),
-                    }))}
-                    placeholder={t('filters.shift', 'Turno')}
-                    onChange={(value) =>
-                      setTurno(value as (typeof TURNO_OPTIONS)[number]['value'])
-                    }
-                  />
-                </View>
-              </View>
-
-              <Input
-                label={t('form.contactPhone')}
-                value={contactPhone}
-                onChangeText={setContactPhone}
-                keyboardType="phone-pad"
-                placeholder="(00) 00000-0000"
-              />
-            </View>
-          </Card>
-
-          <Card
-            className="p-4 border"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: 'rgba(34,183,108,0.35)' }}
-          >
-            <SectionTitle title={t('title')} />
-
-              <View className="flex-row gap-2 mt-4">
-                <View className="flex-1">
-                  <Input
-                    label={t('form.pricePerPerson')}
-                    value={pricePerPerson}
-                    onChangeText={handlePricePerPersonChange}
-                    keyboardType="number-pad"
-                    placeholder="25"
-                    leftAdornment={<Text variant="body" tone="muted">R$</Text>}
-                  />
-                </View>
-                <View className="flex-1">
-                  <Input
-                    label={t('form.durationMinutes')}
-                    value={durationMinutes}
-                    onChangeText={handleDurationMinutesChange}
-                    keyboardType="number-pad"
-                    placeholder="60"
-                    rightAdornment={<Text variant="body" tone="muted">min</Text>}
-                  />
-                </View>
-              </View>
-
-            <View className="mt-4">
-              <Text variant="micro" className="uppercase tracking-[2px]" style={{ color: matchTheme.colors.fgMuted }}>
-                {t('form.ageRestrictions')}
-              </Text>
-              <View style={{ marginTop: 4 }}>
-                <RangeSelector min={16} max={80} minPercent={8} maxPercent={72} />
-              </View>
-              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                {t('form.ageRestrictionsHint')}
-              </Text>
-            </View>
-
-            <View className="gap-2 mt-4">
-              <ToggleRow
-                title={t('form.restBreakTitle')}
-                subtitle={t('form.restBreakSubtitle')}
-                value={restBreak}
-                onToggle={() => setRestBreak((v) => !v)}
-              />
-              <ToggleRow
-                title={t('form.refereeTitle')}
-                subtitle={t('form.refereeSubtitle')}
-                value={referee}
-                onToggle={() => setReferee((v) => !v)}
-              />
-            </View>
-          </Card>
-
-          <Card
-            className="p-4"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
-          >
-            <View className="flex-row items-center justify-between">
-              <SectionTitle title={t('title')} />
-            </View>
-            <Text variant="caption" className="mt-1" style={{ color: matchTheme.colors.fgMuted }}>
-              {t('form.minimumLevelsAccepted')}
-            </Text>
-            <View className="flex-row flex-wrap gap-2 mt-3">
-              {MIN_LEVEL_OPTIONS.map((level) => (
-                <MinLevelCheckbox
-                  key={level.value}
-                  label={t(`form.levelOptions.${level.value}`)}
-                  selected={acceptedLevels.includes(level.value)}
-                  onPress={() => toggleLevel(level.value)}
-                  theme={matchTheme}
+          {activeStep === "2" ? (
+            <View className="flex-row gap-2">
+              <View className="flex-1">
+                <Button
+                  label="Voltar"
+                  variant="ghost"
+                  fullWidth
+                  onPress={goToPreviousStep}
                 />
-              ))}
-            </View>
-          </Card>
-
-          <Card
-            className="p-4"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
-          >
-            <View className="flex-row items-start justify-between mb-3">
-              <View>
-                <SectionTitle title={t('title')} />
-                <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                  {t('form.positionsHint')}
-                </Text>
-                <View className="gap-1 mt-2">
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                    {t('form.hostPosition')}
-                  </Text>
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                    {t('form.confirmedCount')}
-                  </Text>
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                    {t('form.openSlotsCount')}
-                  </Text>
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
-                    {t('form.blockedSlotCount')}
-                  </Text>
-                </View>
               </View>
-              <View className="w-[194px]">
-                <SegmentedControl
-                  options={[
-                    { id: 'futsal', label: t('form.modalityFutsal') },
-                    { id: 'society', label: t('form.modalitySociety') },
-                    { id: 'campo', label: t('form.modalityCampo') },
-                  ]}
-                  activeId={mode}
-                  onChange={(value) => setMode(value as PitchMode)}
-                  compact
+              <View className="flex-1">
+                <Button label="Próxima" fullWidth onPress={goToNextStep} />
+              </View>
+            </View>
+          ) : null}
+
+          {activeStep === "3" ? (
+            <View className="flex-row gap-2">
+              <View className="flex-1">
+                <Button
+                  label="Voltar"
+                  variant="ghost"
+                  fullWidth
+                  onPress={goToPreviousStep}
+                />
+              </View>
+              <View className="flex-1">
+                <Button
+                  label={t("form.createMatchButton")}
+                  fullWidth
+                  loading={submitting}
+                  disabled={submitting}
+                  onPress={() => handleCreateMatch("publicada")}
                 />
               </View>
             </View>
+          ) : null}
 
-            <View className="items-center" style={{ marginTop: pitchOffsetTop, marginBottom: 4 }} pointerEvents="box-none">
-              <View pointerEvents="auto">
-                <TacticalPitch
-                  mode={mode}
-                  selectedIndexes={selectedPositionIndexes}
-                  onToggleIndex={togglePosition}
-                  width={pitchWidth}
-                />
-              </View>
-            </View>
-          </Card>
-
-          <Card
-            className="p-4"
-            style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}
-          >
-            <SectionTitle title={t('title')} />
-            <View className="mt-2">
-              <Input
-                multiline
-                numberOfLines={5}
-                value={description}
-                onChangeText={setDescription}
-              />
-              <Text variant="caption" className="text-right mt-1" style={{ color: matchTheme.colors.fgMuted }}>
-                {description.length} / 280
-              </Text>
-            </View>
-          </Card>
-
-          <Button
-            label={t('form.createMatchButton')}
-            fullWidth
-            loading={submitting}
-            disabled={submitting}
-            onPress={() => handleCreateMatch('publicada')}
-          />
           <View className="h-2" />
         </View>
       </ScrollView>
-      <MatchBottomNav active="new" />
+      <MatchBottomNav active="new" compactBottomInset />
 
-      <Modal transparent visible={showWebDateModal} onRequestClose={() => setShowWebDateModal(false)}>
-        <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
-          <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
+      <Modal
+        transparent
+        visible={showWebDateModal}
+        onRequestClose={() => setShowWebDateModal(false)}
+      >
+        <View
+          className="flex-1 items-center justify-center px-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.62)" }}
+        >
+          <View
+            className="w-full max-w-[420px] rounded-[18px] border p-4"
+            style={{
+              backgroundColor: matchTheme.colors.bgSurfaceA,
+              borderColor: matchTheme.colors.lineStrong,
+            }}
+          >
             <View className="flex-row items-center justify-between mb-3">
               <Button
                 label="<"
                 variant="ghost"
                 size="sm"
                 fullWidth={false}
-                onPress={() => setWebDateCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                onPress={() =>
+                  setWebDateCursor(
+                    (prev) =>
+                      new Date(prev.getFullYear(), prev.getMonth() - 1, 1),
+                  )
+                }
               />
-              <Text variant="label" className="font-bold capitalize" style={{ color: matchTheme.colors.fgPrimary }}>
+              <Text
+                variant="label"
+                className="font-bold capitalize"
+                style={{ color: matchTheme.colors.fgPrimary }}
+              >
                 {monthYearLabel}
               </Text>
               <Button
@@ -581,22 +505,35 @@ export default function CreateMatchScreen() {
                 variant="ghost"
                 size="sm"
                 fullWidth={false}
-                onPress={() => setWebDateCursor((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                onPress={() =>
+                  setWebDateCursor(
+                    (prev) =>
+                      new Date(prev.getFullYear(), prev.getMonth() + 1, 1),
+                  )
+                }
               />
             </View>
 
             <View className="flex-row mb-2">
               {[
-                t('filters.weekdaySun', 'D'),
-                t('filters.weekdayMon', 'S'),
-                t('filters.weekdayTue', 'T'),
-                t('filters.weekdayWed', 'Q'),
-                t('filters.weekdayThu', 'Q'),
-                t('filters.weekdayFri', 'S'),
-                t('filters.weekdaySat', 'S'),
+                t("filters.weekdaySun", "D"),
+                t("filters.weekdayMon", "S"),
+                t("filters.weekdayTue", "T"),
+                t("filters.weekdayWed", "Q"),
+                t("filters.weekdayThu", "Q"),
+                t("filters.weekdayFri", "S"),
+                t("filters.weekdaySat", "S"),
               ].map((weekDay, idx) => (
-                <View key={`weekday-${weekDay}-${idx}`} className="flex-1 items-center">
-                  <Text variant="micro" style={{ color: matchTheme.colors.fgMuted }}>{weekDay}</Text>
+                <View
+                  key={`weekday-${weekDay}-${idx}`}
+                  className="flex-1 items-center"
+                >
+                  <Text
+                    variant="micro"
+                    style={{ color: matchTheme.colors.fgMuted }}
+                  >
+                    {weekDay}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -618,14 +555,26 @@ export default function CreateMatchScreen() {
                     onPress={() => {
                       const selected = new Date(currentYear, currentMonth, day);
                       setMatchDate(selected);
+                      setHasSelectedDate(true);
                       setShowWebDateModal(false);
                     }}
                   >
                     <View
                       className="h-8 w-8 rounded-full items-center justify-center"
-                      style={{ backgroundColor: isSelected ? matchTheme.colors.ok : 'transparent' }}
+                      style={{
+                        backgroundColor: isSelected
+                          ? matchTheme.colors.ok
+                          : "transparent",
+                      }}
                     >
-                      <Text variant="caption" style={{ color: isSelected ? '#05070B' : matchTheme.colors.fgPrimary }}>
+                      <Text
+                        variant="caption"
+                        style={{
+                          color: isSelected
+                            ? "#05070B"
+                            : matchTheme.colors.fgPrimary,
+                        }}
+                      >
                         {day}
                       </Text>
                     </View>
@@ -634,42 +583,102 @@ export default function CreateMatchScreen() {
               })}
             </View>
 
-            <Button label={t('common.close', 'Fechar')} variant="ghost" size="md" className="mt-3" onPress={() => setShowWebDateModal(false)} />
+            <Button
+              label={t("common.close", "Fechar")}
+              variant="ghost"
+              size="md"
+              className="mt-3"
+              onPress={() => setShowWebDateModal(false)}
+            />
           </View>
         </View>
       </Modal>
 
-      <Modal transparent visible={showWebTimeModal} onRequestClose={() => setShowWebTimeModal(false)}>
-        <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
-          <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
-            <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
-              {t('filters.selectTime', 'Selecione o horário')}
+      <Modal
+        transparent
+        visible={showWebTimeModal}
+        onRequestClose={() => setShowWebTimeModal(false)}
+      >
+        <View
+          className="flex-1 items-center justify-center px-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.62)" }}
+        >
+          <View
+            className="w-full max-w-[420px] rounded-[18px] border p-4"
+            style={{
+              backgroundColor: matchTheme.colors.bgSurfaceA,
+              borderColor: matchTheme.colors.lineStrong,
+            }}
+          >
+            <Text
+              variant="label"
+              className="font-bold mb-3"
+              style={{ color: matchTheme.colors.fgPrimary }}
+            >
+              {t("filters.selectTime", "Selecione o hor\u00e1rio")}
             </Text>
             <View className="flex-row items-center justify-center gap-4">
-              <Button label="-" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 23) % 24)} />
-              <Text variant="number" className="text-[34px]" style={{ color: matchTheme.colors.fgPrimary }}>
-                {String(webHour).padStart(2, '0')}
+              <Button
+                label="-"
+                variant="ghost"
+                size="sm"
+                fullWidth={false}
+                onPress={() => setWebHour((h) => (h + 23) % 24)}
+              />
+              <Text
+                variant="number"
+                className="text-[34px]"
+                style={{ color: matchTheme.colors.fgPrimary }}
+              >
+                {String(webHour).padStart(2, "0")}
               </Text>
-              <Text variant="number" className="text-[34px]" style={{ color: matchTheme.colors.fgMuted }}>
+              <Text
+                variant="number"
+                className="text-[34px]"
+                style={{ color: matchTheme.colors.fgMuted }}
+              >
                 :
               </Text>
-              <Text variant="number" className="text-[34px]" style={{ color: matchTheme.colors.fgPrimary }}>
-                {String(webMinute).padStart(2, '0')}
+              <Text
+                variant="number"
+                className="text-[34px]"
+                style={{ color: matchTheme.colors.fgPrimary }}
+              >
+                {String(webMinute).padStart(2, "0")}
               </Text>
-              <Button label="+" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 1) % 24)} />
+              <Button
+                label="+"
+                variant="ghost"
+                size="sm"
+                fullWidth={false}
+                onPress={() => setWebHour((h) => (h + 1) % 24)}
+              />
             </View>
             <View className="flex-row items-center justify-center gap-2 mt-3">
-              <Button label="- min" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 55) % 60)} />
-              <Button label="+ min" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 5) % 60)} />
+              <Button
+                label="- min"
+                variant="ghost"
+                size="sm"
+                fullWidth={false}
+                onPress={() => setWebMinute((m) => (m + 55) % 60)}
+              />
+              <Button
+                label="+ min"
+                variant="ghost"
+                size="sm"
+                fullWidth={false}
+                onPress={() => setWebMinute((m) => (m + 5) % 60)}
+              />
             </View>
             <Button
-              label={t('common.confirm', 'Confirmar')}
+              label={t("common.confirm", "Confirmar")}
               size="md"
               className="mt-4"
               onPress={() => {
                 const selected = new Date(matchTime);
                 selected.setHours(webHour, webMinute, 0, 0);
                 setMatchTime(selected);
+                setHasSelectedTime(true);
                 setShowWebTimeModal(false);
               }}
             />
@@ -679,8 +688,3 @@ export default function CreateMatchScreen() {
     </Screen>
   );
 }
-
-
-
-
-

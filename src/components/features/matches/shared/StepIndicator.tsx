@@ -4,9 +4,10 @@ import { View } from 'react-native';
 type StepIndicatorProps = {
   total: number;
   current: number;
+  solidCurrent?: boolean;
 };
 
-export function StepIndicator({ total, current }: StepIndicatorProps) {
+export function StepIndicator({ total, current, solidCurrent = false }: StepIndicatorProps) {
   return (
     <View className="px-[18px] pb-3 flex-row items-center gap-[6px]">
       {Array.from({ length: total }).map((_, index) => {
@@ -16,6 +17,10 @@ export function StepIndicator({ total, current }: StepIndicatorProps) {
         }
 
         if (step === current) {
+          if (solidCurrent) {
+            return <View key={step} className="flex-1 h-[3px] rounded-full bg-[#22B76C]" />;
+          }
+
           return (
             <LinearGradient
               key={step}

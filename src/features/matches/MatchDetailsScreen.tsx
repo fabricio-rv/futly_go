@@ -1,9 +1,15 @@
-import { Share2, MapPin, Phone, Clock, Users } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
-import { showLocation } from 'react-native-map-link';
+import { Share2, MapPin, Phone, Clock, Users } from "lucide-react-native";
+import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import { showLocation } from "react-native-map-link";
 
 import {
   MatchBackground,
@@ -14,63 +20,79 @@ import {
   StatBadge,
   StatusStamp,
   useMatchTheme,
-} from '@/src/components/features/matches';
-import { TacticalPitch } from '@/src/components/fifa/TacticalPitch';
-import { Button, Card, Screen, Text } from '@/src/components/ui';
-import { useMatches } from '@/src/features/matches/hooks/useMatches';
-import type { MatchDetails } from '@/src/features/matches/services/matchesService';
-import { supabase } from '@/src/lib/supabase';
-import { useAppColorScheme } from '@/src/contexts/ThemeContext';
-import { useTranslation } from '@/src/i18n/hooks/useTranslation';
+} from "@/src/components/features/matches";
+import { TacticalPitch } from "@/src/components/fifa/TacticalPitch";
+import { Button, Card, Screen, Text } from "@/src/components/ui";
+import { useMatches } from "@/src/features/matches/hooks/useMatches";
+import type { MatchDetails } from "@/src/features/matches/services/matchesService";
+import { supabase } from "@/src/lib/supabase";
+import { useAppColorScheme } from "@/src/contexts/ThemeContext";
+import { useTranslation } from "@/src/i18n/hooks/useTranslation";
 
 export function MatchDetailsScreen({ matchId }: { matchId: string }) {
-  const { t } = useTranslation('matches');
+  const { t } = useTranslation("matches");
   const matchTheme = useMatchTheme();
   const theme = useAppColorScheme();
   const { width: screenWidth } = useWindowDimensions();
-  const isLight = theme === 'light';
+  const isLight = theme === "light";
   const router = useRouter();
-  const { getMatchDetails, joinMatch, leaveMatch, processParticipationRequest, loadingDetails, submitting } = useMatches();
+  const {
+    getMatchDetails,
+    joinMatch,
+    leaveMatch,
+    processParticipationRequest,
+    loadingDetails,
+    submitting,
+  } = useMatches();
   const [details, setDetails] = useState<MatchDetails | null>(null);
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(
+    null,
+  );
   const [mapPreviewUrls, setMapPreviewUrls] = useState<string[]>([]);
-  const [mapCoordinates, setMapCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [mapCoordinates, setMapCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const translateStatusLabel = (label: string) => {
-    if (label.includes('Criada por') || label.includes('Created by')) return t('statusCreatedByYou', 'Criada por você');
-    if (label.includes('Finalizada') || label.includes('Finished')) return t('statusFinished', 'Finalizada');
-    if (label.includes('Vagas abertas') || label.includes('Open')) return t('statusOpen', 'Vagas abertas');
-    if (label.includes('Lotada') || label.includes('Full')) return t('statusFull', 'Lotada');
+    if (label.includes("Criada por") || label.includes("Created by"))
+      return t("statusCreatedByYou", "Criada por vocÃƒÂª");
+    if (label.includes("Finalizada") || label.includes("Finished"))
+      return t("statusFinished", "Finalizada");
+    if (label.includes("Vagas abertas") || label.includes("Open"))
+      return t("statusOpen", "Vagas abertas");
+    if (label.includes("Lotada") || label.includes("Full"))
+      return t("statusFull", "Lotada");
     return label;
   };
 
   const translateShiftLabel = (shift: string) => {
     const shifts: Record<string, string> = {
-      'manha': t('shiftMorning'),
-      'tarde': t('shiftAfternoon'),
-      'noite': t('shiftNight'),
-      'Manha': t('shiftMorning'),
-      'Tarde': t('shiftAfternoon'),
-      'Noite': t('shiftNight'),
+      manha: t("shiftMorning"),
+      tarde: t("shiftAfternoon"),
+      noite: t("shiftNight"),
+      Manha: t("shiftMorning"),
+      Tarde: t("shiftAfternoon"),
+      Noite: t("shiftNight"),
     };
     return shifts[shift] || shift;
   };
 
   const translateDayLabel = (dayLabel: string) => {
-    const parts = dayLabel.split(' - ');
+    const parts = dayLabel.split(" - ");
     if (parts.length === 2) {
       const dayAbbr = parts[0].toUpperCase();
       const shift = parts[1];
       const days: Record<string, string> = {
-        'SEG': t('days.mon'),
-        'TER': t('days.tue'),
-        'QUA': t('days.wed'),
-        'QUI': t('days.thu'),
-        'SEX': t('days.fri'),
-        'SAB': t('days.sat'),
-        'SÁB': t('days.sat'),
-        'DOM': t('days.sun'),
-        'HOJE': 'HOJE',
+        SEG: t("days.mon"),
+        TER: t("days.tue"),
+        QUA: t("days.wed"),
+        QUI: t("days.thu"),
+        SEX: t("days.fri"),
+        SAB: t("days.sat"),
+        "SÃƒÂB": t("days.sat"),
+        DOM: t("days.sun"),
+        HOJE: "HOJE",
       };
       return `${days[dayAbbr] || dayAbbr} - ${translateShiftLabel(shift)}`;
     }
@@ -79,19 +101,23 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
   const translateLevelName = (levelName: string) => {
     const levelMap: Record<string, string> = {
-      'pereba': 'Pereba',
-      'resenha': 'Resenha',
-      'casual': 'Casual',
-      'avançado': 'Avançado',
-      'intermediario': 'Intermediário',
-      'competitivo': 'Competitivo',
-      'semi-amador': 'Semi-Amador',
-      'semi_amador': 'Semi-Amador',
-      'amador': 'Amador',
-      'ex-profissional': 'Ex-profissional',
-      'ex_profissional': 'Ex-profissional',
+      pereba: "Resenha",
+      resenha: "Resenha",
+      casual: "Casual",
+      "avanÃƒÂ§ado": "Familia",
+      intermediario: "Amigos",
+      avancado: "Familia",
+      competitivo: "Competitivo",
+      "semi-amador": "Semi-Amador",
+      semi_amador: "Semi-Amador",
+      amador: "Amador",
+      "ex-profissional": "Ex-profissional",
+      ex_profissional: "Ex-profissional",
     };
-    return levelMap[levelName.toLowerCase()] || levelName.charAt(0).toUpperCase() + levelName.slice(1);
+    return (
+      levelMap[levelName.toLowerCase()] ||
+      levelName.charAt(0).toUpperCase() + levelName.slice(1)
+    );
   };
 
   const loadDetails = useCallback(async () => {
@@ -100,16 +126,21 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
       setDetails(data);
 
       if (data.myParticipant) {
-        const currentSlot = data.slots.find((slot) => slot.key === data.myParticipant?.position_key);
+        const currentSlot = data.slots.find(
+          (slot) => slot.key === data.myParticipant?.position_key,
+        );
         setSelectedSlotIndex(currentSlot?.index ?? null);
         return;
       }
 
-      const firstAvailable = data.slots.find((slot) => slot.open && !slot.occupied);
+      const firstAvailable = data.slots.find(
+        (slot) => slot.open && !slot.occupied,
+      );
       setSelectedSlotIndex(firstAvailable?.index ?? null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.loadingMatch');
-      Alert.alert(t('common.error'), message);
+      const message =
+        error instanceof Error ? error.message : t("common.loadingMatch");
+      Alert.alert(t("common.error"), message);
     }
   }, [getMatchDetails, matchId, t]);
 
@@ -121,15 +152,25 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     const channel = supabase
       .channel(`match-details:${matchId}`)
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'match_participation_requests', filter: `match_id=eq.${matchId}` },
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "match_participation_requests",
+          filter: `match_id=eq.${matchId}`,
+        },
         () => {
           void loadDetails();
         },
       )
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'match_participants', filter: `match_id=eq.${matchId}` },
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "match_participants",
+          filter: `match_id=eq.${matchId}`,
+        },
         () => {
           void loadDetails();
         },
@@ -143,39 +184,66 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
   const selectedSlot = useMemo(() => {
     if (!details || selectedSlotIndex === null) return null;
-    return details.slots.find((slot) => slot.index === selectedSlotIndex) ?? null;
+    return (
+      details.slots.find((slot) => slot.index === selectedSlotIndex) ?? null
+    );
   }, [details, selectedSlotIndex]);
 
   const pendingPositionKeys = useMemo(() => {
     if (!details) return new Set<string>();
-    return new Set(details.pendingRequests.map((request) => request.requestedPositionKey));
+    return new Set(
+      details.pendingRequests.map((request) => request.requestedPositionKey),
+    );
   }, [details]);
 
   const pitchSpotTones = useMemo(() => {
     if (!details) return [];
 
     return details.slots.map((slot) => {
-      if (slot.occupied) return 'confirmed' as const;
-      if (pendingPositionKeys.has(slot.key)) return 'pending' as const;
-      if (slot.open) return 'available' as const;
-      return 'inactive' as const;
+      if (slot.occupied) return "confirmed" as const;
+      if (pendingPositionKeys.has(slot.key)) return "pending" as const;
+      if (slot.open) return "available" as const;
+      return "inactive" as const;
     });
   }, [details, pendingPositionKeys]);
 
   const mapGeocodeQueries = useMemo(() => {
     if (!details) return [] as string[];
-    const build = (parts: Array<string | null | undefined>) => parts.filter(Boolean).join(', ');
+    const build = (parts: Array<string | null | undefined>) =>
+      parts.filter(Boolean).join(", ");
     const queries = [
-      build([details.match.address, details.match.district, details.match.city, details.match.state, details.match.cep, 'Brasil']),
-      build([details.match.address, details.match.city, details.match.state, 'Brasil']),
-      build([details.match.district, details.match.city, details.match.state, 'Brasil']),
-      build([details.match.venue_name, details.match.city, details.match.state, 'Brasil']),
-      build([details.match.city, details.match.state, 'Brasil']),
+      build([
+        details.match.address,
+        details.match.district,
+        details.match.city,
+        details.match.state,
+        details.match.cep,
+        "Brasil",
+      ]),
+      build([
+        details.match.address,
+        details.match.city,
+        details.match.state,
+        "Brasil",
+      ]),
+      build([
+        details.match.district,
+        details.match.city,
+        details.match.state,
+        "Brasil",
+      ]),
+      build([
+        details.match.venue_name,
+        details.match.city,
+        details.match.state,
+        "Brasil",
+      ]),
+      build([details.match.city, details.match.state, "Brasil"]),
     ].filter((q) => q.length > 0);
     return Array.from(new Set(queries));
   }, [details]);
 
-  const locationQuery = mapGeocodeQueries[0] ?? '';
+  const locationQuery = mapGeocodeQueries[0] ?? "";
 
   const mapEmbedUrl = useMemo(() => {
     if (!locationQuery) return null;
@@ -187,7 +255,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
     const fetchJson = async <T,>(url: string, source: string): Promise<T> => {
       const response = await fetch(url, {
-        headers: { Accept: 'application/json' },
+        headers: { Accept: "application/json" },
       });
       if (!response.ok) {
         throw new Error(`${source} HTTP ${response.status}`);
@@ -210,7 +278,9 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
         for (const query of mapGeocodeQueries) {
           try {
             const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`;
-            const nominatimPayload = await fetchJson<Array<{ lat?: string; lon?: string }>>(nominatimUrl, 'nominatim');
+            const nominatimPayload = await fetchJson<
+              Array<{ lat?: string; lon?: string }>
+            >(nominatimUrl, "nominatim");
             const first = nominatimPayload?.[0];
             if (first?.lat && first?.lon) {
               const parsedLat = Number(first.lat);
@@ -225,7 +295,9 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
           try {
             const openMeteoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=pt&format=json`;
-            const openMeteoPayload = await fetchJson<{ results?: Array<{ latitude?: number; longitude?: number }> }>(openMeteoUrl, 'open-meteo');
+            const openMeteoPayload = await fetchJson<{
+              results?: Array<{ latitude?: number; longitude?: number }>;
+            }>(openMeteoUrl, "open-meteo");
             const first = openMeteoPayload?.results?.[0];
             if (first?.latitude != null && first?.longitude != null) {
               const parsedLat = Number(first.latitude);
@@ -286,10 +358,11 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
         positionLabel: selectedSlot.label,
       });
       await loadDetails();
-      Alert.alert(t('players.waiting'), t('actions.requestToJoin'));
+      Alert.alert(t("players.waiting"), t("actions.requestToJoin"));
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.error');
-      Alert.alert(t('common.error'), message);
+      const message =
+        error instanceof Error ? error.message : t("common.error");
+      Alert.alert(t("common.error"), message);
     }
   }
 
@@ -299,21 +372,34 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     try {
       await leaveMatch(details.match.id);
       await loadDetails();
-      Alert.alert(t('actions.success'), details.myParticipant ? t('success.leftMatch') : t('players.requestedToJoin'));
+      Alert.alert(
+        t("actions.success"),
+        details.myParticipant
+          ? t("success.leftMatch")
+          : t("players.requestedToJoin"),
+      );
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.error');
-      Alert.alert(t('common.error'), message);
+      const message =
+        error instanceof Error ? error.message : t("common.error");
+      Alert.alert(t("common.error"), message);
     }
   }
 
-  async function handleRequestAction(requestId: string, action: 'accept' | 'reject') {
+  async function handleRequestAction(
+    requestId: string,
+    action: "accept" | "reject",
+  ) {
     try {
       await processParticipationRequest(requestId, action);
       await loadDetails();
-      Alert.alert(t('actions.success'), action === 'accept' ? t('players.accepted') : t('players.declined'));
+      Alert.alert(
+        t("actions.success"),
+        action === "accept" ? t("players.accepted") : t("players.declined"),
+      );
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.error');
-      Alert.alert(t('common.error'), message);
+      const message =
+        error instanceof Error ? error.message : t("common.error");
+      Alert.alert(t("common.error"), message);
     }
   }
 
@@ -324,16 +410,19 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
         latitude: mapCoordinates?.latitude ?? undefined,
         longitude: mapCoordinates?.longitude ?? undefined,
         address: locationQuery,
-        title: details?.match.venue_name ?? 'Local da partida',
-        dialogTitle: 'Abrir com',
-        dialogMessage: 'Escolha o app de mapa',
-        cancelText: 'Cancelar',
-        appsWhiteList: ['apple-maps', 'google-maps', 'waze'],
+        title: details?.match.venue_name ?? "Local da partida",
+        dialogTitle: "Abrir com",
+        dialogMessage: "Escolha o app de mapa",
+        cancelText: "Cancelar",
+        appsWhiteList: ["apple-maps", "google-maps", "waze"],
         alwaysIncludeGoogle: true,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      Alert.alert(t('common.error'), `Não foi possível abrir rota: ${message}`);
+      Alert.alert(
+        t("common.error"),
+        `NÃƒÂ£o foi possÃƒÂ­vel abrir rota: ${message}`,
+      );
     }
   }
 
@@ -342,8 +431,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
       <Screen padded={false} showBackground={false}>
         <MatchBackground />
         <View className="flex-1 items-center justify-center px-6">
-          <Text variant="label" style={{ color: matchTheme.colors.fgSecondary }}>
-            {loadingDetails ? t('common.loadingMatch', 'Carregando partida...') : t('details.notFound', 'Partida não encontrada.')}
+          <Text
+            variant="label"
+            style={{ color: matchTheme.colors.fgSecondary }}
+          >
+            {loadingDetails
+              ? t("common.loadingMatch", "Carregando partida...")
+              : t("details.notFound", "Partida nÃƒÂ£o encontrada.")}
           </Text>
         </View>
       </Screen>
@@ -352,9 +446,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
   const match = details.match;
   const card = details.card;
-  const availableSlots = details.slots.filter((slot) => slot.open && !slot.occupied);
-  const heroGradient = isLight ? (['#1A5B33', '#0E3A23', '#082717'] as const) : (['#0F3A24', '#072314', '#021109'] as const);
-  const matchInfoItemWidth = screenWidth >= 900 ? '25%' : '50%';
+  const availableSlots = details.slots.filter(
+    (slot) => slot.open && !slot.occupied,
+  );
+  const heroGradient = isLight
+    ? (["#1A5B33", "#0E3A23", "#082717"] as const)
+    : (["#0F3A24", "#072314", "#021109"] as const);
+  const matchInfoItemWidth = screenWidth >= 900 ? "25%" : "50%";
   const isCompactScreen = screenWidth <= 390;
   const heroHorizontalPadding = isCompactScreen ? 16 : 20;
   const heroVerticalPadding = isCompactScreen ? 16 : 20;
@@ -363,46 +461,60 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const heroTimeFontSize = isCompactScreen ? 26 : 30;
   const heroMetaSpacingTop = isCompactScreen ? 10 : 14;
   const matchDateLabel = (() => {
-    if (!match.match_date) return t('details.notInformed', 'Não informado');
+    if (!match.match_date) return t("details.notInformed", "NÃƒÂ£o informado");
 
-    const [year, month, day] = match.match_date.split('-');
+    const [year, month, day] = match.match_date.split("-");
     if (!year || !month || !day) return match.match_date;
 
     return `${day}/${month}/${year}`;
   })();
 
-  function formatPositionStats(request: MatchDetails['pendingRequests'][number]) {
+  function formatPositionStats(
+    request: MatchDetails["pendingRequests"][number],
+  ) {
     if (request.userPositionStats.length === 0) {
-      return t('details.noMatchHistory');
+      return t("details.noMatchHistory");
     }
 
     return request.userPositionStats
       .slice(0, 6)
       .map((stat) => {
-        const ratingText = stat.ratingsCount > 0 && stat.avgRating !== null
-          ? `${stat.avgRating.toFixed(1)} (${stat.ratingsCount})`
-          : t('details.noRatings');
+        const ratingText =
+          stat.ratingsCount > 0 && stat.avgRating !== null
+            ? `${stat.avgRating.toFixed(1)} (${stat.ratingsCount})`
+            : t("details.noRatings");
 
         return `${stat.modality.toUpperCase()} - ${stat.positionLabel}: ${stat.matchesCount} - ${ratingText}`;
       })
-      .join('\n');
+      .join("\n");
   }
 
   return (
     <Screen padded={false} showBackground={false}>
       <MatchBackground />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
         <MatchTopNav
-          title={t('details.title')}
+          title={t("details.title")}
           subtitle={`PARTIDA #${match.id.slice(0, 8).toUpperCase()}`}
           rightSlot={
-            <Pressable hitSlop={12} className="w-10 h-10 items-center justify-center">
+            <Pressable
+              hitSlop={12}
+              className="w-10 h-10 items-center justify-center"
+            >
               <Share2 color={matchTheme.colors.fgPrimary} size={20} />
             </Pressable>
           }
         />
 
-        <View style={{ paddingHorizontal: isCompactScreen ? 14 : 18, paddingTop: 10 }}>
+        <View
+          style={{
+            paddingHorizontal: isCompactScreen ? 14 : 18,
+            paddingTop: 10,
+          }}
+        >
           {isLight ? (
             <View
               className="mb-[14px]"
@@ -411,56 +523,94 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 borderColor: matchTheme.colors.line,
                 borderWidth: 1,
                 borderRadius: 20,
-                overflow: 'hidden',
+                overflow: "hidden",
                 paddingHorizontal: heroHorizontalPadding,
                 paddingVertical: heroVerticalPadding,
               }}
             >
-              <Text variant="micro" className="uppercase tracking-[2px] font-bold" style={{ color: '#22B76C' }}>
-                {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
+              <Text
+                variant="micro"
+                className="uppercase tracking-[2px] font-bold"
+                style={{ color: "#22B76C" }}
+              >
+                {match.modality.toUpperCase()} -{" "}
+                {match.venue_name ?? card.title}
               </Text>
-              <Text variant="number" className="mt-1" style={{ color: '#111827', fontSize: heroDayFontSize, lineHeight: heroDayLineHeight }}>
-                {card.dateLabel.split(' - ')[0]}
+              <Text
+                variant="number"
+                className="mt-1"
+                style={{
+                  color: "#111827",
+                  fontSize: heroDayFontSize,
+                  lineHeight: heroDayLineHeight,
+                }}
+              >
+                {card.dateLabel.split(" - ")[0]}
               </Text>
               <View className="flex-row items-end gap-2 mt-1">
-                <Text variant="number" style={{ color: '#D4A13A', fontSize: heroTimeFontSize }}>
+                <Text
+                  variant="number"
+                  style={{ color: "#D4A13A", fontSize: heroTimeFontSize }}
+                >
                   {card.timeLabel}
                 </Text>
-                <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: '#4B5563' }}>
-                  - {translateShiftLabel(card.shiftLabel)} - {match.duration_minutes}min - {matchDateLabel}
+                <Text
+                  variant="micro"
+                  className="uppercase tracking-[2px] pb-1"
+                  style={{ color: "#4B5563" }}
+                >
+                  - {translateShiftLabel(card.shiftLabel)} -{" "}
+                  {match.duration_minutes}min - {matchDateLabel}
                 </Text>
               </View>
 
-              <View className="flex-row gap-2 flex-wrap" style={{ marginTop: heroMetaSpacingTop }}>
+              <View
+                className="flex-row gap-2 flex-wrap"
+                style={{ marginTop: heroMetaSpacingTop }}
+              >
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
                   style={{
-                    backgroundColor: '#E0F2FE',
-                    borderColor: '#0284C7',
+                    backgroundColor: "#E0F2FE",
+                    borderColor: "#0284C7",
                     marginLeft: 6,
                   }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: '#0C4A6E' }}>
+                  <Text
+                    variant="caption"
+                    className="text-[10px]"
+                    style={{ color: "#0C4A6E" }}
+                  >
                     {card.levelLabel}
                   </Text>
                 </View>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
-                  style={{ backgroundColor: '#F3F4F6', borderColor: '#9CA3AF' }}
+                  style={{ backgroundColor: "#F3F4F6", borderColor: "#9CA3AF" }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: '#111827' }}>
-                    R$ {card.pricePerPlayer} {t('pricePerPerson', '/pessoa')}
+                  <Text
+                    variant="caption"
+                    className="text-[10px]"
+                    style={{ color: "#111827" }}
+                  >
+                    R$ {card.pricePerPlayer} {t("pricePerPerson", "/pessoa")}
                   </Text>
                 </View>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
-                  style={{ backgroundColor: '#DBEAFE', borderColor: '#0284C7' }}
+                  style={{ backgroundColor: "#DBEAFE", borderColor: "#0284C7" }}
                 >
-                  <Text variant="caption" className="text-[10px] font-semibold" style={{ color: '#0C4A6E' }}>
-                    {card.occupiedSlots}/{card.totalSlots} {t('details.slots')}
+                  <Text
+                    variant="caption"
+                    className="text-[10px] font-semibold"
+                    style={{ color: "#0C4A6E" }}
+                  >
+                    {card.occupiedSlots}/{card.totalSlots} {t("details.slots")}
                   </Text>
                 </View>
-                {details.isHost ? <StatBadge label="HOST" tone="gold" small /> : null}
+                {details.isHost ? (
+                  <StatBadge label="HOST" tone="gold" small />
+                ) : null}
               </View>
             </View>
           ) : (
@@ -471,67 +621,135 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               className="mb-[14px]"
               style={{
                 borderRadius: 20,
-                overflow: 'hidden',
+                overflow: "hidden",
                 paddingHorizontal: heroHorizontalPadding,
                 paddingVertical: heroVerticalPadding,
               }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-                <Text variant="micro" numberOfLines={2} className="uppercase tracking-[2px] font-bold flex-1" style={{ color: matchTheme.colors.okSoft }}>
-                  {match.modality.toUpperCase()} - {match.venue_name ?? card.title}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: 8,
+                  marginBottom: 4,
+                }}
+              >
+                <Text
+                  variant="micro"
+                  numberOfLines={2}
+                  className="uppercase tracking-[2px] font-bold flex-1"
+                  style={{ color: matchTheme.colors.okSoft }}
+                >
+                  {match.modality.toUpperCase()} -{" "}
+                  {match.venue_name ?? card.title}
                 </Text>
-                <StatusStamp status={card.status === 'host' ? 'host' : 'confirmed'} label={translateStatusLabel(card.statusLabel)} />
+                <StatusStamp
+                  status={card.status === "host" ? "host" : "confirmed"}
+                  label={translateStatusLabel(card.statusLabel)}
+                />
               </View>
-              <Text variant="number" className="mt-1" style={{ fontSize: heroDayFontSize, lineHeight: heroDayLineHeight }}>
-                {translateDayLabel(card.dateLabel).split(' - ')[0]}
+              <Text
+                variant="number"
+                className="mt-1"
+                style={{
+                  fontSize: heroDayFontSize,
+                  lineHeight: heroDayLineHeight,
+                }}
+              >
+                {translateDayLabel(card.dateLabel).split(" - ")[0]}
               </Text>
               <View className="flex-row items-end gap-2 mt-1">
-                <Text variant="number" style={{ color: matchTheme.colors.goldA, fontSize: heroTimeFontSize }}>{card.timeLabel}</Text>
-                <Text variant="micro" className="uppercase tracking-[2px] pb-1" style={{ color: matchTheme.colors.fgSecondary }}>
-                  - {translateShiftLabel(card.shiftLabel)} - {match.duration_minutes}min - {matchDateLabel}
+                <Text
+                  variant="number"
+                  style={{
+                    color: matchTheme.colors.goldA,
+                    fontSize: heroTimeFontSize,
+                  }}
+                >
+                  {card.timeLabel}
+                </Text>
+                <Text
+                  variant="micro"
+                  className="uppercase tracking-[2px] pb-1"
+                  style={{ color: matchTheme.colors.fgSecondary }}
+                >
+                  - {translateShiftLabel(card.shiftLabel)} -{" "}
+                  {match.duration_minutes}min - {matchDateLabel}
                 </Text>
               </View>
 
-              <View className="flex-row gap-2 flex-wrap" style={{ marginTop: heroMetaSpacingTop }}>
+              <View
+                className="flex-row gap-2 flex-wrap"
+                style={{ marginTop: heroMetaSpacingTop }}
+              >
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
                   style={{
-                    backgroundColor: 'rgba(90,177,255,0.14)',
-                    borderColor: 'rgba(90,177,255,0.35)',
+                    backgroundColor: "rgba(90,177,255,0.14)",
+                    borderColor: "rgba(90,177,255,0.35)",
                     marginLeft: 6,
                   }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: '#7AC0FF' }}>
+                  <Text
+                    variant="caption"
+                    className="text-[10px]"
+                    style={{ color: "#7AC0FF" }}
+                  >
                     {card.levelLabel}
                   </Text>
                 </View>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
-                  style={{ backgroundColor: 'rgba(5,7,11,0.52)', borderColor: 'rgba(255,255,255,0.16)' }}
+                  style={{
+                    backgroundColor: "rgba(5,7,11,0.52)",
+                    borderColor: "rgba(255,255,255,0.16)",
+                  }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: 'rgba(255,255,255,0.82)' }}>
-                    R$ {card.pricePerPlayer} {t('pricePerPerson', '/pessoa')}
+                  <Text
+                    variant="caption"
+                    className="text-[10px]"
+                    style={{ color: "rgba(255,255,255,0.82)" }}
+                  >
+                    R$ {card.pricePerPlayer} {t("pricePerPerson", "/pessoa")}
                   </Text>
                 </View>
                 <View
                   className="h-6 px-3 rounded-full border items-center justify-center"
-                  style={{ backgroundColor: 'rgba(5,7,11,0.52)', borderColor: 'rgba(255,255,255,0.16)' }}
+                  style={{
+                    backgroundColor: "rgba(5,7,11,0.52)",
+                    borderColor: "rgba(255,255,255,0.16)",
+                  }}
                 >
-                  <Text variant="caption" className="text-[10px]" style={{ color: 'rgba(255,255,255,0.82)' }}>
-                    {card.occupiedSlots}/{card.totalSlots} {t('details.slots')}
+                  <Text
+                    variant="caption"
+                    className="text-[10px]"
+                    style={{ color: "rgba(255,255,255,0.82)" }}
+                  >
+                    {card.occupiedSlots}/{card.totalSlots} {t("details.slots")}
                   </Text>
                 </View>
-                {details.isHost ? <StatBadge label="HOST" tone="gold" small /> : null}
+                {details.isHost ? (
+                  <StatBadge label="HOST" tone="gold" small />
+                ) : null}
               </View>
             </LinearGradient>
           )}
 
           <View className="mt-[18px]">
-            <SectionTitle title={t('details.positionsAndSlots', 'Posições e vagas')} />
-            <Card className="p-[14px]" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+            <SectionTitle
+              title={t("details.positionsAndSlots", "PosiÃƒÂ§ÃƒÂµes e vagas")}
+            />
+            <Card
+              className="p-[14px]"
+              style={{
+                backgroundColor: matchTheme.colors.bgSurfaceA,
+                borderColor: matchTheme.colors.line,
+              }}
+            >
               <View className="items-center">
                 <TacticalPitch
-                  mode={(match.modality as 'futsal' | 'society' | 'campo')}
+                  mode={match.modality as "futsal" | "society" | "campo"}
                   spotTones={pitchSpotTones}
                   width={300}
                 />
@@ -545,24 +763,41 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   return (
                     <Pressable
                       key={`${slot.key}-${slot.index}`}
-                      disabled={!isAvailable || !!details.myParticipant || details.isHost}
+                      disabled={
+                        !isAvailable ||
+                        !!details.myParticipant ||
+                        details.isHost
+                      }
                       onPress={() => setSelectedSlotIndex(slot.index)}
                       className="rounded-[12px] border px-3 py-2"
                       style={{
-                        borderColor: isSelected ? matchTheme.colors.ok : matchTheme.colors.line,
-                        backgroundColor: isSelected ? matchTheme.colors.bgSurfaceB : (matchTheme.colors.bgBase === matchTheme.colors.bgSurfaceA ? 'rgba(34,183,108,0.06)' : 'rgba(255,255,255,0.02)'),
+                        borderColor: isSelected
+                          ? matchTheme.colors.ok
+                          : matchTheme.colors.line,
+                        backgroundColor: isSelected
+                          ? matchTheme.colors.bgSurfaceB
+                          : matchTheme.colors.bgBase ===
+                              matchTheme.colors.bgSurfaceA
+                            ? "rgba(34,183,108,0.06)"
+                            : "rgba(255,255,255,0.02)",
                         opacity: !isAvailable ? 0.6 : 1,
                       }}
                     >
-                      <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                      <Text
+                        variant="label"
+                        style={{ color: matchTheme.colors.fgPrimary }}
+                      >
                         {slot.label}
                       </Text>
-                      <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                      <Text
+                        variant="caption"
+                        style={{ color: matchTheme.colors.fgMuted }}
+                      >
                         {!slot.open
-                          ? t('details.blockedByHost', 'Blocked by host')
+                          ? t("details.blockedByHost", "Blocked by host")
                           : slot.occupied
-                            ? `${t('details.occupiedBy', 'Occupied by')} ${slot.occupiedByName ?? t('details.anotherAthlete', 'another athlete')}`
-                            : t('details.available', 'Available')}
+                            ? `${t("details.occupiedBy", "Occupied by")} ${slot.occupiedByName ?? t("details.anotherAthlete", "another athlete")}`
+                            : t("details.available", "Available")}
                       </Text>
                     </Pressable>
                   );
@@ -572,24 +807,35 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           </View>
 
           <View className="mt-[18px]">
-            <SectionTitle title={t('details.confirmedPlayers', 'Atletas Confirmados')} badge={String(details.participants.length)} />
+            <SectionTitle
+              title={t("details.confirmedPlayers", "Atletas Confirmados")}
+              badge={String(details.participants.length)}
+            />
             <Card
               className="p-0 overflow-hidden"
               style={{
                 backgroundColor: matchTheme.colors.bgSurfaceA,
-                borderColor: 'transparent',
+                borderColor: "transparent",
                 borderWidth: 0,
                 padding: 0,
               }}
             >
               {details.participants.length === 0 ? (
                 <View className="px-4 py-4">
-                  <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                    {t('details.noConfirmedPlayers', 'No confirmed players yet')}
+                  <Text
+                    variant="caption"
+                    style={{ color: matchTheme.colors.fgMuted }}
+                  >
+                    {t(
+                      "details.noConfirmedPlayers",
+                      "No confirmed players yet",
+                    )}
                   </Text>
                 </View>
               ) : (
-                details.participants.map((player) => <PlayerRow key={player.id} player={player} />)
+                details.participants.map((player) => (
+                  <PlayerRow key={player.id} player={player} />
+                ))
               )}
             </Card>
           </View>
@@ -599,22 +845,42 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               <Text
                 variant="number"
                 numberOfLines={1}
-                style={{ color: matchTheme.colors.fgPrimary, fontSize: 28, lineHeight: 30, letterSpacing: -0.3 }}
+                style={{
+                  color: matchTheme.colors.fgPrimary,
+                  fontSize: 28,
+                  lineHeight: 30,
+                  letterSpacing: -0.3,
+                }}
               >
-                {match.venue_name ?? t('details.notInformed', 'Não informado')}
+                {match.venue_name ??
+                  t("details.notInformed", "NÃƒÂ£o informado")}
               </Text>
               <Text
                 variant="number"
                 className="mt-1"
-                style={{ color: isLight ? '#0F9D58' : '#66E0A3', fontSize: 18, lineHeight: 20, letterSpacing: 0.8 }}
+                style={{
+                  color: isLight ? "#0F9D58" : "#66E0A3",
+                  fontSize: 18,
+                  lineHeight: 20,
+                  letterSpacing: 0.8,
+                }}
               >
-                {match.cep ?? t('details.notInformed', 'Não informado')}
+                {match.cep ?? t("details.notInformed", "NÃƒÂ£o informado")}
               </Text>
             </View>
 
             <MapPreviewCard
-              addressLine={match.address ?? match.venue_name ?? t('details.addressNotInformed')}
-              districtLine={[match.district, match.city, match.state].filter(Boolean).join(' - ') || t('details.locationNotInformed', 'Location not provided')}
+              addressLine={
+                match.address ??
+                match.venue_name ??
+                t("details.addressNotInformed")
+              }
+              districtLine={
+                [match.district, match.city, match.state]
+                  .filter(Boolean)
+                  .join(" - ") ||
+                t("details.locationNotInformed", "Location not provided")
+              }
               mapImageUrls={mapPreviewUrls}
               mapEmbedUrl={mapEmbedUrl}
               latitude={mapCoordinates?.latitude ?? null}
@@ -626,20 +892,71 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           </View>
 
           <View className="mt-[18px]">
-            <SectionTitle title={t('details.matchInfo', 'Informações da Partida')} />
-            <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
-              <View className="flex-row flex-wrap" style={{ marginBottom: -12 }}>
+            <SectionTitle
+              title={t("details.matchInfo", "InformaÃƒÂ§ÃƒÂµes da Partida")}
+            />
+            <Card
+              className="p-4"
+              style={{
+                backgroundColor: matchTheme.colors.bgSurfaceA,
+                borderColor: matchTheme.colors.line,
+              }}
+            >
+              <View
+                className="flex-row flex-wrap"
+                style={{ marginBottom: -12 }}
+              >
                 {[
-                  { label: t('details.contactPhone', 'Telefone para contato'), value: match.contact_phone ?? t('details.notInformed', 'Não informado') },
-                  { label: t('details.ageRestrictions', 'Restrições de idade'), value: `${match.min_age} - ${match.max_age}` },
-                  { label: t('details.hasBreak', 'Tem intervalo'), value: match.rest_break ? t('common.yes', 'Sim') : t('common.no', 'Não') },
-                  { label: t('details.refereeIncluded', 'Árbitro incluído'), value: match.referee_included ? t('common.yes', 'Sim') : t('common.no', 'Não') },
+                  {
+                    label: t("details.contactPhone", "Telefone para contato"),
+                    value:
+                      match.contact_phone ??
+                      t("details.notInformed", "NÃƒÂ£o informado"),
+                  },
+                  {
+                    label: t(
+                      "details.ageRestrictions",
+                      "RestriÃƒÂ§ÃƒÂµes de idade",
+                    ),
+                    value: `${match.min_age} - ${match.max_age}`,
+                  },
+                  {
+                    label: t("details.hasBreak", "Tem intervalo"),
+                    value: match.rest_break
+                      ? t("common.yes", "Sim")
+                      : t("common.no", "NÃƒÂ£o"),
+                  },
+                  {
+                    label: t(
+                      "details.refereeIncluded",
+                      "ÃƒÂrbitro incluÃƒÂ­do",
+                    ),
+                    value: match.referee_included
+                      ? t("common.yes", "Sim")
+                      : t("common.no", "NÃƒÂ£o"),
+                  },
                 ].map((item, i) => (
-                  <View key={i} style={{ width: matchInfoItemWidth, paddingBottom: 12, paddingRight: 4 }}>
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted, marginBottom: 2 }}>
+                  <View
+                    key={i}
+                    style={{
+                      width: matchInfoItemWidth,
+                      paddingBottom: 12,
+                      paddingRight: 4,
+                    }}
+                  >
+                    <Text
+                      variant="caption"
+                      style={{
+                        color: matchTheme.colors.fgMuted,
+                        marginBottom: 2,
+                      }}
+                    >
                       {item.label}
                     </Text>
-                    <Text variant="label" style={{ color: matchTheme.colors.fgPrimary }}>
+                    <Text
+                      variant="label"
+                      style={{ color: matchTheme.colors.fgPrimary }}
+                    >
                       {item.value}
                     </Text>
                   </View>
@@ -649,28 +966,55 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           </View>
 
           <View className="mt-[18px]">
-            <SectionTitle title={t('details.playerRequirements')} />
-            <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
-              <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }} className="mb-3">
-                {t('details.minimumLevelsAccepted')}
+            <SectionTitle title={t("details.playerRequirements")} />
+            <Card
+              className="p-4"
+              style={{
+                backgroundColor: matchTheme.colors.bgSurfaceA,
+                borderColor: matchTheme.colors.line,
+              }}
+            >
+              <Text
+                variant="caption"
+                style={{ color: matchTheme.colors.fgMuted }}
+                className="mb-3"
+              >
+                {t("details.minimumLevelsAccepted")}
               </Text>
               <View className="flex-row flex-wrap gap-2">
-                {['pereba', 'casual', 'resenha', 'avançado', 'competitivo', 'semi-amador', 'amador', 'ex-profissional'].map((level) => {
-                  const isAccepted = Array.isArray(match.accepted_levels) && match.accepted_levels.includes(level as any);
+                {[
+                  "resenha",
+                  "casual",
+                  "intermediario",
+                  "avancado",
+                  "competitivo",
+                  "semi_amador",
+                  "amador",
+                  "ex_profissional",
+                ].map((level) => {
+                  const isAccepted =
+                    Array.isArray(match.accepted_levels) &&
+                    match.accepted_levels.includes(level as any);
                   return (
                     <View
                       key={level}
                       className="px-3 py-2 rounded-[10px] border"
                       style={{
-                        backgroundColor: isAccepted ? matchTheme.colors.bgSurfaceB : 'transparent',
-                        borderColor: isAccepted ? matchTheme.colors.ok : matchTheme.colors.line,
+                        backgroundColor: isAccepted
+                          ? matchTheme.colors.bgSurfaceB
+                          : "transparent",
+                        borderColor: isAccepted
+                          ? matchTheme.colors.ok
+                          : matchTheme.colors.line,
                       }}
                     >
                       <Text
                         variant="caption"
                         style={{
-                          color: isAccepted ? matchTheme.colors.ok : matchTheme.colors.fgMuted,
-                          fontWeight: isAccepted ? '600' : '400',
+                          color: isAccepted
+                            ? matchTheme.colors.ok
+                            : matchTheme.colors.fgMuted,
+                          fontWeight: isAccepted ? "600" : "400",
                         }}
                       >
                         {translateLevelName(level)}
@@ -684,9 +1028,20 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
           {match.description ? (
             <View className="mt-[18px]">
-              <SectionTitle title={t('details.description', 'Descrição')} />
-              <Card className="p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
-                <Text variant="label" style={{ color: matchTheme.colors.fgPrimary, lineHeight: 20 }}>
+              <SectionTitle
+                title={t("details.description", "DescriÃƒÂ§ÃƒÂ£o")}
+              />
+              <Card
+                className="p-4"
+                style={{
+                  backgroundColor: matchTheme.colors.bgSurfaceA,
+                  borderColor: matchTheme.colors.line,
+                }}
+              >
+                <Text
+                  variant="label"
+                  style={{ color: matchTheme.colors.fgPrimary, lineHeight: 20 }}
+                >
                   {match.description}
                 </Text>
               </Card>
@@ -695,55 +1050,113 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
           <View className="mt-[14px] gap-2">
             {details.isHost ? (
-              <Button label={t('cta.youAreHost', 'Você é o host desta partida')} disabled onPress={() => undefined} />
-            ) : details.myParticipant ? (
-              <Button label={t('players.leaveMatch', 'Desmarcar Presença')} variant="destructive" loading={submitting} disabled={submitting} onPress={handleLeave} />
-            ) : details.myRequest?.status === 'pending' ? (
-              <>
-                <Button label={t('cta.pendingApproval', 'Solicitação pendente de aprovacao')} disabled onPress={() => undefined} />
-                <Button label={t('cta.cancelRequest', 'Cancelar solicitação')} variant="destructive" loading={submitting} disabled={submitting} onPress={handleLeave} />
-              </>
-            ) : details.myRequest?.status === 'rejected' ? (
               <Button
-                label={availableSlots.length === 0 ? t('cta.noSlots', 'Sem vagas disponíveis') : t('cta.requestAgain', 'Solicitar novamente')}
+                label={t("cta.youAreHost", "VocÃƒÂª ÃƒÂ© o host desta partida")}
+                disabled
+                onPress={() => undefined}
+              />
+            ) : details.myParticipant ? (
+              <Button
+                label={t("players.leaveMatch", "Desmarcar PresenÃƒÂ§a")}
+                variant="destructive"
                 loading={submitting}
-                disabled={submitting || !selectedSlot || availableSlots.length === 0}
+                disabled={submitting}
+                onPress={handleLeave}
+              />
+            ) : details.myRequest?.status === "pending" ? (
+              <>
+                <Button
+                  label={t(
+                    "cta.pendingApproval",
+                    "SolicitaÃƒÂ§ÃƒÂ£o pendente de aprovacao",
+                  )}
+                  disabled
+                  onPress={() => undefined}
+                />
+                <Button
+                  label={t("cta.cancelRequest", "Cancelar solicitaÃƒÂ§ÃƒÂ£o")}
+                  variant="destructive"
+                  loading={submitting}
+                  disabled={submitting}
+                  onPress={handleLeave}
+                />
+              </>
+            ) : details.myRequest?.status === "rejected" ? (
+              <Button
+                label={
+                  availableSlots.length === 0
+                    ? t("cta.noSlots", "Sem vagas disponÃƒÂ­veis")
+                    : t("cta.requestAgain", "Solicitar novamente")
+                }
+                loading={submitting}
+                disabled={
+                  submitting || !selectedSlot || availableSlots.length === 0
+                }
                 onPress={handleJoin}
               />
             ) : (
               <Button
-                label={availableSlots.length === 0 ? t('cta.noSlots', 'Sem vagas disponíveis') : t('cta.requestParticipation', 'Solicitar Participacao')}
+                label={
+                  availableSlots.length === 0
+                    ? t("cta.noSlots", "Sem vagas disponÃƒÂ­veis")
+                    : t("cta.requestParticipation", "Solicitar Participacao")
+                }
                 loading={submitting}
-                disabled={submitting || !selectedSlot || availableSlots.length === 0}
+                disabled={
+                  submitting || !selectedSlot || availableSlots.length === 0
+                }
                 onPress={handleJoin}
               />
             )}
 
-            <Button label={t('common.back', 'Voltar')} variant="ghost" onPress={() => router.back()} />
+            <Button
+              label={t("common.back", "Voltar")}
+              variant="ghost"
+              onPress={() => router.back()}
+            />
           </View>
 
           {details.isHost ? (
             <View className="mt-[14px]">
-              <SectionTitle title={t('details.pendingRequests')} badge={String(details.pendingRequests.length)} />
-              <Card className="p-0 overflow-hidden" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.line }}>
+              <SectionTitle
+                title={t("details.pendingRequests")}
+                badge={String(details.pendingRequests.length)}
+              />
+              <Card
+                className="p-0 overflow-hidden"
+                style={{
+                  backgroundColor: matchTheme.colors.bgSurfaceA,
+                  borderColor: matchTheme.colors.line,
+                }}
+              >
                 {details.pendingRequests.length === 0 ? (
                   <View className="px-4 py-4">
-                    <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                      {t('details.noPendingRequests', 'No pending requests')}
+                    <Text
+                      variant="caption"
+                      style={{ color: matchTheme.colors.fgMuted }}
+                    >
+                      {t("details.noPendingRequests", "No pending requests")}
                     </Text>
                   </View>
                 ) : (
                   details.pendingRequests.map((request) => (
-                    <View key={request.id} className="px-4 py-3 border-b border-line">
-                      <Text variant="label" className="font-semibold text-white">
+                    <View
+                      key={request.id}
+                      className="px-4 py-3 border-b border-line"
+                    >
+                      <Text
+                        variant="label"
+                        className="font-semibold text-white"
+                      >
                         {request.userName}
                       </Text>
                       <Text variant="micro" className="text-fg3 mt-1">
-                        {t('details.positionRequested')}: {request.requestedPositionLabel}
+                        {t("details.positionRequested")}:{" "}
+                        {request.requestedPositionLabel}
                       </Text>
                       {request.note ? (
                         <Text variant="micro" className="text-fg3 mt-1">
-                          {t('details.note')}: {request.note}
+                          {t("details.note")}: {request.note}
                         </Text>
                       ) : null}
                       <View className="flex-row gap-2 mt-3">
@@ -751,18 +1164,46 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                           className="rounded-[10px] border border-line px-3 py-2"
                           onPress={() =>
                             Alert.alert(
-                              t('details.requesterProfile', 'Requester Profile'),
-                              `${t('common.name', 'Name')}: ${request.userName}\n${t('form.city')}: ${request.userCity ?? t('details.notInformed')}\n${t('details.positionRequested')}: ${request.requestedPositionLabel}\n\n${formatPositionStats(request)}`,
+                              t(
+                                "details.requesterProfile",
+                                "Requester Profile",
+                              ),
+                              `${t("common.name", "Name")}: ${request.userName}\n${t("form.city")}: ${request.userCity ?? t("details.notInformed")}\n${t("details.positionRequested")}: ${request.requestedPositionLabel}\n\n${formatPositionStats(request)}`,
                             )
                           }
                         >
-                          <Text variant="micro" className="text-white font-semibold">{t('details.viewProfile', 'View Profile')}</Text>
+                          <Text
+                            variant="micro"
+                            className="text-white font-semibold"
+                          >
+                            {t("details.viewProfile", "View Profile")}
+                          </Text>
                         </Pressable>
-                        <Pressable className="rounded-[10px] border border-[#22B76C66] bg-[#22B76C22] px-3 py-2" onPress={() => void handleRequestAction(request.id, 'accept')}>
-                          <Text variant="micro" className="text-[#86E5B4] font-semibold">{t('players.approve')}</Text>
+                        <Pressable
+                          className="rounded-[10px] border border-[#22B76C66] bg-[#22B76C22] px-3 py-2"
+                          onPress={() =>
+                            void handleRequestAction(request.id, "accept")
+                          }
+                        >
+                          <Text
+                            variant="micro"
+                            className="text-[#86E5B4] font-semibold"
+                          >
+                            {t("players.approve")}
+                          </Text>
                         </Pressable>
-                        <Pressable className="rounded-[10px] border border-[#EF444466] bg-[#EF444422] px-3 py-2" onPress={() => void handleRequestAction(request.id, 'reject')}>
-                          <Text variant="micro" className="text-[#FCA5A5] font-semibold">{t('players.reject')}</Text>
+                        <Pressable
+                          className="rounded-[10px] border border-[#EF444466] bg-[#EF444422] px-3 py-2"
+                          onPress={() =>
+                            void handleRequestAction(request.id, "reject")
+                          }
+                        >
+                          <Text
+                            variant="micro"
+                            className="text-[#FCA5A5] font-semibold"
+                          >
+                            {t("players.reject")}
+                          </Text>
                         </Pressable>
                       </View>
                     </View>
