@@ -37,18 +37,13 @@ type CreateMatchStep2Props = {
   durationMinutes: string;
   minAge: number;
   maxAge: number;
-  minPercent: number;
-  maxPercent: number;
   restBreak: boolean;
   referee: boolean;
   acceptedLevels: MinLevelValue[];
   minLevelOptions: Array<{ value: MinLevelValue }>;
   onPricePerPersonChange: (value: string) => void;
   onDurationMinutesChange: (value: string) => void;
-  onDecreaseMinAge: () => void;
-  onIncreaseMinAge: () => void;
-  onDecreaseMaxAge: () => void;
-  onIncreaseMaxAge: () => void;
+  onAgeRangeChange: (nextMin: number, nextMax: number) => void;
   onToggleRestBreak: () => void;
   onToggleReferee: () => void;
   onToggleLevel: (value: MinLevelValue) => void;
@@ -109,18 +104,13 @@ export function CreateMatchStep2({
   durationMinutes,
   minAge,
   maxAge,
-  minPercent,
-  maxPercent,
   restBreak,
   referee,
   acceptedLevels,
   minLevelOptions,
   onPricePerPersonChange,
   onDurationMinutesChange,
-  onDecreaseMinAge,
-  onIncreaseMinAge,
-  onDecreaseMaxAge,
-  onIncreaseMaxAge,
+  onAgeRangeChange,
   onToggleRestBreak,
   onToggleReferee,
   onToggleLevel,
@@ -175,14 +165,11 @@ export function CreateMatchStep2({
           </Text>
           <View style={{ marginTop: 4 }}>
             <RangeSelector
+              minLimit={16}
+              maxLimit={80}
               min={minAge}
               max={maxAge}
-              minPercent={minPercent}
-              maxPercent={maxPercent}
-              onDecreaseMin={onDecreaseMinAge}
-              onIncreaseMin={onIncreaseMinAge}
-              onDecreaseMax={onDecreaseMaxAge}
-              onIncreaseMax={onIncreaseMaxAge}
+              onChange={onAgeRangeChange}
             />
           </View>
           <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>

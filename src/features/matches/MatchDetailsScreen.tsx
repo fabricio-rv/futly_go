@@ -56,7 +56,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
   const translateStatusLabel = (label: string) => {
     if (label.includes("Criada por") || label.includes("Created by"))
-      return t("statusCreatedByYou", "Criada por vocÃƒÂª");
+      return t("statusCreatedByYou", "Criada por vocÃƒÆ’Ã‚Âª");
     if (label.includes("Finalizada") || label.includes("Finished"))
       return t("statusFinished", "Finalizada");
     if (label.includes("Vagas abertas") || label.includes("Open"))
@@ -90,7 +90,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
         QUI: t("days.thu"),
         SEX: t("days.fri"),
         SAB: t("days.sat"),
-        "SÃƒÂB": t("days.sat"),
+        "SÃƒÆ’Ã‚ÂB": t("days.sat"),
         DOM: t("days.sun"),
         HOJE: "HOJE",
       };
@@ -98,22 +98,6 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     }
     return dayLabel;
   };
-
-  const translateLevelName = (levelName: string) => {
-    const levelMap: Record<string, string> = {
-      pereba: "Resenha",
-      resenha: "Resenha",
-      casual: "Casual",
-      "avanÃƒÂ§ado": "Familia",
-      intermediario: "Amigos",
-      avancado: "Familia",
-      competitivo: "Competitivo",
-      "semi-amador": "Semi-Amador",
-      semi_amador: "Semi-Amador",
-      amador: "Amador",
-      "ex-profissional": "Ex-profissional",
-      ex_profissional: "Ex-profissional",
-    };
     return (
       levelMap[levelName.toLowerCase()] ||
       levelName.charAt(0).toUpperCase() + levelName.slice(1)
@@ -421,7 +405,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
       const message = error instanceof Error ? error.message : String(error);
       Alert.alert(
         t("common.error"),
-        `NÃƒÂ£o foi possÃƒÂ­vel abrir rota: ${message}`,
+        `NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel abrir rota: ${message}`,
       );
     }
   }
@@ -437,7 +421,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           >
             {loadingDetails
               ? t("common.loadingMatch", "Carregando partida...")
-              : t("details.notFound", "Partida nÃƒÂ£o encontrada.")}
+              : t("details.notFound", "Partida nÃƒÆ’Ã‚Â£o encontrada.")}
           </Text>
         </View>
       </Screen>
@@ -461,7 +445,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const heroTimeFontSize = isCompactScreen ? 26 : 30;
   const heroMetaSpacingTop = isCompactScreen ? 10 : 14;
   const matchDateLabel = (() => {
-    if (!match.match_date) return t("details.notInformed", "NÃƒÂ£o informado");
+    if (!match.match_date) return t("details.notInformed", "NÃƒÆ’Ã‚Â£o informado");
 
     const [year, month, day] = match.match_date.split("-");
     if (!year || !month || !day) return match.match_date;
@@ -738,7 +722,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
           <View className="mt-[18px]">
             <SectionTitle
-              title={t("details.positionsAndSlots", "PosiÃƒÂ§ÃƒÂµes e vagas")}
+              title={t("details.positionsAndSlots", "PosiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes e vagas")}
             />
             <Card
               className="p-[14px]"
@@ -853,7 +837,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 }}
               >
                 {match.venue_name ??
-                  t("details.notInformed", "NÃƒÂ£o informado")}
+                  t("details.notInformed", "NÃƒÆ’Ã‚Â£o informado")}
               </Text>
               <Text
                 variant="number"
@@ -865,7 +849,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                   letterSpacing: 0.8,
                 }}
               >
-                {match.cep ?? t("details.notInformed", "NÃƒÂ£o informado")}
+                {match.cep ?? t("details.notInformed", "NÃƒÆ’Ã‚Â£o informado")}
               </Text>
             </View>
 
@@ -893,7 +877,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
           <View className="mt-[18px]">
             <SectionTitle
-              title={t("details.matchInfo", "InformaÃƒÂ§ÃƒÂµes da Partida")}
+              title={t("details.matchInfo", "InformaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes da Partida")}
             />
             <Card
               className="p-4"
@@ -911,12 +895,12 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                     label: t("details.contactPhone", "Telefone para contato"),
                     value:
                       match.contact_phone ??
-                      t("details.notInformed", "NÃƒÂ£o informado"),
+                      t("details.notInformed", "NÃƒÆ’Ã‚Â£o informado"),
                   },
                   {
                     label: t(
                       "details.ageRestrictions",
-                      "RestriÃƒÂ§ÃƒÂµes de idade",
+                      "RestriÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes de idade",
                     ),
                     value: `${match.min_age} - ${match.max_age}`,
                   },
@@ -924,16 +908,16 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                     label: t("details.hasBreak", "Tem intervalo"),
                     value: match.rest_break
                       ? t("common.yes", "Sim")
-                      : t("common.no", "NÃƒÂ£o"),
+                      : t("common.no", "NÃƒÆ’Ã‚Â£o"),
                   },
                   {
                     label: t(
                       "details.refereeIncluded",
-                      "ÃƒÂrbitro incluÃƒÂ­do",
+                      "ÃƒÆ’Ã‚Ârbitro incluÃƒÆ’Ã‚Â­do",
                     ),
                     value: match.referee_included
                       ? t("common.yes", "Sim")
-                      : t("common.no", "NÃƒÂ£o"),
+                      : t("common.no", "NÃƒÆ’Ã‚Â£o"),
                   },
                 ].map((item, i) => (
                   <View
@@ -965,71 +949,10 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
             </Card>
           </View>
 
-          <View className="mt-[18px]">
-            <SectionTitle title={t("details.playerRequirements")} />
-            <Card
-              className="p-4"
-              style={{
-                backgroundColor: matchTheme.colors.bgSurfaceA,
-                borderColor: matchTheme.colors.line,
-              }}
-            >
-              <Text
-                variant="caption"
-                style={{ color: matchTheme.colors.fgMuted }}
-                className="mb-3"
-              >
-                {t("details.minimumLevelsAccepted")}
-              </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {[
-                  "resenha",
-                  "casual",
-                  "intermediario",
-                  "avancado",
-                  "competitivo",
-                  "semi_amador",
-                  "amador",
-                  "ex_profissional",
-                ].map((level) => {
-                  const isAccepted =
-                    Array.isArray(match.accepted_levels) &&
-                    match.accepted_levels.includes(level as any);
-                  return (
-                    <View
-                      key={level}
-                      className="px-3 py-2 rounded-[10px] border"
-                      style={{
-                        backgroundColor: isAccepted
-                          ? matchTheme.colors.bgSurfaceB
-                          : "transparent",
-                        borderColor: isAccepted
-                          ? matchTheme.colors.ok
-                          : matchTheme.colors.line,
-                      }}
-                    >
-                      <Text
-                        variant="caption"
-                        style={{
-                          color: isAccepted
-                            ? matchTheme.colors.ok
-                            : matchTheme.colors.fgMuted,
-                          fontWeight: isAccepted ? "600" : "400",
-                        }}
-                      >
-                        {translateLevelName(level)}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-            </Card>
-          </View>
-
           {match.description ? (
             <View className="mt-[18px]">
               <SectionTitle
-                title={t("details.description", "DescriÃƒÂ§ÃƒÂ£o")}
+                title={t("details.description", "DescriÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o")}
               />
               <Card
                 className="p-4"
@@ -1051,13 +974,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           <View className="mt-[14px] gap-2">
             {details.isHost ? (
               <Button
-                label={t("cta.youAreHost", "VocÃƒÂª ÃƒÂ© o host desta partida")}
+                label={t("cta.youAreHost", "VocÃƒÆ’Ã‚Âª ÃƒÆ’Ã‚Â© o host desta partida")}
                 disabled
                 onPress={() => undefined}
               />
             ) : details.myParticipant ? (
               <Button
-                label={t("players.leaveMatch", "Desmarcar PresenÃƒÂ§a")}
+                label={t("players.leaveMatch", "Desmarcar PresenÃƒÆ’Ã‚Â§a")}
                 variant="destructive"
                 loading={submitting}
                 disabled={submitting}
@@ -1068,13 +991,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                 <Button
                   label={t(
                     "cta.pendingApproval",
-                    "SolicitaÃƒÂ§ÃƒÂ£o pendente de aprovacao",
+                    "SolicitaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o pendente de aprovacao",
                   )}
                   disabled
                   onPress={() => undefined}
                 />
                 <Button
-                  label={t("cta.cancelRequest", "Cancelar solicitaÃƒÂ§ÃƒÂ£o")}
+                  label={t("cta.cancelRequest", "Cancelar solicitaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o")}
                   variant="destructive"
                   loading={submitting}
                   disabled={submitting}
@@ -1085,7 +1008,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               <Button
                 label={
                   availableSlots.length === 0
-                    ? t("cta.noSlots", "Sem vagas disponÃƒÂ­veis")
+                    ? t("cta.noSlots", "Sem vagas disponÃƒÆ’Ã‚Â­veis")
                     : t("cta.requestAgain", "Solicitar novamente")
                 }
                 loading={submitting}
@@ -1098,7 +1021,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               <Button
                 label={
                   availableSlots.length === 0
-                    ? t("cta.noSlots", "Sem vagas disponÃƒÂ­veis")
+                    ? t("cta.noSlots", "Sem vagas disponÃƒÆ’Ã‚Â­veis")
                     : t("cta.requestParticipation", "Solicitar Participacao")
                 }
                 loading={submitting}

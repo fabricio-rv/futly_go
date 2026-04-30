@@ -135,6 +135,8 @@ export default function CreateMatchScreen() {
   const [turno, setTurno] = useState<TurnoValue>("");
   const [pricePerPerson, setPricePerPerson] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("");
+  const [minAge, setMinAge] = useState(16);
+  const [maxAge, setMaxAge] = useState(80);
   const [activeStep, setActiveStep] = useState<CreateStep>("1");
 
   const [acceptedLevels, setAcceptedLevels] = useState<MinLevelValue[]>([]);
@@ -197,8 +199,8 @@ export default function CreateMatchScreen() {
         turno: (turno || "noite") as (typeof TURNO_OPTIONS)[number]["value"],
         durationMinutes: Number(durationMinutes) || 60,
         pricePerPerson: Number(pricePerPerson) || 0,
-        minAge: 16,
-        maxAge: 80,
+        minAge,
+        maxAge,
         acceptedLevels,
         allowExternalReserves: true,
         restBreak,
@@ -252,6 +254,8 @@ export default function CreateMatchScreen() {
   const dayNumbers = Array.from({ length: monthDays }, (_, idx) => idx + 1);
   const pitchWidth = Math.min(300, Math.max(248, screenWidth - 120));
   const pitchOffsetTop = 0;
+  const minAgeFloor = 16;
+  const maxAgeCeil = 80;
 
   return (
     <Screen padded={false} showBackground={false}>
@@ -380,12 +384,28 @@ export default function CreateMatchScreen() {
               }}
               pricePerPerson={pricePerPerson}
               durationMinutes={durationMinutes}
+              minAge={minAge}
+              maxAge={maxAge}
               restBreak={restBreak}
               referee={referee}
               acceptedLevels={acceptedLevels}
               minLevelOptions={MIN_LEVEL_OPTIONS}
               onPricePerPersonChange={handlePricePerPersonChange}
               onDurationMinutesChange={handleDurationMinutesChange}
+              onAgeRangeChange={(nextMin, nextMax) => {
+                const safeMin = Math.max(
+                  minAgeFloor,
+                  Math.min(nextMin, maxAgeCeil - 1),
+                );
+                const safeMax = Math.min(
+                  maxAgeCeil,
+                  Math.max(nextMax, minAgeFloor + 1),
+                );
+
+                if (safeMin >= safeMax) return;
+                setMinAge(safeMin);
+                setMaxAge(safeMax);
+              }}
               onToggleRestBreak={() => setRestBreak((value) => !value)}
               onToggleReferee={() => setReferee((value) => !value)}
               onToggleLevel={toggleLevel}
