@@ -1,6 +1,6 @@
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
-import { useAudioRecorder, RecordingPresets, AudioModule } from 'expo-audio';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Audio } from 'expo-av';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
@@ -20,7 +20,7 @@ import {
   TypingIndicator,
 } from '@/src/components/features/chat';
 import { Text } from '@/src/components/ui';
-import { Pin, Star } from 'lucide-react-native';
+import { Camera, FileText, Image as ImageIcon, Pin, Star } from 'lucide-react-native';
 import { useConversationThread } from '@/src/features/chat/hooks/useConversationThread';
 import {
   addConversationParticipant,
@@ -44,26 +44,21 @@ type MessageAction = {
   onPress: () => void;
 };
 
-async function readUriAsBlob(uri: string): Promise<Blob> {
-  try {
-    const response = await fetch(uri);
-    return await response.blob();
-  } catch {
-    try {
-      const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
-      const response = await fetch(`data:application/octet-stream;base64,${base64}`);
-      return await response.blob();
-    } catch {
-      return await new Promise<Blob>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onerror = () => reject(new Error('Nao foi possivel ler o arquivo selecionado.'));
-        xhr.onload = () => resolve(xhr.response as Blob);
-        xhr.responseType = 'blob';
-        xhr.open('GET', uri, true);
-        xhr.send(null);
-      });
-    }
+// Lê um arquivo local e retorna ArrayBuffer.
+// fetch(file://) é instável em dispositivos iOS físicos e Blob não é confiável
+// no React Native para uploads ao Supabase Storage — usar FileSystem + base64.
+async function readFileAsArrayBuffer(uri: string): Promise<ArrayBuffer> {
+  const localUri = uri.startsWith('/') ? `file://${uri}` : uri;
+  // FileSystem.EncodingType não está disponível no namespace no Expo SDK 54 — usar string literal
+  const base64 = await FileSystem.readAsStringAsync(localUri, {
+    encoding: 'base64' as any,
+  });
+  const binaryStr = atob(base64);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
   }
+  return bytes.buffer as ArrayBuffer;
 }
 
 function VideoPreview({ uri }: { uri: string }) {
@@ -105,7 +100,7 @@ export default function ConversationDetailScreen() {
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
-  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recordingRef = useRef<Audio.Recording | null>(null);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const listRef = useRef<any>(null);
   const hasScrolledToBottomRef = useRef(false);
@@ -323,13 +318,13 @@ export default function ConversationDetailScreen() {
 
       if (!messageId) throw new Error('Nao foi possivel criar a mensagem do anexo.');
 
-      const blob = await readUriAsBlob(input.uri);
+      const bytes = await readFileAsArrayBuffer(input.uri);
       await createChatFileAttachment({
         conversationId,
         messageId,
         fileName: input.fileName,
         mimeType: input.mimeType,
-        bytes: blob,
+        bytes,
       });
       await refresh();
     } catch (err) {
@@ -405,32 +400,37 @@ export default function ConversationDetailScreen() {
           kind: 'document',
         });
       }
-    } catch {
-      Alert.alert(t('common.error', 'Erro'), t('errors.selectFileError', 'Não foi possível selecionar o arquivo.'));
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      Alert.alert(t('common.error', 'Erro'), detail || t('errors.selectFileError', 'Não foi possível selecionar o arquivo.'));
     }
   }, [handleSendAttachment, t]);
 
   const handleStartRecording = useCallback(async () => {
-    const { granted } = await AudioModule.requestRecordingPermissionsAsync();
+    const { granted } = await Audio.requestPermissionsAsync();
     if (!granted) {
       Alert.alert(t('errors.micPermissionTitle', 'Permissão necessária'), t('errors.micPermissionMessage', 'Precisamos de acesso ao microfone para gravar áudios.'));
       return;
     }
 
     try {
-      if (recorder.isRecording) {
-        await recorder.stop();
+      if (recordingRef.current) {
+        try { await recordingRef.current.stopAndUnloadAsync(); } catch { /* já parado */ }
+        recordingRef.current = null;
       }
-      await AudioModule.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      await recorder.prepareToRecordAsync();
-      await recorder.record();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+      );
+      recordingRef.current = recording;
       setIsRecording(true);
       setRecordingDuration(0);
       recordingTimerRef.current = setInterval(() => setRecordingDuration((prev) => prev + 1), 1000);
-    } catch {
-      Alert.alert(t('common.error', 'Erro'), t('errors.startRecordingError', 'Não foi possível iniciar a gravação.'));
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      Alert.alert(t('common.error', 'Erro'), detail || t('errors.startRecordingError', 'Não foi possível iniciar a gravação.'));
     }
-  }, [recorder, t]);
+  }, [t]);
 
   const handleStopRecording = useCallback(async (cancelled: boolean) => {
     if (recordingTimerRef.current) {
@@ -442,13 +442,15 @@ export default function ConversationDetailScreen() {
     setRecordingDuration(0);
 
     try {
-      if (recorder.isRecording) {
-        await recorder.stop();
+      const recording = recordingRef.current;
+      recordingRef.current = null;
+      if (recording) {
+        await recording.stopAndUnloadAsync();
       }
-      await AudioModule.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
-      if (cancelled) return;
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
+      if (cancelled || !recording) return;
 
-      const uri = recorder.uri;
+      const uri = recording.getURI();
       if (!uri) throw new Error('Nao foi possivel ler o arquivo de audio.');
 
       await handleSendAttachment({
@@ -458,16 +460,26 @@ export default function ConversationDetailScreen() {
         kind: 'audio',
         durationSec,
       });
-    } catch {
-      Alert.alert(t('common.error', 'Erro'), t('errors.audioProcessError', 'Não foi possível processar o áudio gravado.'));
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      Alert.alert(t('common.error', 'Erro'), detail || t('errors.audioProcessError', 'Não foi possível processar o áudio gravado.'));
     }
-  }, [handleSendAttachment, recorder, recordingDuration, t]);
+  }, [handleSendAttachment, recordingDuration, t]);
 
-  const attachmentActions = useMemo(() => [
-    { key: 'gallery', label: t('detail.gallery', 'Galeria de Fotos e Vídeos'), icon: 'image' as const, onPress: handlePickImage },
-    { key: 'camera', label: t('detail.camera', 'Câmera'), icon: 'camera' as const, onPress: handleOpenCamera },
-    { key: 'document', label: t('detail.documentFile', 'Documento / Arquivo'), icon: 'document' as const, onPress: handlePickDocument },
-  ], [handleOpenCamera, handlePickDocument, handlePickImage, t]);
+  // No iOS, o Modal do action sheet precisa estar completamente fechado antes de
+  // abrir qualquer picker nativo (UIImagePickerController, UIDocumentPickerViewController).
+  // Chamar o picker enquanto o Modal ainda está montado resulta em erro silencioso.
+  const attachmentActions = useMemo(() => {
+    const run = (fn: () => void) => () => {
+      setAttachVisible(false);
+      setTimeout(fn, 50);
+    };
+    return [
+      { key: 'gallery', label: t('detail.gallery', 'Galeria'), icon: 'image' as const, color: '#7c3aed', onPress: run(handlePickImage) },
+      { key: 'camera', label: t('detail.camera', 'Câmera'), icon: 'camera' as const, color: '#0369a1', onPress: run(handleOpenCamera) },
+      { key: 'document', label: t('detail.documentFile', 'Arquivo'), icon: 'document' as const, color: '#e11d48', onPress: run(handlePickDocument) },
+    ];
+  }, [handleOpenCamera, handlePickDocument, handlePickImage, t]);
 
   const selectedMessageActions = useMemo(() => {
     if (!selectedMessage) return [];
@@ -516,7 +528,7 @@ export default function ConversationDetailScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 6 : 0}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
         <ConversationHeader
           title={header?.title ?? t('detail.title', 'Conversa')}
           subtitle={headerSubtitle}
@@ -562,7 +574,8 @@ export default function ConversationDetailScreen() {
           bounces
           overScrollMode="always"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 156 + insets.bottom }}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}
           ListHeaderComponent={(
             <>
               <View className="self-center rounded-full px-3 py-1 mb-3 mt-1" style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}>
@@ -640,6 +653,33 @@ export default function ConversationDetailScreen() {
           }}
         />
 
+        {attachVisible ? (
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              paddingHorizontal: 24,
+              paddingTop: 16,
+              paddingBottom: 12,
+              borderTopWidth: 1,
+              borderTopColor: theme === 'light' ? '#E5E7EB' : 'rgba(255,255,255,0.09)',
+              backgroundColor: theme === 'light' ? '#FFFFFF' : '#111827',
+            }}
+          >
+            {attachmentActions.map((action) => {
+              const Icon = action.icon === 'image' ? ImageIcon : action.icon === 'camera' ? Camera : FileText;
+              return (
+                <Pressable key={action.key} onPress={action.onPress} style={{ alignItems: 'center', gap: 7 }}>
+                  <View style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: action.color, alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon size={24} color="#fff" strokeWidth={1.8} />
+                  </View>
+                  <Text variant="micro" style={{ color: theme === 'light' ? '#6B7280' : '#9CA3AF' }}>{action.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+
         <ComposerBar
           text={draft}
           placeholder={t('detail.messagePlaceholder', 'Mensagem...')}
@@ -652,8 +692,8 @@ export default function ConversationDetailScreen() {
           bottomInset={insets.bottom}
           onChangeText={handleDraftChange}
           onSend={handleSend}
-          onAddAttachment={() => setAttachVisible(true)}
-          onPickImage={handlePickImage}
+          onAddAttachment={() => setAttachVisible((v) => !v)}
+          onOpenCamera={handleOpenCamera}
           onOpenEmoji={() => setEmojiVisible(true)}
           onCancelReply={() => setReplyTo(null)}
           onStartRecording={handleStartRecording}
@@ -703,8 +743,6 @@ export default function ConversationDetailScreen() {
             setReactionEmojiAnchor(undefined);
           }}
         />
-        <ChatActionSheet visible={attachVisible} title="Anexar" actions={attachmentActions} onClose={() => setAttachVisible(false)} />
-
         <Modal visible={!!forwardingMessage} transparent animationType="fade" onRequestClose={() => setForwardingMessage(null)}>
           <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setForwardingMessage(null)}>
             <Pressable className="rounded-t-2xl border-t px-4 py-4" style={{ backgroundColor: theme === 'light' ? '#FFFFFF' : '#111827', borderTopColor: theme === 'light' ? '#D1DCEB' : 'rgba(255,255,255,0.10)' }}>

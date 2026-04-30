@@ -1,7 +1,7 @@
 import { MapPin } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Image, Platform, Pressable, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
@@ -43,6 +43,7 @@ export function MapPreviewCard({
 
   const activeMapUrl = mapImageUrls[currentUrlIndex] ?? null;
   const hasCoordinates = Number.isFinite(latitude) && Number.isFinite(longitude);
+  const mapProvider = Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined;
   const mapClassName = embeddedInCard
     ? 'h-64 w-full overflow-hidden rounded-[20px]'
     : 'h-56 rounded-[18px] border mb-2 overflow-hidden';
@@ -69,6 +70,7 @@ export function MapPreviewCard({
         ) : !isWeb && hasCoordinates ? (
           <MapView
             style={{ width: '100%', height: '100%' }}
+            provider={mapProvider}
             initialRegion={{
               latitude: latitude as number,
               longitude: longitude as number,

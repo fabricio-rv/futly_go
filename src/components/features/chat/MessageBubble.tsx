@@ -2,6 +2,7 @@ import { Check, CheckCheck, CornerUpLeft, FileText, Forward, Mic, Pause, Pin, Pl
 import { Image, Platform, Pressable, type GestureResponderEvent, View, useWindowDimensions } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { VideoView, useVideoPlayer } from 'expo-video';
+import type { ReactNode } from 'react';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { getChatTokens } from '@/src/lib/chatTokens';
@@ -25,6 +26,145 @@ type MessageBubbleProps = {
   onAttachmentDownload?: (message: ChatMessage) => void;
 };
 
+function formatAudioTime(ms: number) {
+  const total = Math.max(0, Math.round(ms / 1000));
+  const min = Math.floor(total / 60).toString().padStart(1, '0');
+  const sec = (total % 60).toString().padStart(2, '0');
+  return `${min}:${sec}`;
+}
+
+function VideoAttachmentPreview({ url }: { url: string }) {
+  const videoPlayer = useVideoPlayer({ uri: url }, (p) => { p.loop = false; });
+  return (
+    <VideoView
+      player={videoPlayer}
+      style={{ width: '100%', height: '100%' }}
+      nativeControls
+      contentFit="cover"
+    />
+  );
+}
+
+type AudioAttachmentProps = {
+  message: ChatMessage;
+  mine: boolean;
+  bubbleBg: string;
+  textSecondary: string;
+  textTertiary: string;
+  brandGold: string;
+  isPinned: boolean;
+  isSaved: boolean;
+  receiptIcon: ReactNode;
+  attachmentCardWidth: number;
+};
+
+function AudioAttachmentCard({
+  message,
+  mine,
+  bubbleBg,
+  textSecondary,
+  textTertiary,
+  brandGold,
+  isPinned,
+  isSaved,
+  receiptIcon,
+  attachmentCardWidth,
+}: AudioAttachmentProps) {
+  const audioSource = message.attachment?.kind === 'audio' && message.attachment?.url
+    ? { uri: message.attachment.url }
+    : null;
+  const audioPlayer = useAudioPlayer(audioSource);
+  const audioStatus = useAudioPlayerStatus(audioPlayer);
+  const isPlayingAudio = audioStatus.playing;
+  const audioDurationMs = audioStatus.duration * 1000;
+  const audioPositionMs = audioStatus.currentTime * 1000;
+  const probedDurationMs = message.attachment?.durationSec && message.attachment.durationSec > 0
+    ? message.attachment.durationSec * 1000
+    : audioDurationMs;
+
+  const toggleAudioPlayback = () => {
+    if (!message.attachment?.url || message.attachment.kind !== 'audio') return;
+    if (audioStatus.playing) {
+      audioPlayer.pause();
+    } else {
+      const finished = audioStatus.duration > 0 && audioStatus.currentTime >= audioStatus.duration - 0.5;
+      if (finished) {
+        audioPlayer.seekTo(0);
+      }
+      audioPlayer.play();
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={toggleAudioPlayback}
+      style={{
+        backgroundColor: bubbleBg,
+        borderRadius: 18,
+        paddingHorizontal: 12,
+        paddingTop: 12,
+        paddingBottom: 8,
+        width: attachmentCardWidth,
+        minWidth: 220,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        {message.avatarUrl ? (
+          <Image source={{ uri: message.avatarUrl }} style={{ width: 40, height: 40, borderRadius: 20, flexShrink: 0 }} resizeMode="cover" />
+        ) : (
+          <View style={{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', flexShrink: 0, backgroundColor: mine ? 'rgba(255,255,255,0.22)' : '#0f766e' }}>
+            <Text variant="micro" style={{ color: '#fff', fontWeight: '800', fontSize: 15 }}>{(message.author ?? 'A').slice(0, 1).toUpperCase()}</Text>
+          </View>
+        )}
+        <View style={{ width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexShrink: 0, backgroundColor: 'rgba(255,255,255,0.15)' }}>
+          {isPlayingAudio ? (
+            <Pause size={16} color="#FFFFFF" fill="#FFFFFF" />
+          ) : (
+            <Play size={16} color="#FFFFFF" fill="#FFFFFF" />
+          )}
+        </View>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+          {Array.from({ length: 32 }).map((_, idx) => {
+            const totalMs = audioDurationMs || probedDurationMs || ((message.attachment?.durationSec ?? 0) * 1000);
+            const playedRatio = totalMs > 0 ? audioPositionMs / totalMs : 0;
+            const activeBar = idx / 32 <= playedRatio;
+            const heights = [5, 8, 12, 7, 10, 14, 6, 9, 13, 5, 11, 8, 15, 6, 10, 7, 12, 9, 14, 5, 8, 13, 6, 11, 7, 10, 15, 8, 6, 12, 9, 5];
+            const barH = heights[idx % heights.length];
+            return (
+              <View
+                key={`${message.id}-bar-${idx}`}
+                style={{
+                  flex: 1,
+                  height: barH,
+                  borderRadius: 1.5,
+                  backgroundColor: activeBar
+                    ? (mine ? '#4ade80' : '#22d3ee')
+                    : (mine ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.25)'),
+                }}
+              />
+            );
+          })}
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingLeft: 82 }}>
+        <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.85)' : textSecondary, fontSize: 12 }}>
+          {formatAudioTime(audioDurationMs || probedDurationMs || ((message.attachment?.durationSec ?? 0) * 1000) || audioPositionMs)}
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          {isPinned ? <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : brandGold} /> : null}
+          {isSaved ? <Star size={10} color={mine ? 'rgba(255,255,255,0.68)' : brandGold} fill={mine ? 'rgba(255,255,255,0.68)' : brandGold} /> : null}
+          {message.time ? (
+            <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.65)' : textTertiary, fontSize: 11 }}>
+              {message.time}
+            </Text>
+          ) : null}
+          {receiptIcon}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 export function MessageBubble({
   message,
   showSenderName = false,
@@ -40,23 +180,10 @@ export function MessageBubble({
   onAttachmentPress,
   onAttachmentDownload,
 }: MessageBubbleProps) {
-  const audioPlayer = useAudioPlayer(
-    message.attachment?.kind === 'audio' && message.attachment?.url ? { uri: message.attachment.url } : null
-  );
-  const audioStatus = useAudioPlayerStatus(audioPlayer);
-  const videoPlayer = useVideoPlayer(
-    message.attachment?.kind === 'video' && message.attachment?.url ? { uri: message.attachment.url } : null,
-    (p) => { p.loop = false; }
-  );
-  const isPlayingAudio = audioStatus.playing;
-  const audioDurationMs = audioStatus.duration * 1000;
-  const audioPositionMs = audioStatus.currentTime * 1000;
-  const probedDurationMs = message.attachment?.durationSec && message.attachment.durationSec > 0
-    ? message.attachment.durationSec * 1000
-    : audioDurationMs;
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
   const { width: screenWidth } = useWindowDimensions();
+
 
   if (message.kind === 'system') {
     return (
@@ -79,6 +206,10 @@ export function MessageBubble({
   const firstReaction = reactions[0];
   const mediaWidth = Math.min(330, Math.max(220, screenWidth - 92));
   const mediaHeight = Math.round(mediaWidth * 1.2);
+  const attachmentCardWidth = Math.min(screenWidth * 0.76, 320);
+  const senderNameMaxWidth = isMediaAttachment
+    ? mediaWidth - 24
+    : (isAudioOnly || isDocumentOnly ? attachmentCardWidth - 24 : undefined);
 
   const receiptIcon = mine
     ? message.receipt === 'read'
@@ -108,21 +239,6 @@ export function MessageBubble({
       }
     : {};
 
-  const toggleAudioPlayback = () => {
-    if (!message.attachment?.url || message.attachment.kind !== 'audio') return;
-    if (audioStatus.playing) {
-      audioPlayer.pause();
-    } else {
-      audioPlayer.play();
-    }
-  };
-
-  const formatAudioTime = (ms: number) => {
-    const total = Math.max(0, Math.round(ms / 1000));
-    const min = Math.floor(total / 60).toString().padStart(1, '0');
-    const sec = (total % 60).toString().padStart(2, '0');
-    return `${min}:${sec}`;
-  };
 
   return (
     <Pressable
@@ -156,8 +272,8 @@ export function MessageBubble({
             backgroundColor: (isAudioOnly || isDocumentOnly) ? (mine ? tk.bubbleOwnBg : tk.bubbleThemBg) : (mine ? tk.bubbleOwnBg : tk.bubbleThemBg),
             borderColor: (isAudioOnly || isDocumentOnly) ? 'transparent' : (mine ? tk.bubbleOwnBorder : tk.bubbleThemBorder),
             opacity: isSelected ? 0.85 : 1,
-            paddingTop: isDocumentOnly ? 12 : (mine && !isAudioOnly && !isMediaAttachment ? 11 : undefined),
-            paddingBottom: isMediaAttachment ? (mine ? 10 : 18) : undefined,
+            paddingTop: isDocumentOnly ? 0 : (mine && !isAudioOnly && !isMediaAttachment ? 11 : undefined),
+            paddingBottom: isMediaAttachment ? 10 : undefined,
           }}
         >
         {/* Group sender name */}
@@ -165,8 +281,15 @@ export function MessageBubble({
           <Text
             variant="micro"
             numberOfLines={1}
-            style={{ color: tk.brand.gold.primary, marginLeft: isDocumentOnly ? 12 : 0, marginTop: 5 }}
-            className={`font-bold ${isMediaAttachment ? 'mb-[8px]' : 'mb-[4px]'}`}
+            ellipsizeMode="tail"
+            style={{
+              color: tk.brand.gold.primary,
+              marginLeft: (isDocumentOnly || isAudioOnly || isMediaAttachment) ? 12 : 0,
+              marginRight: 12,
+              marginTop: (isDocumentOnly || isAudioOnly) ? 2 : 4,
+              maxWidth: senderNameMaxWidth ?? '100%',
+            }}
+            className={`font-bold ${isMediaAttachment ? 'mb-[6px]' : 'mb-[4px]'}`}
           >
             {message.author}
             {message.role ? ` · ${message.role}` : ''}
@@ -224,7 +347,7 @@ export function MessageBubble({
                 style={{
                   width: mediaWidth,
                   height: mediaHeight,
-                  borderRadius: 14,
+                  borderRadius: 0,
                   marginBottom: message.text ? 8 : 0,
                   backgroundColor: mine ? 'rgba(0,0,0,0.15)' : '#0b1220',
                   overflow: 'hidden',
@@ -243,163 +366,97 @@ export function MessageBubble({
                 style={{
                   width: mediaWidth,
                   height: mediaHeight,
-                  borderRadius: 14,
+                  borderRadius: 0,
                   marginBottom: message.text ? 8 : 0,
                   backgroundColor: mine ? 'rgba(0,0,0,0.15)' : '#0b1220',
                   overflow: 'hidden',
                 }}
               >
-                <VideoView
-                  player={videoPlayer}
-                  style={{ width: '100%', height: '100%' }}
-                  nativeControls
-                  contentFit="cover"
-                />
+                <VideoAttachmentPreview url={message.attachment.url} />
               </View>
             )}
           </Pressable>
         ) : null}
 
         {message.attachment?.kind === 'audio' ? (
-          <Pressable
-            onPress={toggleAudioPlayback}
-            className="rounded-2xl px-3 py-2 mb-0"
-            style={{ backgroundColor: mine ? tk.bubbleOwnBg : tk.bubbleThemBg }}
-          >
-            {/* Top row: avatar + centered play + waves */}
-            <View
-              className="flex-row items-center gap-2"
-              style={{ transform: [{ translateY: 6 }] }}
-            >
-              {message.avatarUrl ? (
-                <Image source={{ uri: message.avatarUrl }} style={{ width: 50, height: 50, borderRadius: 25 }} resizeMode="cover" />
-              ) : (
-                <View className="h-12 w-12 rounded-full items-center justify-center" style={{ backgroundColor: mine ? 'rgba(255,255,255,0.2)' : '#0f766e' }}>
-                  <Text variant="micro" style={{ color: '#fff', fontWeight: '800' }}>{(message.author ?? 'A').slice(0, 1).toUpperCase()}</Text>
-                </View>
-              )}
-              <View style={{ width: 12, alignItems: 'center', justifyContent: 'center', marginLeft: 10 }}>
-                <Pressable onPress={toggleAudioPlayback} hitSlop={8}>
-                  {isPlayingAudio ? (
-                    <Pause size={18} color="#FFFFFF" fill="#FFFFFF" />
-                  ) : (
-                    <Play size={18} color="#FFFFFF" fill="#FFFFFF" />
-                  )}
-                </Pressable>
-              </View>
-              <View style={{ width: 4 }} />
-              <View style={{ flex: 1 }}>
-                <View className="flex-row items-center" style={{ gap: 2 }}>
-                  {Array.from({ length: 36 }).map((_, idx) => {
-                    const progressMs = audioPositionMs;
-                    const totalMs = audioDurationMs || probedDurationMs || ((message.attachment?.durationSec ?? 0) * 1000);
-                    const playedRatio = totalMs > 0 ? progressMs / totalMs : 0;
-                    const activeBar = idx / 36 <= playedRatio;
-                    const barH = 4 + ((idx % 7) * 1.2);
-                    return (
-                      <View
-                        key={`${message.id}-bar-${idx}`}
-                        style={{
-                          width: 2,
-                          height: barH,
-                          borderRadius: 1,
-                          backgroundColor: activeBar ? '#60a5fa' : (mine ? 'rgba(255,255,255,0.35)' : '#67e8f9'),
-                        }}
-                      />
-                    );
-                  })}
-                </View>
-              </View>
-            </View>
-            <View className="mt-1.5 flex-row items-center justify-between">
-              <Text
-                variant="micro"
-                style={{ color: mine ? 'rgba(255,255,255,0.88)' : tk.text.secondary, marginLeft: 95 }}
-              >
-                {formatAudioTime(audioDurationMs || probedDurationMs || ((message.attachment?.durationSec ?? 0) * 1000) || audioPositionMs)}
-              </Text>
-              <View className="flex-row items-center gap-1.5" style={{ marginTop: 10 }}>
-                {isPinned ? (
-                  <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
-                ) : null}
-                {isSaved ? (
-                  <Star size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} fill={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
-                ) : null}
-                {message.time ? (
-                  <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.72)' : tk.text.tertiary }}>
-                    {message.time}
-                  </Text>
-                ) : null}
-                {receiptIcon}
-              </View>
-            </View>
-          </Pressable>
+          <AudioAttachmentCard
+            message={message}
+            mine={mine}
+            bubbleBg={mine ? tk.bubbleOwnBg : tk.bubbleThemBg}
+            textSecondary={tk.text.secondary}
+            textTertiary={tk.text.tertiary}
+            brandGold={tk.brand.gold.primary}
+            isPinned={isPinned}
+            isSaved={isSaved}
+            receiptIcon={receiptIcon}
+            attachmentCardWidth={attachmentCardWidth}
+          />
         ) : null}
 
-        {message.attachment?.kind === 'document' ? (
-          <Pressable
-            onPress={() => onAttachmentPress?.(message)}
-            className="rounded-xl overflow-hidden mb-0"
-            style={{ backgroundColor: mine ? tk.bubbleOwnBg : tk.bubbleThemBg }}
-          >
-            <View
-              className="px-3 py-2 flex-row items-center gap-2"
+        {message.attachment?.kind === 'document' ? (() => {
+          const fileName = message.attachment.fileName ?? 'Documento';
+          const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+          const extLabel = ext.toUpperCase() || 'FILE';
+          const iconBg =
+            ext === 'pdf' ? '#e11d48' :
+            ext === 'doc' || ext === 'docx' ? '#2563eb' :
+            ext === 'xls' || ext === 'xlsx' ? '#16a34a' :
+            ext === 'm4a' || ext === 'mp3' || ext === 'wav' || ext === 'aac' ? '#7c3aed' :
+            '#475569';
+          const actionColor = mine ? '#4ade80' : '#22d3ee';
+          return (
+            <Pressable
+              onPress={() => onAttachmentPress?.(message)}
               style={{
-                width: 330,
-                maxWidth: '100%',
-                minHeight: 58,
                 backgroundColor: mine ? tk.bubbleOwnBg : tk.bubbleThemBg,
-                position: 'relative',
-                paddingRight: 64,
+                borderRadius: 18,
+                paddingHorizontal: 12,
+                paddingTop: 12,
+                paddingBottom: 10,
+                width: attachmentCardWidth,
+                minWidth: 220,
               }}
             >
-              <View className="h-8 w-8 rounded items-center justify-center" style={{ backgroundColor: '#e11d48' }}>
-                <FileText size={16} color="#fff" />
-              </View>
-              <View style={{ flex: 1, minWidth: 0 }}>
-                <Text variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ color: mine ? '#e5e7eb' : tk.text.primary, fontWeight: '700' }}>
-                  {message.attachment.fileName ?? 'Documento.pdf'}
-                </Text>
-                <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.72)' : tk.text.secondary }}>
-                  PDF
-                </Text>
-              </View>
-              <View
-                className="flex-row items-center gap-1.5"
-                style={{ position: 'absolute', right: 12, bottom: 8 }}
-              >
-                {isPinned ? (
-                  <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
-                ) : null}
-                {isSaved ? (
-                  <Star size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} fill={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} />
-                ) : null}
-                {message.time ? (
-                  <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.72)' : tk.text.tertiary }}>
-                    {message.time}
+              {/* Row 1: icon + file info */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 44, height: 44, borderRadius: 11, backgroundColor: iconBg, alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <FileText size={21} color="#fff" />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text variant="caption" numberOfLines={2} ellipsizeMode="middle" style={{ color: mine ? '#f1f5f9' : tk.text.primary, fontWeight: '700', lineHeight: 17 }}>
+                    {fileName}
                   </Text>
-                ) : null}
-                {receiptIcon}
+                  <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.50)' : tk.text.secondary, marginTop: 3, letterSpacing: 0.4 }}>
+                    {extLabel}
+                  </Text>
+                </View>
               </View>
-            </View>
-            <View className="flex-row">
-              <Pressable
-                className="flex-1 py-2 items-center"
-                style={{ borderTopWidth: 1, borderRightWidth: 1, borderColor: mine ? 'rgba(16,185,129,0.45)' : tk.border.primary }}
-                onPress={() => onAttachmentPress?.(message)}
-              >
-                <Text variant="caption" style={{ color: '#22c55e', fontWeight: '700' }}>Abrir</Text>
-              </Pressable>
-              <Pressable
-                className="flex-1 py-2 items-center"
-                style={{ borderTopWidth: 1, borderColor: mine ? 'rgba(16,185,129,0.45)' : tk.border.primary }}
-                onPress={() => onAttachmentDownload?.(message)}
-              >
-                <Text variant="caption" style={{ color: '#22c55e', fontWeight: '700' }}>Baixar</Text>
-              </Pressable>
-            </View>
-          </Pressable>
-        ) : null}
+              {/* Divider */}
+              <View style={{ height: 1, backgroundColor: mine ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.07)', marginTop: 10, marginBottom: 8 }} />
+              {/* Row 2: actions + time/receipt */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', gap: 18 }}>
+                  <Pressable onPress={() => onAttachmentPress?.(message)}>
+                    <Text variant="caption" style={{ color: actionColor, fontWeight: '700' }}>Abrir</Text>
+                  </Pressable>
+                  <Pressable onPress={() => onAttachmentDownload?.(message)}>
+                    <Text variant="caption" style={{ color: actionColor, fontWeight: '700' }}>Baixar</Text>
+                  </Pressable>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  {isPinned ? <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} /> : null}
+                  {isSaved ? <Star size={10} color={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} fill={mine ? 'rgba(255,255,255,0.68)' : tk.brand.gold.primary} /> : null}
+                  {message.time ? (
+                    <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.55)' : tk.text.tertiary, fontSize: 11 }}>
+                      {message.time}
+                    </Text>
+                  ) : null}
+                  {receiptIcon}
+                </View>
+              </View>
+            </Pressable>
+          );
+        })() : null}
 
         {/* Message text */}
         {message.text ? (
@@ -417,9 +474,7 @@ export function MessageBubble({
               className="flex-row items-center justify-end gap-1.5"
               style={{
                 paddingRight: isMediaAttachment ? (mine ? 4 : 10) : 0,
-                paddingBottom: isMediaAttachment && !mine ? 12 : 0,
-                marginTop: isMediaAttachment ? 6 : 4,
-                transform: isMediaAttachment && !mine ? [{ translateY: -6 }] : undefined,
+                marginTop: isMediaAttachment ? 8 : 4,
               }}
             >
               {isPinned ? (
@@ -431,7 +486,7 @@ export function MessageBubble({
               {message.time ? (
                 <Text
                   variant="micro"
-                  style={{ color: mine ? 'rgba(255,255,255,0.55)' : tk.text.tertiary, lineHeight: 14, paddingBottom: isMediaAttachment && !mine ? 2 : 0 }}
+                  style={{ color: mine ? 'rgba(255,255,255,0.55)' : tk.text.tertiary, lineHeight: 14 }}
                 >
                   {message.time}
                 </Text>

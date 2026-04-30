@@ -19,7 +19,7 @@ type ComposerBarProps = {
   onChangeText: (value: string) => void;
   onSend: () => void;
   onAddAttachment: () => void;
-  onPickImage: () => void;
+  onOpenCamera: () => void;
   onOpenEmoji: () => void;
   onCancelReply: () => void;
   onStartRecording: () => void;
@@ -52,7 +52,7 @@ export function ComposerBar({
   onChangeText,
   onSend,
   onAddAttachment,
-  onPickImage,
+  onOpenCamera,
   onOpenEmoji,
   onCancelReply,
   onStartRecording,
@@ -79,7 +79,7 @@ export function ComposerBar({
 
   return (
     <View
-      className="absolute left-0 right-0 bottom-0 border-t"
+      className="border-t"
       style={{
         paddingHorizontal: 10,
         paddingTop: 7,
@@ -265,10 +265,10 @@ export function ComposerBar({
               </Pressable>
 
               <Pressable
-                onPress={onPickImage}
+                onPress={onOpenCamera}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Enviar imagem"
+                accessibilityLabel="Abrir câmera"
                 style={{ paddingHorizontal: 11 }}
               >
                 <Camera size={20} color={tk.placeholderColor} strokeWidth={1.8} />

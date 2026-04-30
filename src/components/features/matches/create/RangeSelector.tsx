@@ -15,9 +15,31 @@ export function RangeSelector({ min, max, minPercent, maxPercent }: RangeSelecto
   const matchTheme = useMatchTheme();
   return (
     <View>
-      <View className="flex-row justify-between items-center px-[2px]">
-        <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>Min <Text variant="number" className="text-[18px]" style={{ color: matchTheme.colors.fgPrimary }}>{min}</Text></Text>
-        <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>Max <Text variant="number" className="text-[18px]" style={{ color: matchTheme.colors.fgPrimary }}>{max}</Text></Text>
+      <View className="flex-row items-center px-[2px]">
+        <View className="flex-1 min-w-0 flex-row items-center gap-1.5">
+          <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
+            Min
+          </Text>
+          <Text
+            variant="title"
+            numberOfLines={1}
+            style={{ color: matchTheme.colors.fgPrimary, fontSize: 20, lineHeight: 24 }}
+          >
+            {min}
+          </Text>
+        </View>
+        <View className="flex-1 min-w-0 flex-row items-center justify-end gap-1.5">
+          <Text
+            variant="title"
+            numberOfLines={1}
+            style={{ color: matchTheme.colors.fgPrimary, fontSize: 20, lineHeight: 24 }}
+          >
+            {max}
+          </Text>
+          <Text variant="caption" style={{ color: matchTheme.colors.fgSecondary }}>
+            Max
+          </Text>
+        </View>
       </View>
 
       <View className="h-[6px] rounded-full mt-3 mb-2 relative overflow-visible" style={{ backgroundColor: matchTheme.colors.lineStrong }}>

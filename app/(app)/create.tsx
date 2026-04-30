@@ -10,7 +10,6 @@ import {
   RangeSelector,
   SectionTitle,
   SegmentedControl,
-  StatBadge,
   StepIndicator,
   ToggleRow,
   useMatchTheme,
@@ -408,19 +407,6 @@ export default function CreateMatchScreen() {
           >
             <SectionTitle title={t('title')} />
 
-            <Text variant="micro" className="uppercase tracking-[2px] mt-2" style={{ color: matchTheme.colors.fgMuted }}>
-              {t('form.gameLevel')}
-            </Text>
-            <View className="flex-row flex-wrap gap-2 mt-2">
-              {MIN_LEVEL_OPTIONS.map((level) => (
-                <StatBadge
-                  key={`game-level-${level.value}`}
-                  label={t(`form.levelOptions.${level.value}`)}
-                  tone={acceptedLevels.includes(level.value) ? 'active' : 'neutral'}
-                />
-              ))}
-            </View>
-
               <View className="flex-row gap-2 mt-4">
                 <View className="flex-1">
                   <Input
@@ -448,7 +434,9 @@ export default function CreateMatchScreen() {
               <Text variant="micro" className="uppercase tracking-[2px]" style={{ color: matchTheme.colors.fgMuted }}>
                 {t('form.ageRestrictions')}
               </Text>
-              <RangeSelector min={16} max={80} minPercent={8} maxPercent={72} />
+              <View style={{ marginTop: 4 }}>
+                <RangeSelector min={16} max={80} minPercent={8} maxPercent={72} />
+              </View>
               <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
                 {t('form.ageRestrictionsHint')}
               </Text>
@@ -691,11 +679,6 @@ export default function CreateMatchScreen() {
     </Screen>
   );
 }
-
-
-
-
-
 
 
 

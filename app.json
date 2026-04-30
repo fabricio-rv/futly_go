@@ -24,7 +24,8 @@
         "NSCameraUsageDescription": "Precisamos de acesso à câmera para tirar fotos e gravar vídeos no chat.",
         "NSPhotoLibraryUsageDescription": "Precisamos de acesso à galeria para enviar fotos e vídeos no chat.",
         "NSPhotoLibraryAddUsageDescription": "Precisamos de acesso para salvar mídias compartilhadas no chat.",
-        "NSMicrophoneUsageDescription": "Precisamos de acesso ao microfone para gravar áudios no chat."
+        "NSMicrophoneUsageDescription": "Precisamos de acesso ao microfone para gravar áudios no chat.",
+        "UIBackgroundModes": ["audio"]
       },
       "supportsTablet": true
     },
@@ -37,15 +38,6 @@
         "READ_MEDIA_VIDEO",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "CAMERA",
-        "RECORD_AUDIO",
-        "READ_MEDIA_IMAGES",
-        "READ_MEDIA_VIDEO",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "adaptiveIcon": {

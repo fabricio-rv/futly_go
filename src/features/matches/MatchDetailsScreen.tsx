@@ -2,7 +2,8 @@ import { Share2, MapPin, Phone, Clock, Users } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Alert, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { showLocation } from 'react-native-map-link';
 
 import {
   MatchBackground,
@@ -161,18 +162,20 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     });
   }, [details, pendingPositionKeys]);
 
-  const locationQuery = useMemo(() => {
-    if (!details) return '';
-    const locationParts = [
-      details.match.address,
-      details.match.district,
-      details.match.city,
-      details.match.state,
-      details.match.cep,
-      'Brasil',
-    ].filter(Boolean);
-    return locationParts.join(', ');
+  const mapGeocodeQueries = useMemo(() => {
+    if (!details) return [] as string[];
+    const build = (parts: Array<string | null | undefined>) => parts.filter(Boolean).join(', ');
+    const queries = [
+      build([details.match.address, details.match.district, details.match.city, details.match.state, details.match.cep, 'Brasil']),
+      build([details.match.address, details.match.city, details.match.state, 'Brasil']),
+      build([details.match.district, details.match.city, details.match.state, 'Brasil']),
+      build([details.match.venue_name, details.match.city, details.match.state, 'Brasil']),
+      build([details.match.city, details.match.state, 'Brasil']),
+    ].filter((q) => q.length > 0);
+    return Array.from(new Set(queries));
   }, [details]);
+
+  const locationQuery = mapGeocodeQueries[0] ?? '';
 
   const mapEmbedUrl = useMemo(() => {
     if (!locationQuery) return null;
@@ -182,45 +185,61 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   useEffect(() => {
     let cancelled = false;
 
+    const fetchJson = async <T,>(url: string, source: string): Promise<T> => {
+      const response = await fetch(url, {
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) {
+        throw new Error(`${source} HTTP ${response.status}`);
+      }
+      const payload = await response.json();
+      return payload as T;
+    };
+
     async function loadMapPreview() {
-      if (!locationQuery) {
+      if (mapGeocodeQueries.length === 0) {
         setMapPreviewUrls([]);
         setMapCoordinates(null);
         return;
       }
 
       try {
-        const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(locationQuery)}`;
-        let response = await fetch(geocodeUrl, {
-          headers: {
-            Accept: 'application/json',
-            'User-Agent': 'FutlyGo/1.0 (mobile app geocoding)',
-          },
-        });
-        let payload = (await response.json()) as Array<{ lat?: string; lon?: string }>;
-        if (!Array.isArray(payload) || payload.length === 0) {
-          const fallbackUrl = `https://geocode.maps.co/search?q=${encodeURIComponent(locationQuery)}`;
-          response = await fetch(fallbackUrl, {
-            headers: {
-              Accept: 'application/json',
-              'User-Agent': 'FutlyGo/1.0 (mobile app geocoding)',
-            },
-          });
-          payload = (await response.json()) as Array<{ lat?: string; lon?: string }>;
-        }
-        const first = payload?.[0];
+        let lat: number | null = null;
+        let lon: number | null = null;
 
-        if (!first?.lat || !first?.lon) {
-          if (!cancelled) {
-            setMapPreviewUrls([]);
-            setMapCoordinates(null);
-          }
-          return;
+        for (const query of mapGeocodeQueries) {
+          try {
+            const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`;
+            const nominatimPayload = await fetchJson<Array<{ lat?: string; lon?: string }>>(nominatimUrl, 'nominatim');
+            const first = nominatimPayload?.[0];
+            if (first?.lat && first?.lon) {
+              const parsedLat = Number(first.lat);
+              const parsedLon = Number(first.lon);
+              if (Number.isFinite(parsedLat) && Number.isFinite(parsedLon)) {
+                lat = parsedLat;
+                lon = parsedLon;
+                break;
+              }
+            }
+          } catch {}
+
+          try {
+            const openMeteoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=pt&format=json`;
+            const openMeteoPayload = await fetchJson<{ results?: Array<{ latitude?: number; longitude?: number }> }>(openMeteoUrl, 'open-meteo');
+            const first = openMeteoPayload?.results?.[0];
+            if (first?.latitude != null && first?.longitude != null) {
+              const parsedLat = Number(first.latitude);
+              const parsedLon = Number(first.longitude);
+              if (Number.isFinite(parsedLat) && Number.isFinite(parsedLon)) {
+                lat = parsedLat;
+                lon = parsedLon;
+                break;
+              }
+            }
+          } catch {}
         }
 
-        const lat = Number(first.lat);
-        const lon = Number(first.lon);
-        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        if (lat == null || lon == null) {
           if (!cancelled) {
             setMapPreviewUrls([]);
             setMapCoordinates(null);
@@ -255,7 +274,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [locationQuery]);
+  }, [mapGeocodeQueries]);
 
   async function handleJoin() {
     if (!details || !selectedSlot) return;
@@ -300,15 +319,22 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
 
   async function handleOpenRoute() {
     if (!locationQuery) return;
-    const routeUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationQuery)}`;
-    const canOpen = await Linking.canOpenURL(routeUrl);
-    if (canOpen) {
-      await Linking.openURL(routeUrl);
-      return;
+    try {
+      await showLocation({
+        latitude: mapCoordinates?.latitude ?? undefined,
+        longitude: mapCoordinates?.longitude ?? undefined,
+        address: locationQuery,
+        title: details?.match.venue_name ?? 'Local da partida',
+        dialogTitle: 'Abrir com',
+        dialogMessage: 'Escolha o app de mapa',
+        cancelText: 'Cancelar',
+        appsWhiteList: ['apple-maps', 'google-maps', 'waze'],
+        alwaysIncludeGoogle: true,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      Alert.alert(t('common.error'), `Não foi possível abrir rota: ${message}`);
     }
-
-    const fallback = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationQuery)}`;
-    await Linking.openURL(fallback);
   }
 
   if (!details) {

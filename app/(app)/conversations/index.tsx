@@ -2,8 +2,8 @@
 import { router } from 'expo-router';
 import { Camera, Clock3, MessageCircle, Plus, Search, UserPlus, Users, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Alert, Image, Modal, Pressable, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Image, Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 
 import {
@@ -44,6 +44,8 @@ export default function ConversationsListScreen() {
   const { t } = useTranslation('chat');
   const { filter, setFilter, loading, error, summary, visibleActive, visibleArchived, refresh } = useChatList();
   const theme = useAppColorScheme();
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const [searchQuery, setSearchQuery] = useState('');
   const [createMenuVisible, setCreateMenuVisible] = useState(false);
   const [createMode, setCreateMode] = useState<CreateMode | null>(null);
@@ -227,8 +229,8 @@ export default function ConversationsListScreen() {
                     onPress={() => setFilter('todas')}
                   />
                   <Pill size="sm" label={`${t('filters.active', 'Ativas')} ${summary.activeCount}`} tone={filter === 'ativas' ? 'active' : 'default'} onPress={() => setFilter('ativas')} />
-                  <Pill size="sm" label={`HOST ${summary.hostCount}`} tone={filter === 'host' ? 'active' : 'default'} onPress={() => setFilter('host')} />
-                  <Pill size="sm" label={`JOGADOR ${summary.playerCount}`} tone={filter === 'jogador' ? 'active' : 'default'} onPress={() => setFilter('jogador')} />
+                  <Pill size="sm" label={`Host ${summary.hostCount}`} tone={filter === 'host' ? 'active' : 'default'} onPress={() => setFilter('host')} />
+                  <Pill size="sm" label={`Jogador ${summary.playerCount}`} tone={filter === 'jogador' ? 'active' : 'default'} onPress={() => setFilter('jogador')} />
                   <Pill size="sm" label={`${t('filters.archived', 'Arquivadas')} ${summary.archivedCount}`} tone={filter === 'arquivadas' ? 'active' : 'default'} onPress={() => setFilter('arquivadas')} />
                 </ScrollView>
               )}
@@ -265,7 +267,7 @@ export default function ConversationsListScreen() {
               }}
             >
               <Clock3 size={12} color={isLight ? '#1A8F57' : '#86E5B4'} strokeWidth={2.2} />
-              <Text variant="micro" className="text-[#1F2937] dark:text-fg2">
+              <Text variant="micro" className="text-[#1F2937] dark:text-fg2" style={{ flex: 1, flexShrink: 1 }}>
                 {t('list.linkedToMatchHint', 'Cada conversa e vinculada a uma ')}
                 <Text variant="micro" className="text-[#1A8F57] dark:text-[#86E5B4] font-bold">{t('list.scheduledMatch', 'partida marcada')}</Text>
                 {t('list.autoArchiveHint', '. Auto-arquiva 7 dias apos o jogo.')}
@@ -318,27 +320,38 @@ export default function ConversationsListScreen() {
 
       <Modal visible={createMenuVisible} transparent animationType="fade" onRequestClose={() => setCreateMenuVisible(false)}>
         <Pressable className="flex-1" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }} onPress={() => setCreateMenuVisible(false)}>
-          <Pressable
-            className="absolute right-4 top-14 rounded-2xl border py-2 overflow-hidden"
+          <View
+            pointerEvents="box-none"
             style={{
-              width: 220,
-              backgroundColor: isLight ? '#FFFFFF' : '#1F1F1F',
-              borderColor: isLight ? '#E2E8F0' : 'rgba(255,255,255,0.10)',
-              shadowColor: '#000',
-              shadowOpacity: 0.25,
-              shadowRadius: 14,
-              elevation: 14,
+              position: 'absolute',
+              top: insets.top + 50,
+              left: 16,
+              right: 16,
+              alignItems: 'flex-end',
             }}
           >
-            <Pressable className="px-4 py-3 flex-row items-center gap-3" onPress={() => openCreateModal('private')}>
-              <MessageCircle size={18} color={isLight ? '#334155' : '#E5E7EB'} />
-              <Text variant="caption" className="font-semibold text-fg1">Nova conversa</Text>
+            <Pressable
+              className="rounded-2xl border py-2 overflow-hidden"
+              style={{
+                width: Math.min(220, screenWidth - 32),
+                backgroundColor: isLight ? '#FFFFFF' : '#0C111E',
+                borderColor: isLight ? '#D1DCEB' : 'rgba(255,255,255,0.12)',
+                shadowColor: '#000',
+                shadowOpacity: 0.25,
+                shadowRadius: 14,
+                elevation: 14,
+              }}
+            >
+              <Pressable className="px-4 py-3 flex-row items-center gap-3" onPress={() => openCreateModal('private')}>
+                <MessageCircle size={18} color={isLight ? '#334155' : '#A5B4C8'} />
+                <Text variant="caption" className="font-semibold text-fg1">Nova conversa</Text>
+              </Pressable>
+              <Pressable className="px-4 py-3 flex-row items-center gap-3" onPress={() => openCreateModal('group')}>
+                <Users size={18} color={isLight ? '#334155' : '#A5B4C8'} />
+                <Text variant="caption" className="font-semibold text-fg1">Novo grupo</Text>
+              </Pressable>
             </Pressable>
-            <Pressable className="px-4 py-3 flex-row items-center gap-3" onPress={() => openCreateModal('group')}>
-              <Users size={18} color={isLight ? '#334155' : '#E5E7EB'} />
-              <Text variant="caption" className="font-semibold text-fg1">Novo grupo</Text>
-            </Pressable>
-          </Pressable>
+          </View>
         </Pressable>
       </Modal>
 
