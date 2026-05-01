@@ -221,7 +221,7 @@ export const ptBRMatches = {
     placeholder: 'Buscar local, time, organizador...'
   },
   hub: {
-    title: 'Hub de Partidas',
+    title: 'Futly Go',
     subtitleDefault: 'Quinta - Porto Alegre',
     openConversations: 'Abrir conversas'
   },

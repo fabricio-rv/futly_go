@@ -223,7 +223,7 @@ export const esESMatches = {
     placeholder: 'Buscar por lugar, equipo u organizador...'
   },
   hub: {
-    title: 'Hub de Partidos',
+    title: 'Futly Go',
     subtitleDefault: 'Jueves - Porto Alegre',
     openConversations: 'Abrir conversaciones'
   },

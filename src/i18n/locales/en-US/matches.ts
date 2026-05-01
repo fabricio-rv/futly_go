@@ -223,7 +223,7 @@ export const enUSMatches = {
     placeholder: 'Search by location, team, organizer...'
   },
   hub: {
-    title: 'Match Hub',
+    title: 'Futly Go',
     subtitleDefault: 'Thursday - Porto Alegre',
     openConversations: 'Open conversations'
   },

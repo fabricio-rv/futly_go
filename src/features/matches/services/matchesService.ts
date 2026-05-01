@@ -772,8 +772,7 @@ export async function submitMatchRating(params: {
   comment?: string | null;
 }) {
   const reviewerId = await getCurrentUserId();
-
-  const { error } = await supabase.from("ratings").insert({
+  const payload = {
     match_id: params.matchId,
     reviewer_id: reviewerId,
     reviewed_id: params.reviewedId,
@@ -782,11 +781,70 @@ export async function submitMatchRating(params: {
     tags: [],
     comment: params.comment ?? null,
     anonymous: false,
-  });
+  };
 
-  if (error) {
-    throw new Error(error.message || "Não foi possível salvar a avaliação.");
+  const { data: existingRating, error: existingError } = await supabase
+    .from("ratings")
+    .select("id")
+    .eq("match_id", params.matchId)
+    .eq("reviewer_id", reviewerId)
+    .eq("reviewed_id", params.reviewedId)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(
+      existingError.message || "Não foi possível verificar avaliação existente.",
+    );
   }
+
+  if (existingRating?.id) {
+    const { error: updateError } = await supabase
+      .from("ratings")
+      .update({
+        target_role: params.targetRole,
+        score: params.score,
+        tags: [],
+        comment: params.comment ?? null,
+        anonymous: false,
+      })
+      .eq("id", existingRating.id)
+      .eq("reviewer_id", reviewerId);
+
+    if (updateError) {
+      throw new Error(
+        updateError.message || "Não foi possível atualizar a avaliação.",
+      );
+    }
+    return;
+  }
+
+  const { error } = await supabase.from("ratings").insert(payload);
+
+  if (!error) return;
+
+  if (error.code === "23505") {
+    const { error: updateAfterDuplicateError } = await supabase
+      .from("ratings")
+      .update({
+        target_role: params.targetRole,
+        score: params.score,
+        tags: [],
+        comment: params.comment ?? null,
+        anonymous: false,
+      })
+      .eq("match_id", params.matchId)
+      .eq("reviewer_id", reviewerId)
+      .eq("reviewed_id", params.reviewedId);
+
+    if (!updateAfterDuplicateError) return;
+
+    throw new Error(
+      updateAfterDuplicateError.message ||
+        "Não foi possível atualizar a avaliação.",
+    );
+  }
+
+  throw new Error(error.message || "Não foi possível salvar a avaliação.");
 }
 
 export async function getUserAgenda(): Promise<AgendaResult> {

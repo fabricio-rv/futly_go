@@ -53,23 +53,27 @@ type CreateMatchStep2Props = {
 function MinLevelCheckbox({
   label,
   selected,
+  disabled,
   onPress,
   matchTheme,
 }: {
   label: string;
   selected: boolean;
+  disabled: boolean;
   onPress: () => void;
   matchTheme: ReturnType<typeof useMatchTheme>;
 }) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       className="w-[48.5%] rounded-[14px] border px-[12px] py-[10px] flex-row items-center gap-2"
       style={{
         backgroundColor: matchTheme.colors.bgSurfaceB,
         borderColor: selected
           ? matchTheme.colors.ok
           : matchTheme.colors.lineStrong,
+        opacity: disabled ? 0.5 : 1,
       }}
     >
       <View
@@ -117,6 +121,8 @@ export function CreateMatchStep2({
   onToggleReferee,
   onToggleLevel,
 }: CreateMatchStep2Props) {
+  const hasReachedLevelLimit = acceptedLevels.length >= 2;
+
   return (
     <View className="gap-[14px]">
       <Card
@@ -167,7 +173,7 @@ export function CreateMatchStep2({
           </Text>
           <View style={{ marginTop: 4 }}>
             <RangeSelector
-              minLimit={16}
+              minLimit={14}
               maxLimit={80}
               min={minAge}
               max={maxAge}
@@ -175,7 +181,10 @@ export function CreateMatchStep2({
               onDragStateChange={onAgeDragStateChange}
             />
           </View>
-          <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+          <Text
+            variant="caption"
+            style={{ color: matchTheme.colors.fgMuted, marginTop: 4 }}
+          >
             {labels.ageRestrictionsHint}
           </Text>
         </View>
@@ -210,6 +219,7 @@ export function CreateMatchStep2({
                 key={level.value}
                 label={labels.levelOptionLabel(level.value)}
                 selected={acceptedLevels.includes(level.value)}
+                disabled={hasReachedLevelLimit && !acceptedLevels.includes(level.value)}
                 onPress={() => onToggleLevel(level.value)}
                 matchTheme={matchTheme}
               />

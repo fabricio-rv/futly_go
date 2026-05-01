@@ -7,7 +7,7 @@ export const ptPTLegal = {
   updated: 'Atualizado em 15/04/26',
   sections: {
     acceptance: '1. Aceitação dos Termos',
-    acceptanceText: 'Ao acessar e usar o Futly Hub de Partidas...',
+    acceptanceText: 'Ao acessar e usar o Futly Go...',
     service: '2. Descrição do Serviço',
     responsibility: '3. Responsabilidade do Usuário',
     conduct: '4. Regras de Conduta',

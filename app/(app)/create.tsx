@@ -57,6 +57,7 @@ const TURNO_OPTIONS = [
 
 type CreateStep = "1" | "2" | "3";
 type TurnoValue = (typeof TURNO_OPTIONS)[number]["value"] | "";
+type SelectedPositionsByMode = Record<PitchMode, number[]>;
 
 function formatDateField(value: Date) {
   const day = String(value.getDate()).padStart(2, "0");
@@ -100,9 +101,12 @@ export default function CreateMatchScreen() {
   const [restBreak, setRestBreak] = useState(false);
   const [referee, setReferee] = useState(false);
   const [description, setDescription] = useState("");
-  const [selectedPositionIndexes, setSelectedPositionIndexes] = useState<
-    number[]
-  >([]);
+  const [selectedPositionIndexesByMode, setSelectedPositionIndexesByMode] =
+    useState<SelectedPositionsByMode>({
+      futsal: [],
+      society: [],
+      campo: [],
+    });
 
   const [stateCode, setStateCode] = useState("");
   const [city, setCity] = useState("");
@@ -135,7 +139,7 @@ export default function CreateMatchScreen() {
   const [turno, setTurno] = useState<TurnoValue>("");
   const [pricePerPerson, setPricePerPerson] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("");
-  const [minAge, setMinAge] = useState(16);
+  const [minAge, setMinAge] = useState(14);
   const [maxAge, setMaxAge] = useState(80);
   const [activeStep, setActiveStep] = useState<CreateStep>("1");
   const [isDraggingAgeRange, setIsDraggingAgeRange] = useState(false);
@@ -152,16 +156,24 @@ export default function CreateMatchScreen() {
     setAcceptedLevels((prev) =>
       prev.includes(value)
         ? prev.filter((item) => item !== value)
-        : [...prev, value],
+        : prev.length >= 2
+          ? prev
+          : [...prev, value],
     );
   };
 
   const togglePosition = (index: number) => {
-    setSelectedPositionIndexes((prev) =>
-      prev.includes(index)
-        ? prev.filter((item) => item !== index)
-        : [...prev, index].sort((a, b) => a - b),
-    );
+    setSelectedPositionIndexesByMode((prev) => {
+      const current = prev[mode];
+      const nextForMode = current.includes(index)
+        ? current.filter((item) => item !== index)
+        : [...current, index].sort((a, b) => a - b);
+
+      return {
+        ...prev,
+        [mode]: nextForMode,
+      };
+    });
   };
 
   const goToStep = (step: CreateStep) => setActiveStep(step);
@@ -186,8 +198,54 @@ export default function CreateMatchScreen() {
     setDurationMinutes(value.replace(/[^\d]/g, ""));
   };
 
+  const selectedPositionIndexes = selectedPositionIndexesByMode[mode];
+
+  function validateRequiredFields(): string[] {
+    const missing: string[] = [];
+
+    if (!hasSelectedDate) missing.push(t("filters.date", "Data"));
+    if (!hasSelectedTime) missing.push(t("filters.time", "Horário"));
+    if (!turno) missing.push(t("filters.shift", "Turno"));
+
+    if (!venueName.trim()) missing.push(t("form.venueName"));
+    if (!contactPhone.trim()) missing.push(t("form.contactPhone"));
+    if (!cep.trim()) missing.push(t("form.cep"));
+    if (!district.trim()) missing.push(t("form.district"));
+    if (!stateCode.trim()) missing.push(t("form.state"));
+    if (!city.trim()) missing.push(t("form.city"));
+    if (!address.trim()) missing.push(t("form.address"));
+
+    if (!pricePerPerson.trim() || Number(pricePerPerson) <= 0) {
+      missing.push(t("form.pricePerPerson"));
+    }
+
+    if (!durationMinutes.trim() || Number(durationMinutes) <= 0) {
+      missing.push(t("form.durationMinutes"));
+    }
+
+    if (acceptedLevels.length === 0) {
+      missing.push(t("form.minimumLevelsAccepted"));
+    }
+
+    if (selectedPositionIndexes.length === 0) {
+      missing.push(t("form.positionsHint"));
+    }
+
+    return missing;
+  }
+
   async function handleCreateMatch(status: "publicada" | "rascunho") {
     if (creatingRef.current) return;
+
+    const missingFields = validateRequiredFields();
+    if (missingFields.length > 0) {
+      Alert.alert(
+        t("form.createFailedTitle"),
+        `Preencha os campos obrigatórios:\n\n• ${missingFields.join("\n• ")}`,
+      );
+      return;
+    }
+
     creatingRef.current = true;
 
     try {
@@ -213,7 +271,7 @@ export default function CreateMatchScreen() {
         city: city.trim() || null,
         state: stateCode.trim() || null,
         address: address.trim() || null,
-        selectedPositionIndexes,
+        selectedPositionIndexes: selectedPositionIndexesByMode[mode],
         status,
         facilities: [
           { label: t("form.facilityLockerRoom"), selected: true },
@@ -255,7 +313,7 @@ export default function CreateMatchScreen() {
   const dayNumbers = Array.from({ length: monthDays }, (_, idx) => idx + 1);
   const pitchWidth = Math.min(300, Math.max(248, screenWidth - 120));
   const pitchOffsetTop = 0;
-  const minAgeFloor = 16;
+  const minAgeFloor = 14;
   const maxAgeCeil = 80;
 
   return (

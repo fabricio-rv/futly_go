@@ -15,6 +15,7 @@ type ConversationHeaderProps = {
   isTyping?: boolean;
   showPresenceDot?: boolean;
   onBack: () => void;
+  onOpenInfo?: () => void;
 };
 
 export function ConversationHeader({
@@ -25,6 +26,7 @@ export function ConversationHeader({
   isTyping = false,
   showPresenceDot = true,
   onBack,
+  onOpenInfo,
 }: ConversationHeaderProps) {
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
@@ -51,7 +53,7 @@ export function ConversationHeader({
           <ChevronLeft size={22} color={tk.icon.primary} />
         </Pressable>
 
-        <View className="flex-1 flex-row items-center gap-2">
+        <Pressable className="flex-1 flex-row items-center gap-2" onPress={onOpenInfo} disabled={!onOpenInfo}>
           <View>
             <LinearGradient
               colors={['#0F3A24', '#072314']}
@@ -84,7 +86,7 @@ export function ConversationHeader({
               {subtitle}
             </Text>
           </View>
-        </View>
+        </Pressable>
       </View>
     </View>
   );

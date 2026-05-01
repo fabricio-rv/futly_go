@@ -81,6 +81,24 @@ export type ChatProfileSearchResult = {
   avatar_url: string | null;
 };
 
+export type ConversationInfoData = {
+  id: string;
+  type: 'group' | 'private';
+  title: string;
+  avatarUrl: string | null;
+  description: string | null;
+  partnerId: string | null;
+  partnerPhone: string | null;
+  mediaCount: number;
+  videoCount: number;
+  audioCount: number;
+  sentCount: number;
+  starredCount: number;
+  pinnedCount: number;
+  notificationsEnabled: boolean;
+  membersCount: number;
+};
+
 export type MessageReceiptStatus = {
   delivered_at: string | null;
   read_at: string | null;
@@ -1064,6 +1082,118 @@ export async function createPrivateConversation(otherUserId: string, initialMess
   }
 
   return data as string;
+}
+
+export async function fetchConversationInfo(conversationId: string): Promise<ConversationInfoData> {
+  const me = await getCurrentProfileId();
+  const { data: conversation, error } = await (supabase as any)
+    .from('conversations')
+    .select('id,type,group_name,group_description,group_avatar_url,match_id')
+    .eq('id', conversationId)
+    .single();
+  if (error || !conversation) throw new Error(errorMessage('Nao foi possivel carregar info da conversa.', error));
+  let matchInfo: { title: string | null; description: string | null } | null = null;
+  if (conversation.match_id) {
+    const { data } = await (supabase as any)
+      .from('matches')
+      .select('title,description')
+      .eq('id', conversation.match_id)
+      .maybeSingle();
+    matchInfo = data ?? null;
+  }
+
+  const { data: participants } = await (supabase as any)
+    .from('conversation_participants')
+    .select('user_id')
+    .eq('conversation_id', conversationId);
+  const membersCount = (participants ?? []).length;
+  const partnerId = conversation.type === 'private'
+    ? ((participants ?? []).find((p: any) => p.user_id !== me)?.user_id ?? null)
+    : null;
+
+  let partnerProfile: any = null;
+  if (partnerId) {
+    const { data } = await (supabase as any).from('profiles').select('id,full_name,phone,avatar_url').eq('id', partnerId).maybeSingle();
+    partnerProfile = data ?? null;
+  }
+
+  const { data: messages } = await (supabase as any)
+    .from('messages')
+    .select('id,sender_id,metadata')
+    .eq('conversation_id', conversationId);
+  const rows = messages ?? [];
+  const messageIds = rows.map((row: any) => row.id);
+  const mySentCount = rows.filter((row: any) => row.sender_id === me).length;
+  const mediaCount = rows.filter((row: any) => String(row.metadata?.attachment_kind ?? '') === 'image').length;
+  const videoCount = rows.filter((row: any) => String(row.metadata?.attachment_kind ?? '') === 'video').length;
+  const audioCount = rows.filter((row: any) => String(row.metadata?.attachment_kind ?? '') === 'audio').length;
+
+  const { count: pinnedCount } = await (supabase as any)
+    .from('pinned_messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('conversation_id', conversationId);
+  const { count: starredCount } = await (supabase as any)
+    .from('saved_messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('profile_id', me)
+    .in('message_id', messageIds.length > 0 ? messageIds : ['00000000-0000-0000-0000-000000000000']);
+
+  const { data: setting } = await (supabase as any)
+    .from('chat_conversation_notification_settings')
+    .select('notifications_enabled')
+    .eq('conversation_id', conversationId)
+    .eq('profile_id', me)
+    .maybeSingle();
+
+  return {
+    id: conversation.id,
+    type: conversation.type,
+    title: conversation.type === 'private'
+      ? (partnerProfile?.full_name ?? 'Atleta')
+      : (conversation.group_name ?? matchInfo?.title ?? 'Grupo'),
+    avatarUrl: conversation.type === 'private' ? (partnerProfile?.avatar_url ?? null) : (conversation.group_avatar_url ?? null),
+    description: conversation.group_description ?? matchInfo?.description ?? null,
+    partnerId,
+    partnerPhone: partnerProfile?.phone ?? null,
+    mediaCount,
+    videoCount,
+    audioCount,
+    sentCount: mySentCount,
+    starredCount: Number(starredCount ?? 0),
+    pinnedCount: Number(pinnedCount ?? 0),
+    notificationsEnabled: setting?.notifications_enabled ?? true,
+    membersCount,
+  };
+}
+
+export async function setConversationNotificationsEnabled(conversationId: string, enabled: boolean) {
+  const me = await getCurrentProfileId();
+  const { error } = await (supabase as any)
+    .from('chat_conversation_notification_settings')
+    .upsert({
+      conversation_id: conversationId,
+      profile_id: me,
+      notifications_enabled: enabled,
+    }, { onConflict: 'conversation_id,profile_id' });
+  if (error) throw new Error(errorMessage('Nao foi possivel atualizar notificacoes.', error));
+}
+
+export async function fetchGroupsInCommon(otherProfileId: string) {
+  const me = await getCurrentProfileId();
+  const { data, error } = await (supabase as any)
+    .rpc('get_groups_in_common_with_profile', { p_other_profile_id: otherProfileId, p_me: me });
+  if (error) throw new Error(errorMessage('Nao foi possivel carregar grupos em comum.', error));
+  return (data ?? []) as Array<{ conversation_id: string; group_name: string; members_count: number }>;
+}
+
+export async function updateGroupInfo(input: { conversationId: string; name: string; description?: string | null; avatarUrl?: string | null }) {
+  const { error } = await (supabase as any).rpc('update_group_info', {
+    p_conversation_id: input.conversationId,
+    p_name: input.name,
+    p_description: input.description ?? null,
+    p_avatar_url: input.avatarUrl ?? null,
+  });
+  if (error) throw new Error(errorMessage('Nao foi possivel atualizar grupo.', error));
 }
 
 export async function createCustomGroupConversation(input: {

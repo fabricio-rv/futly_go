@@ -32,7 +32,13 @@ export const ptBRNotifications = {
   requests: {
     accepted: 'Solicitação aceita!',
     rejected: 'Solicitação recusada.',
-    processError: 'Não foi possível processar a solicitação.'
+    processError: 'Não foi possível processar a solicitação.',
+    acceptedTitle: 'Solicitação aprovada',
+    rejectedTitle: 'Solicitação recusada',
+    acceptedByYouInMatch: 'Você aceitou esta solicitação na sua partida.',
+    rejectedByYouInMatch: 'Você recusou esta solicitação na sua partida.',
+    acceptedForRequester: 'Sua solicitação foi aceita na partida.',
+    rejectedForRequester: 'Sua solicitação foi recusada na partida.'
   },
   rating: {
     sent: 'Avaliação enviada!',
@@ -57,16 +63,16 @@ export const ptBRNotifications = {
     title: 'Ações recentes',
     empty: 'Sem ações recentes.'
   },
-  newParticipationRequest: 'Nova solicitação de participação',
+  newParticipationRequest: 'Nova Solicitação de Participação',
   requestedToJoin: 'solicitou participar de',
-  evaluationAvailable: 'Avaliação disponível',
+  evaluationAvailable: 'Avaliação Disponível',
   actionTypes: {
-    ratePlayer: 'Avaliar jogador',
-    rateHost: 'Avaliar host',
-    ratingSent: 'Avaliação enviada',
-    matchCreated: 'Partida criada',
-    participationConfirmed: 'Participação confirmada',
-    ratingPending: 'Avaliação pendente'
+    ratePlayer: 'Avaliar Jogador',
+    rateHost: 'Avaliar Host',
+    ratingSent: 'Avaliação Enviada',
+    matchCreated: 'Partida Criada',
+    participationConfirmed: 'Participação Confirmada',
+    ratingPending: 'Avaliação Pendente'
   },
   requestStatus: {
     sent: 'Solicitação enviada',
@@ -77,3 +83,4 @@ export const ptBRNotifications = {
     rejectedByYou: 'Solicitação recusada por você'
   }
 };
+

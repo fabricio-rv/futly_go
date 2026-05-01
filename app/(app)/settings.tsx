@@ -264,7 +264,7 @@ export default function SettingsScreen() {
 
 				<View className="items-center px-4 pt-7 pb-5">
 					<Text variant="micro" className="text-[#4B5563] dark:text-fg4 text-center uppercase tracking-[1.8px] leading-[16px]">
-						HUB DE PARTIDAS
+						Futly Go
 						{'\n'}v 1.4.2 - Build 240425
 					</Text>
 				</View>

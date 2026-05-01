@@ -15,8 +15,8 @@ export function DateTimeField({ label, value, placeholder, onPress }: DateTimeFi
 
   return (
     <Pressable onPress={onPress}>
-      <Text variant="label" className="mb-2" style={{ color: matchTheme.colors.fgSecondary }}>{label}</Text>
-      <View className="h-12 rounded-[28px] border px-3 justify-center" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
+      <Text variant="label" className="mb-2.5 font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>{label}</Text>
+      <View className="h-14 rounded-[28px] border-[0.5px] px-4 justify-center" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
         <Text variant="body" style={{ color: value ? matchTheme.colors.fgPrimary : matchTheme.colors.fgMuted }}>{value || placeholder}</Text>
       </View>
     </Pressable>

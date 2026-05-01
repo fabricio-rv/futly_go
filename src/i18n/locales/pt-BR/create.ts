@@ -30,7 +30,7 @@ export const ptBRCreate = {
     gameLevel: "Nível do Jogo",
     facilities: "Facilidades",
     ageRestrictions: "Restrições de idade",
-    ageRestrictionsHint: "Apenas atletas entre 16 e 80 anos podem se inscrever",
+    ageRestrictionsHint: "Apenas atletas entre 14 e 80 anos podem se inscrever",
     minimumLevelsAccepted: "Níveis Mínimos Aceitos",
     positionsHint: "Toque para abrir / bloquear vagas",
     hostPosition: "Você (Host) - Goleiro",

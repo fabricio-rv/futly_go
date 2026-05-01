@@ -25,7 +25,7 @@ export function StoreHero() {
   return (
     <View className={`mx-[18px] mb-[14px] rounded-[20px] border border-[#D4A13A47] overflow-hidden ${isLight ? 'bg-[#FFFBF0]' : 'bg-[#0A0703]'} px-[18px] py-[18px]`}>
       <Text variant="micro" className="uppercase tracking-[2.5px] font-extrabold text-goldA mb-1">
-        {t('hero.kicker', 'Hub de Partidas - Pro')}
+        {t('hero.kicker', 'Futly Go - Pro')}
       </Text>
       <Text
         variant="heading"

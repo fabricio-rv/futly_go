@@ -1,5 +1,5 @@
-import { Bell, CircleDot, MessageCircle, Star } from 'lucide-react-native';
-import { useCallback, useMemo, useState } from 'react';
+﻿import { Bell, CircleDot, MessageCircle, Star } from 'lucide-react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Modal, Pressable, TextInput, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
@@ -13,6 +13,7 @@ import { BaseCard, Text, Button, SkeletonList, TouchableScale } from '@/src/comp
 import { useNotifications } from '@/src/features/notifications/hooks/useNotifications';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
+import { supabase } from '@/src/lib/supabase';
 
 type NotificationItem = ReturnType<typeof useNotifications>['notifications'][number];
 
@@ -75,23 +76,110 @@ export default function NotificationsScreen() {
   const { processParticipationRequest, submitMatchRating, submitting } = useMatches();
 
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
-  const [ratingScore, setRatingScore] = useState(5);
+  const [ratingScore, setRatingScore] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
   const [ratingData, setRatingData] = useState<{ matchId: string; targetUserId: string; targetRole: 'creator' | 'player' } | null>(null);
+  const [showAllRecentActions, setShowAllRecentActions] = useState(false);
+  const [submittedRatingKeys, setSubmittedRatingKeys] = useState<Set<string>>(new Set());
+  const [requestStatusById, setRequestStatusById] = useState<Record<string, 'pending' | 'accepted' | 'rejected' | 'cancelled'>>({});
 
   const title = useMemo(() => `${t('title', 'Notificacoes')} ${unreadCount > 0 ? `(${unreadCount})` : ''}`.trim(), [unreadCount, t]);
   const displayNotifications = useMemo(() => groupNotifications(notifications), [notifications]);
+  const displayedRecentActions = useMemo(
+    () => (showAllRecentActions ? recentActions : recentActions.slice(0, 3)),
+    [recentActions, showAllRecentActions],
+  );
   const bgColor = theme === 'light' ? '#F1F5F9' : '#020617';
+  const getRatingKey = useCallback((matchId?: string | null, targetUserId?: string | null) => {
+    if (!matchId || !targetUserId) return null;
+    return `${matchId}:${targetUserId}`;
+  }, []);
+  const isRatingAlreadySubmitted = useCallback((item: NotificationItem) => {
+    const key = getRatingKey(item.metadata?.match_id, item.metadata?.target_user_id);
+    return Boolean(key && submittedRatingKeys.has(key));
+  }, [getRatingKey, submittedRatingKeys]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadSubmittedRatings = async () => {
+      const ratingNotifications = notifications.filter(
+        (item) => item.type === 'match_rating_available' && item.metadata?.match_id && item.metadata?.target_user_id,
+      );
+
+      if (ratingNotifications.length === 0) {
+        if (active) setSubmittedRatingKeys(new Set());
+        return;
+      }
+
+      const matchIds = Array.from(new Set(ratingNotifications.map((item) => String(item.metadata?.match_id))));
+      const targetUserIds = Array.from(new Set(ratingNotifications.map((item) => String(item.metadata?.target_user_id))));
+
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id;
+      if (!userId) {
+        if (active) setSubmittedRatingKeys(new Set());
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('ratings')
+        .select('match_id, reviewed_id')
+        .eq('reviewer_id', userId)
+        .in('match_id', matchIds)
+        .in('reviewed_id', targetUserIds);
+
+      if (error) return;
+
+      const keys = new Set<string>();
+      for (const row of data ?? []) {
+        const key = getRatingKey(row.match_id, row.reviewed_id);
+        if (key) keys.add(key);
+      }
+
+      if (active) setSubmittedRatingKeys(keys);
+    };
+
+    void loadSubmittedRatings();
+    return () => {
+      active = false;
+    };
+  }, [notifications, getRatingKey]);
+
+  const loadRequestStatuses = useCallback(async () => {
+    const requestIds = notifications
+      .filter((item) => item.type === 'participation_requested' && typeof item.metadata?.request_id === 'string')
+      .map((item) => String(item.metadata?.request_id));
+    if (requestIds.length === 0) {
+      setRequestStatusById({});
+      return;
+    }
+    const { data, error } = await supabase
+      .from('match_participation_requests')
+      .select('id,status')
+      .in('id', requestIds);
+    if (error) return;
+    const next: Record<string, 'pending' | 'accepted' | 'rejected' | 'cancelled'> = {};
+    for (const row of data ?? []) {
+      next[String(row.id)] = String(row.status) as 'pending' | 'accepted' | 'rejected' | 'cancelled';
+    }
+    setRequestStatusById(next);
+  }, [notifications]);
+
+  useEffect(() => {
+    void loadRequestStatuses();
+  }, [loadRequestStatuses]);
 
   const handleRequestAction = useCallback(async (requestId: string, action: 'accept' | 'reject') => {
     try {
       await processParticipationRequest(requestId, action);
       Alert.alert(t('common.success', 'Sucesso'), action === 'accept' ? t('requests.accepted', 'Solicitação aceita!') : t('requests.rejected', 'Solicitação recusada.'));
+      await loadRequestStatuses();
       await setAllRead();
     } catch {
       Alert.alert(t('common.error', 'Erro'), t('requests.processError', 'Não foi possível processar a solicitação.'));
     }
-  }, [processParticipationRequest, setAllRead, t]);
+  }, [loadRequestStatuses, processParticipationRequest, setAllRead, t]);
 
   const handleOpenRating = useCallback((notif: NotificationItem) => {
     if (notif.metadata?.match_id && notif.metadata?.target_user_id) {
@@ -100,14 +188,23 @@ export default function NotificationsScreen() {
         targetUserId: notif.metadata.target_user_id,
         targetRole: notif.metadata.target_role || 'player',
       });
-      setRatingScore(5);
+      setRatingScore(0);
       setRatingComment('');
       setRatingModalVisible(true);
+      return;
     }
-  }, []);
+    Alert.alert(
+      t('common.error', 'Erro'),
+      t('rating.unavailableTask', 'Esta tarefa de avaliação está incompleta. Atualize as notificações e tente novamente.'),
+    );
+  }, [t]);
 
   const handleSubmitRating = useCallback(async () => {
     if (!ratingData) return;
+    if (ratingScore <= 0) {
+      Alert.alert(t('common.error', 'Erro'), t('rating.chooseScore', 'Escolha uma nota antes de enviar.'));
+      return;
+    }
 
     try {
       await submitMatchRating({
@@ -117,13 +214,20 @@ export default function NotificationsScreen() {
         score: ratingScore,
         comment: ratingComment.trim() || null,
       });
+      setSubmittedRatingKeys((prev) => {
+        const next = new Set(prev);
+        const key = getRatingKey(ratingData.matchId, ratingData.targetUserId);
+        if (key) next.add(key);
+        return next;
+      });
       setRatingModalVisible(false);
       Alert.alert(t('common.success', 'Sucesso'), t('rating.sent', 'Avaliação enviada!'));
       await setAllRead();
-    } catch {
-      Alert.alert(t('common.error', 'Erro'), t('rating.sendError', 'Não foi possível enviar a avaliação.'));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('rating.sendError', 'Não foi possível enviar a avaliação.');
+      Alert.alert(t('common.error', 'Erro'), message);
     }
-  }, [ratingData, ratingScore, ratingComment, submitMatchRating, setAllRead, t]);
+  }, [ratingData, ratingScore, ratingComment, submitMatchRating, setAllRead, t, getRatingKey]);
 
   useFocusEffect(
     useCallback(() => {
@@ -142,20 +246,23 @@ bounces
         contentContainerStyle={{ paddingBottom: 120 }}
         ListHeaderComponent={(
           <View className="px-[18px]">
-            <HubTopNav
-              title={title}
-              subtitle={t('subtitle', 'ATIVIDADE')}
-              hideBack
-            />
+            <View className="pt-1 pb-2">
+              <HubTopNav
+                title={title}
+                centerNode={(
+                  <View className="flex-row items-center gap-2 py-0.5">
+                    <Bell size={16} color="#86E5B4" />
+                    <Text variant="body" className="font-semibold text-[#111827] dark:text-white">
+                      {title}
+                    </Text>
+                  </View>
+                )}
+                hideBack
+              />
+            </View>
 
-            <BaseCard className="mb-4">
-              <View className="flex-row items-center gap-2 mb-3">
-                <Bell size={16} color="#86E5B4" />
-                <Text variant="label" className="font-semibold text-[#111827] dark:text-white">{t('account.title', 'Notificacoes da conta')}</Text>
-              </View>
-              {error ? <Text variant="caption" className="text-[#FCA5A5]">{error}</Text> : null}
-              {loading ? <SkeletonList rows={3} /> : null}
-            </BaseCard>
+            {error ? <Text variant="caption" className="text-[#FCA5A5] mb-3">{error}</Text> : null}
+            {loading ? <SkeletonList rows={3} /> : null}
           </View>
         )}
         ListEmptyComponent={!loading ? (
@@ -175,7 +282,7 @@ bounces
                 <Text variant="caption" className="text-[#4B5563] dark:text-fg3">{t('recentActions.empty', 'Sem ações recentes.')}</Text>
               ) : (
                 <View className="gap-2">
-                  {recentActions.map((action) => (
+                  {displayedRecentActions.map((action) => (
                     <View key={action.id} className="rounded-[12px] border px-3 py-3" style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}>
                       <View className="flex-row items-center justify-between">
                         <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{action.title}</Text>
@@ -184,6 +291,17 @@ bounces
                       <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">{action.body}</Text>
                     </View>
                   ))}
+                  {recentActions.length > 3 ? (
+                    <TouchableScale
+                      className="mt-1 rounded-[10px] border px-3 py-2"
+                      style={{ borderColor: matchTheme.colors.lineStrong, backgroundColor: matchTheme.colors.bgSurfaceB }}
+                      onPress={() => setShowAllRecentActions((prev) => !prev)}
+                    >
+                      <Text variant="micro" className="text-center font-semibold" style={{ color: '#86E5B4' }}>
+                        {showAllRecentActions ? t('recentActions.showLess', 'Ver menos') : t('recentActions.showMore', 'Ver mais')}
+                      </Text>
+                    </TouchableScale>
+                  ) : null}
                 </View>
               )}
             </BaseCard>
@@ -226,13 +344,35 @@ bounces
               <BaseCard className="mb-3" style={{ backgroundColor: item.isRead ? matchTheme.colors.bgSurfaceA : 'rgba(34,183,108,0.08)' }}>
                 <View className="flex-row items-start justify-between gap-2">
                   <View className="flex-1">
-                    <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item.title}</Text>
-                    <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">{item.body}</Text>
+                    <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">
+                      {item.type === 'match_rating_available' && isRatingAlreadySubmitted(item)
+                        ? t('rating.sentInlineTitle', 'Avaliação Enviada')
+                        : item.type === 'participation_accepted'
+                          ? t('requests.acceptedTitle', 'Solicitação aprovada')
+                          : item.type === 'participation_rejected'
+                            ? t('requests.rejectedTitle', 'Solicitação recusada')
+                            : item.title}
+                    </Text>
+                    <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-1">
+                      {item.type === 'match_rating_available' && isRatingAlreadySubmitted(item)
+                        ? t('rating.sentInlineBody', 'Avaliação Enviada com sucesso. Obrigado pelo feedback!')
+                        : item.type === 'participation_requested' && item.metadata?.request_id && requestStatusById[String(item.metadata.request_id)] === 'accepted'
+                          ? t('requests.acceptedByYouInMatch', 'Você aceitou esta solicitação na sua partida.')
+                          : item.type === 'participation_requested' && item.metadata?.request_id && requestStatusById[String(item.metadata.request_id)] === 'rejected'
+                            ? t('requests.rejectedByYouInMatch', 'Você recusou esta solicitação na sua partida.')
+                            : item.type === 'participation_accepted'
+                              ? t('requests.acceptedForRequester', 'Sua solicitação foi aceita na partida.')
+                              : item.type === 'participation_rejected'
+                                ? t('requests.rejectedForRequester', 'Sua solicitação foi recusada na partida.')
+                        : item.body}
+                    </Text>
                   </View>
                   <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(item.createdAt)}</Text>
                 </View>
 
-                {item.type === 'participation_requested' && item.metadata?.request_id ? (
+                {item.type === 'participation_requested'
+                  && item.metadata?.request_id
+                  && (requestStatusById[String(item.metadata.request_id)] ?? 'pending') === 'pending' ? (
                   <View className="flex-row gap-2 mt-3">
                     <TouchableScale
                       className="rounded-[10px] border border-[#22B76C66] bg-[#22B76C22] px-3 py-2 flex-1"
@@ -252,13 +392,23 @@ bounces
                 ) : null}
 
                 {item.type === 'match_rating_available' ? (
-                  <TouchableScale
-                    className="mt-3 rounded-[10px] px-3 py-2"
-                    style={{ backgroundColor: matchTheme.colors.ok }}
-                    onPress={() => handleOpenRating(item)}
-                  >
-                    <Text variant="micro" className="text-[#111827] dark:text-white font-semibold text-center">{t('actions.rateNow', 'Avaliar agora')}</Text>
-                  </TouchableScale>
+                  item.metadata?.match_id && item.metadata?.target_user_id ? (
+                    isRatingAlreadySubmitted(item) ? null : (
+                    <TouchableScale
+                      className="mt-3 rounded-[10px] px-3 py-2"
+                      style={{ backgroundColor: matchTheme.colors.ok }}
+                      onPress={() => handleOpenRating(item)}
+                    >
+                      <Text variant="micro" className="text-[#111827] dark:text-white font-semibold text-center">{t('actions.rateNow', 'Avaliar agora')}</Text>
+                    </TouchableScale>
+                    )
+                  ) : null
+                ) : null}
+
+                {item.type === 'match_rating_available' && (!item.metadata?.match_id || !item.metadata?.target_user_id) ? (
+                  <Text variant="micro" className="mt-2 text-[#4B5563] dark:text-fg3">
+                    {t('rating.unavailableTask', 'Esta tarefa de avaliação está incompleta. Atualize as notificações e tente novamente.')}
+                  </Text>
                 ) : null}
               </BaseCard>
             )}
@@ -303,8 +453,21 @@ bounces
             />
 
             <View className="flex-row gap-2 mt-4">
-              <Button label={t('actions.cancel', 'Cancelar')} variant="ghost" className="flex-1" onPress={() => setRatingModalVisible(false)} />
-              <Button label={t('actions.send', 'Enviar')} className="flex-1" loading={submitting} disabled={submitting} onPress={() => void handleSubmitRating()} />
+              <View className="flex-1">
+                <Button
+                  label={t('actions.back', 'Voltar')}
+                  variant="ghost"
+                  onPress={() => setRatingModalVisible(false)}
+                />
+              </View>
+              <View className="flex-1">
+                <Button
+                  label={t('actions.send', 'Enviar')}
+                  loading={submitting}
+                  disabled={submitting || ratingScore <= 0}
+                  onPress={() => void handleSubmitRating()}
+                />
+              </View>
             </View>
           </Pressable>
         </Pressable>
@@ -312,6 +475,4 @@ bounces
     </SafeAreaView>
   );
 }
-
-
 

@@ -7,7 +7,7 @@ export const esESLegal = {
   updated: 'Actualizado el 15/04/26',
   sections: {
     acceptance: '1. Aceptación de Términos',
-    acceptanceText: 'Al acceder y usar Futly Hub...',
+    acceptanceText: 'Al acceder y usar Futly Go...',
     service: '2. Descripción del Servicio',
     responsibility: '3. Responsabilidad del Usuario',
     conduct: '4. Código de Conducta',
@@ -17,7 +17,7 @@ export const esESLegal = {
     contact: '8. Contacto'
   },
   terms: {
-    serviceText: 'Futly Hub conecta atletas para organizar partidos.',
+    serviceText: 'Futly Go conecta atletas para organizar partidos.',
     responsibilityText: 'Eres responsable de tu cuenta y tus acciones en la app.',
     conductText: 'Respeta a otros usuarios y evita comportamientos ofensivos.',
     cancellationText: 'Puedes cancelar tu cuenta en cualquier momento en configuración.',

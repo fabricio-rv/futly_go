@@ -30,7 +30,7 @@ export const ptPTCreate = {
     gameLevel: "Nível do Jogo",
     facilities: "Facilidades",
     ageRestrictions: "Restrições de idade",
-    ageRestrictionsHint: "Apenas atletas entre 16 e 80 anos podem inscrever-se",
+    ageRestrictionsHint: "Apenas atletas entre 14 e 80 anos podem inscrever-se",
     minimumLevelsAccepted: "Níveis Mínimos Aceites",
     positionsHint: "Toque para abrir / bloquear vagas",
     hostPosition: "Você (Anfitrião) - Guarda-redes",

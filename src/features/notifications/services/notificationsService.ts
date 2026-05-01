@@ -38,14 +38,17 @@ function translateNotificationTitle(type: string, fallbackTitle: string, t?: (ke
   const translate = t || ((_, fallback) => fallback);
 
   const titleMap: Record<string, [string, string]> = {
-    'participation_requested': ['newParticipationRequest', 'Nova solicitação de participacao'],
-    'match_rating_available': ['evaluationAvailable', 'Avaliação disponível'],
-    'rating_pending': ['actionTypes.ratingPending', 'Avaliação pendente'],
-    'match_created': ['actionTypes.matchCreated', 'Partida criada'],
-    'participation_confirmed': ['actionTypes.participationConfirmed', 'Participacao confirmada'],
-    'rating_sent': ['actionTypes.ratingSent', 'Avaliação enviada'],
-    'rate_player': ['actionTypes.ratePlayer', 'Avaliar jogador'],
-    'rate_host': ['actionTypes.rateHost', 'Avaliar host'],
+    'participation_requested': ['newParticipationRequest', 'Nova Solicitação de Participação'],
+    'participation_pending': ['requestStatus.sent', 'Solicitação enviada'],
+    'participation_accepted': ['requestStatus.approved', 'Solicitação aprovada'],
+    'participation_rejected': ['requestStatus.rejected', 'Solicitação recusada'],
+    'match_rating_available': ['evaluationAvailable', 'Avaliação Disponível'],
+    'rating_pending': ['actionTypes.ratingPending', 'Avaliação Pendente'],
+    'match_created': ['actionTypes.matchCreated', 'Partida Criada'],
+    'participation_confirmed': ['actionTypes.participationConfirmed', 'Participação Confirmada'],
+    'rating_sent': ['actionTypes.ratingSent', 'Avaliação Enviada'],
+    'rate_player': ['actionTypes.ratePlayer', 'Avaliar Jogador'],
+    'rate_host': ['actionTypes.rateHost', 'Avaliar Host'],
   };
 
   const [key, fallback] = titleMap[type] || [type, fallbackTitle];
@@ -54,10 +57,12 @@ function translateNotificationTitle(type: string, fallbackTitle: string, t?: (ke
 
 export async function fetchNotifications(t?: (key: string, fallback: string) => string) {
   await syncRatingNotifications();
+  const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(200);
 
@@ -218,7 +223,7 @@ export async function fetchRecentActions(t?: (key: string, fallback: string) => 
 
   const ratingActions: RecentAction[] = (ratingRows ?? []).map((row) => ({
     id: `rating:${row.id}`,
-    title: translate('actionTypes.ratingSent', 'Avaliação enviada'),
+    title: translate('actionTypes.ratingSent', 'Avaliação Enviada'),
     body: `${matchById.get(row.match_id)?.title ?? 'Partida'} - nota ${row.score}/5`,
     createdAt: row.created_at,
     type: 'rating',
@@ -226,7 +231,7 @@ export async function fetchRecentActions(t?: (key: string, fallback: string) => 
 
   const createdMatchActions: RecentAction[] = (createdMatches ?? []).map((match) => ({
     id: `created:${match.id}`,
-    title: translate('actionTypes.matchCreated', 'Partida criada'),
+    title: translate('actionTypes.matchCreated', 'Partida Criada'),
     body: `${match.title} - ${match.match_date} ${String(match.match_time).slice(0, 5)}`,
     createdAt: match.created_at,
     type: 'match',
@@ -234,7 +239,7 @@ export async function fetchRecentActions(t?: (key: string, fallback: string) => 
 
   const joinedMatchActions: RecentAction[] = (joinedRows ?? []).map((row) => ({
     id: `joined:${row.id}`,
-    title: translate('actionTypes.participationConfirmed', 'Participacao confirmada'),
+    title: translate('actionTypes.participationConfirmed', 'Participação Confirmada'),
     body: `${matchById.get(row.match_id)?.title ?? 'Partida'} - vaga garantida`,
     createdAt: row.joined_at,
     type: 'match',

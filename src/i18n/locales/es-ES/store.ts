@@ -87,7 +87,7 @@ export const esESStore = {
     description: 'PIX, tarjeta de credito o Apple/Google Pay. Sin permanencia. Reembolso completo en los primeros 7 dias.'
   },
   hero: {
-    kicker: 'Hub de Partidos - Pro',
+    kicker: 'Futly Go - Pro',
     title: 'Mas partidos. Mas visibilidad. Mas futbol.',
     description: 'Desbloquea un radio de busqueda mayor, creacion ilimitada de partidos y prioridad en plazas concurridas.'
   }

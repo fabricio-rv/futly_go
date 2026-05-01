@@ -32,7 +32,13 @@ export const ptPTNotifications = {
   requests: {
     accepted: 'Solicitação aceita!',
     rejected: 'Solicitação recusada.',
-    processError: 'Não foi possível processar a solicitação.'
+    processError: 'Não foi possível processar a solicitação.',
+    acceptedTitle: 'Solicitação aprovada',
+    rejectedTitle: 'Solicitação recusada',
+    acceptedByYouInMatch: 'Aceitaste esta solicitação no teu jogo.',
+    rejectedByYouInMatch: 'Recusaste esta solicitação no teu jogo.',
+    acceptedForRequester: 'A tua solicitação foi aceite no jogo.',
+    rejectedForRequester: 'A tua solicitação foi recusada no jogo.'
   },
   rating: {
     sent: 'Avaliação enviada!',

@@ -23,7 +23,7 @@ export function HubHeader({ onMessagesPress, unreadCount = 0 }: HubHeaderProps) 
       <View className="relative min-h-[44px] justify-center">
         <View className="absolute left-0 right-0 items-center">
           <Text className="font-geistBold text-[15px]" style={{ color: titleColor }}>
-            {t('hub.title', 'Hub de Partidas')}
+            {t('hub.title', 'Futly Go')}
           </Text>
         </View>
 

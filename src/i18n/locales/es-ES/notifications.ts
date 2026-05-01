@@ -32,7 +32,13 @@ export const esESNotifications = {
   requests: {
     accepted: 'Solicitud aceptada!',
     rejected: 'Solicitud rechazada.',
-    processError: 'No se pudo procesar la solicitud.'
+    processError: 'No se pudo procesar la solicitud.',
+    acceptedTitle: 'Solicitud aprobada',
+    rejectedTitle: 'Solicitud rechazada',
+    acceptedByYouInMatch: 'Aceptaste esta solicitud en tu partido.',
+    rejectedByYouInMatch: 'Rechazaste esta solicitud en tu partido.',
+    acceptedForRequester: 'Tu solicitud fue aceptada en el partido.',
+    rejectedForRequester: 'Tu solicitud fue rechazada en el partido.'
   },
   rating: {
     sent: 'Valoracion enviada!',

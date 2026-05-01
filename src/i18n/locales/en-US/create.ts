@@ -30,7 +30,7 @@ export const enUSCreate = {
     gameLevel: "Game Level",
     facilities: "Facilities",
     ageRestrictions: "Age Restrictions",
-    ageRestrictionsHint: "Only athletes between 16 and 80 years can register",
+    ageRestrictionsHint: "Only athletes between 14 and 80 years can register",
     minimumLevelsAccepted: "Minimum Levels Accepted",
     positionsHint: "Tap to open / block slots",
     hostPosition: "You (Host) - Goalkeeper",

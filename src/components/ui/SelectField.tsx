@@ -60,7 +60,7 @@ export function SelectField<T extends string>({
   return (
     <View className="w-full">
       {label ? (
-        <Text variant="label" tone="secondary" className="mb-2">
+        <Text variant="label" tone="secondary" className="mb-2.5 font-semibold">
           {label}
         </Text>
       ) : null}
@@ -69,7 +69,7 @@ export function SelectField<T extends string>({
         accessibilityRole="button"
         disabled={disabled}
         onPress={() => setOpen(true)}
-        className={`h-12 rounded-xl border px-4 flex-row items-center ${
+        className={`h-14 rounded-[28px] border-[0.5px] px-4 flex-row items-center ${
           error ? 'border-danger' : (theme === 'light' ? 'border-[rgba(0,0,0,0.12)]' : 'border-bg-border')
         } ${disabled ? 'opacity-60' : ''}`}
         style={{ backgroundColor: theme === 'light' ? '#FAFBFC' : '#101626' }}

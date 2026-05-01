@@ -24,6 +24,7 @@ type MessageBubbleProps = {
   onToggleSelect?: (messageId: string) => void;
   onAttachmentPress?: (message: ChatMessage) => void;
   onAttachmentDownload?: (message: ChatMessage) => void;
+  onContactPress?: (message: ChatMessage) => void;
 };
 
 function formatAudioTime(ms: number) {
@@ -179,6 +180,7 @@ export function MessageBubble({
   onToggleSelect,
   onAttachmentPress,
   onAttachmentDownload,
+  onContactPress,
 }: MessageBubbleProps) {
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
@@ -339,6 +341,33 @@ export function MessageBubble({
               </View>
             </View>
           ) : null}
+
+        {message.contactShare ? (
+          <Pressable
+            onPress={() => onContactPress?.(message)}
+            style={{
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: mine ? 'rgba(255,255,255,0.25)' : tk.bubbleThemBorder,
+              paddingHorizontal: 10,
+              paddingVertical: 8,
+              marginBottom: message.text ? 8 : 0,
+              backgroundColor: mine ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.03)',
+            }}
+          >
+            <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.75)' : tk.text.tertiary }}>
+              Contato
+            </Text>
+            <Text variant="caption" className="font-bold" style={{ color: mine ? '#fff' : tk.text.primary }}>
+              {message.contactShare.fullName}
+            </Text>
+            {message.contactShare.phone ? (
+              <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.82)' : tk.text.secondary }}>
+                {message.contactShare.phone}
+              </Text>
+            ) : null}
+          </Pressable>
+        ) : null}
 
         {(message.attachment?.kind === 'image' || message.attachment?.kind === 'video') && message.attachment.url ? (
           <Pressable onPress={() => onAttachmentPress?.(message)}>

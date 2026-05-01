@@ -87,7 +87,7 @@ export const ptPTStore = {
     description: 'PIX, cartão de crédito ou Apple/Google Pay. Sem fidelização. Reembolso total nos primeiros 7 dias.'
   },
   hero: {
-    kicker: 'Hub de Partidas - Pro',
+    kicker: 'Futly Go - Pro',
     title: 'Mais jogos. Mais visibilidade. Mais futebol.',
     description: 'Desbloqueie raio de pesquisa alargado, criação ilimitada de jogos e prioridade nas vagas mais concorridas.'
   }

@@ -32,7 +32,13 @@ export const enUSNotifications = {
   requests: {
     accepted: 'Request accepted!',
     rejected: 'Request rejected.',
-    processError: 'Could not process the request.'
+    processError: 'Could not process the request.',
+    acceptedTitle: 'Request approved',
+    rejectedTitle: 'Request rejected',
+    acceptedByYouInMatch: 'You accepted this request in your match.',
+    rejectedByYouInMatch: 'You rejected this request in your match.',
+    acceptedForRequester: 'Your request was accepted in the match.',
+    rejectedForRequester: 'Your request was rejected in the match.'
   },
   rating: {
     sent: 'Rating submitted!',

@@ -309,6 +309,11 @@ export type ChatMessage = {
 	kind: 'system' | 'them' | 'me' | 'typing';
 	senderId?: string | null;
 	text?: string;
+	contactShare?: {
+		profileId: string;
+		fullName: string;
+		phone?: string | null;
+	};
 	attachment?: {
 		id: string;
 		kind: 'image' | 'video' | 'audio' | 'document';

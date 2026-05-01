@@ -25,6 +25,7 @@ import type { RatingTask } from "@/src/features/matches/services/matchesService"
 import { getOrCreateMatchConversation } from "@/src/features/chat/services/chatService";
 import { useAppColorScheme } from "@/src/contexts/ThemeContext";
 import { useTranslation } from "@/src/i18n/hooks/useTranslation";
+import { supabase } from "@/src/lib/supabase";
 
 type AgendaTab = "criadas" | "marcadas" | "pendentes";
 type AgendaListItem =
@@ -64,6 +65,22 @@ export default function AgendaScreen() {
       () => undefined,
     );
   }, [getUserAgenda, getHostPendingRequests]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`agenda-refresh:${Date.now()}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "match_participation_requests" }, () => {
+        void Promise.all([getUserAgenda(), getHostPendingRequests()]);
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "match_participants" }, () => {
+        void getUserAgenda();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [getHostPendingRequests, getUserAgenda]);
 
   const list: Partida[] =
     tab === "criadas"
@@ -321,7 +338,7 @@ export default function AgendaScreen() {
                               void processParticipationRequest(
                                 request.id,
                                 "accept",
-                              ).then(() => getHostPendingRequests())
+                              ).then(() => Promise.all([getHostPendingRequests(), getUserAgenda()]))
                             }
                           >
                             <Text
@@ -338,7 +355,7 @@ export default function AgendaScreen() {
                               void processParticipationRequest(
                                 request.id,
                                 "reject",
-                              ).then(() => getHostPendingRequests())
+                              ).then(() => Promise.all([getHostPendingRequests(), getUserAgenda()]))
                             }
                           >
                             <Text

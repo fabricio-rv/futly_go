@@ -352,6 +352,7 @@ export function useConversationThread(conversationId: string) {
         const allOthersRead = othersIds.length > 0
           && othersIds.every((id) => receipt?.read_by?.includes(id));
 
+        const metadata = message.metadata as Record<string, unknown> | undefined;
         const firstAttachment = attachmentsByMessageId[message.id]?.[0];
         const attachment = (() => {
           if (!firstAttachment) return undefined;
@@ -373,27 +374,34 @@ export function useConversationThread(conversationId: string) {
             previewUrl: kind === 'document' && (firstAttachment.mime_type ?? '').includes('pdf')
               ? `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(attachmentUrlById[firstAttachment.id] || '')}`
               : null,
-            durationSec: Number((message.metadata as Record<string, unknown> | undefined)?.attachment_duration_sec ?? 0) || null,
+            durationSec: Number(metadata?.attachment_duration_sec ?? 0) || null,
           } as ChatMessage['attachment'];
         })();
 
         const cleanedText = cleanMessageText(parsed.text) || undefined;
-        if (!attachment && !cleanedText) return null as unknown as ChatMessage;
+        const contactProfileId = typeof metadata?.contact_profile_id === 'string' ? metadata.contact_profile_id : null;
+        const contactFullName = typeof metadata?.contact_full_name === 'string' ? metadata.contact_full_name : null;
+        const contactPhone = typeof metadata?.contact_phone === 'string' ? metadata.contact_phone : null;
+        const contactShare = contactProfileId && contactFullName
+          ? { profileId: contactProfileId, fullName: contactFullName, phone: contactPhone }
+          : undefined;
+        if (!attachment && !cleanedText && !contactShare) return null as unknown as ChatMessage;
 
         return {
           id: message.id,
           kind: mine ? 'me' : 'them',
           senderId: message.sender_id,
           text: attachment ? undefined : cleanedText,
+          contactShare,
           attachment,
           replyTo: parsed.replyTo,
           replyAuthor: parsed.replyTo
-            ? String((message.metadata as Record<string, unknown> | undefined)?.reply_author ?? '')
+            ? String(metadata?.reply_author ?? '')
             : null,
           replyMine: parsed.replyTo
-            ? Boolean((message.metadata as Record<string, unknown> | undefined)?.reply_mine)
+            ? Boolean(metadata?.reply_mine)
             : undefined,
-          isForwarded: Boolean((message.metadata as Record<string, unknown> | undefined)?.forwardedFromMessageId),
+          isForwarded: Boolean(metadata?.forwardedFromMessageId),
           author: participant?.full_name ?? t('detail.athleteFallback', 'Atleta'),
           avatarUrl: participant?.avatar_url ?? null,
           role: participant?.role === 'host'

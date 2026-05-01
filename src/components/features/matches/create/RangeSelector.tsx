@@ -1,8 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { runOnJS } from "react-native-reanimated";
 
 import { Text } from "@/src/components/ui";
 import { useMatchTheme } from "../shared/theme";
@@ -25,6 +24,7 @@ export function RangeSelector({
   onDragStateChange,
 }: RangeSelectorProps) {
   const matchTheme = useMatchTheme();
+  const { width: windowWidth } = useWindowDimensions();
   const [trackWidth, setTrackWidth] = useState(1);
   const minStartRef = useRef(min);
   const maxStartRef = useRef(max);
@@ -37,6 +37,12 @@ export function RangeSelector({
   }, [min, max]);
 
   const span = Math.max(1, maxLimit - minLimit);
+  const isSmallScreen = windowWidth <= 390;
+  const horizontalInset = isSmallScreen ? 10 : 8;
+  const handleTouchSize = isSmallScreen ? 24 : 28;
+  const handleCoreSize = isSmallScreen ? 16 : 18;
+  const handleHalf = handleTouchSize / 2;
+  const handleTop = 3 - handleHalf;
   const minPercent = ((min - minLimit) / span) * 100;
   const maxPercent = ((max - minLimit) / span) * 100;
 
@@ -50,10 +56,11 @@ export function RangeSelector({
   const minGesture = useMemo(
     () =>
       Gesture.Pan()
+        .runOnJS(true)
         .shouldCancelWhenOutside(false)
         .onBegin(() => {
           minStartRef.current = minRef.current;
-          if (onDragStateChange) runOnJS(onDragStateChange)(true);
+          onDragStateChange?.(true);
         })
         .onUpdate((event) => {
           const steps = pxToSteps(event.translationX);
@@ -62,11 +69,11 @@ export function RangeSelector({
             Math.min(minStartRef.current + steps, maxRef.current - 1),
           );
           if (nextMin !== minRef.current) {
-            runOnJS(onChange)(nextMin, maxRef.current);
+            onChange(nextMin, maxRef.current);
           }
         })
         .onFinalize(() => {
-          if (onDragStateChange) runOnJS(onDragStateChange)(false);
+          onDragStateChange?.(false);
         }),
     [minLimit, onChange, onDragStateChange, trackWidth],
   );
@@ -74,10 +81,11 @@ export function RangeSelector({
   const maxGesture = useMemo(
     () =>
       Gesture.Pan()
+        .runOnJS(true)
         .shouldCancelWhenOutside(false)
         .onBegin(() => {
           maxStartRef.current = maxRef.current;
-          if (onDragStateChange) runOnJS(onDragStateChange)(true);
+          onDragStateChange?.(true);
         })
         .onUpdate((event) => {
           const steps = pxToSteps(event.translationX);
@@ -86,11 +94,11 @@ export function RangeSelector({
             Math.max(maxStartRef.current + steps, minRef.current + 1),
           );
           if (nextMax !== maxRef.current) {
-            runOnJS(onChange)(minRef.current, nextMax);
+            onChange(minRef.current, nextMax);
           }
         })
         .onFinalize(() => {
-          if (onDragStateChange) runOnJS(onDragStateChange)(false);
+          onDragStateChange?.(false);
         }),
     [maxLimit, onChange, onDragStateChange, trackWidth],
   );
@@ -134,7 +142,10 @@ export function RangeSelector({
 
       <View
         className="h-[6px] rounded-full mt-3 mb-2 relative overflow-visible"
-        style={{ backgroundColor: matchTheme.colors.lineStrong }}
+        style={{
+          backgroundColor: matchTheme.colors.lineStrong,
+          marginHorizontal: horizontalInset,
+        }}
         onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}
       >
         <LinearGradient
@@ -149,25 +160,45 @@ export function RangeSelector({
         />
         <GestureDetector gesture={minGesture}>
           <View
-            className="absolute w-[28px] h-[28px] items-center justify-center"
-            style={{ left: `${minPercent}%`, top: -11, marginLeft: -14 }}
+            className="absolute items-center justify-center"
+            style={{
+              left: `${minPercent}%`,
+              top: handleTop,
+              marginLeft: -handleHalf,
+              width: handleTouchSize,
+              height: handleTouchSize,
+            }}
             collapsable={false}
           >
             <View
-              className="w-[18px] h-[18px] rounded-full border-[3px] border-[#22B76C]"
-              style={{ backgroundColor: matchTheme.colors.bgSurfaceA }}
+              className="rounded-full border-[3px] border-[#22B76C]"
+              style={{
+                width: handleCoreSize,
+                height: handleCoreSize,
+                backgroundColor: matchTheme.colors.bgSurfaceA,
+              }}
             />
           </View>
         </GestureDetector>
         <GestureDetector gesture={maxGesture}>
           <View
-            className="absolute w-[28px] h-[28px] items-center justify-center"
-            style={{ left: `${maxPercent}%`, top: -11, marginLeft: -14 }}
+            className="absolute items-center justify-center"
+            style={{
+              left: `${maxPercent}%`,
+              top: handleTop,
+              marginLeft: -handleHalf,
+              width: handleTouchSize,
+              height: handleTouchSize,
+            }}
             collapsable={false}
           >
             <View
-              className="w-[18px] h-[18px] rounded-full border-[3px] border-[#D4A13A]"
-              style={{ backgroundColor: matchTheme.colors.bgSurfaceA }}
+              className="rounded-full border-[3px] border-[#D4A13A]"
+              style={{
+                width: handleCoreSize,
+                height: handleCoreSize,
+                backgroundColor: matchTheme.colors.bgSurfaceA,
+              }}
             />
           </View>
         </GestureDetector>

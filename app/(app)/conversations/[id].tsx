@@ -25,6 +25,7 @@ import { useConversationThread } from '@/src/features/chat/hooks/useConversation
 import {
   addConversationParticipant,
   createChatFileAttachment,
+  createPrivateConversation,
   forwardMessage,
   removeConversationParticipant,
   searchChatProfiles,
@@ -245,6 +246,10 @@ export default function ConversationDetailScreen() {
     }
     router.replace('/(app)/conversations');
   }, []);
+  const handleOpenInfo = useCallback(() => {
+    if (!conversationId) return;
+    router.push({ pathname: '/(app)/conversations/info/[id]', params: { id: conversationId } });
+  }, [conversationId]);
 
   const handleDraftChange = useCallback((value: string) => {
     setDraft(value);
@@ -537,6 +542,7 @@ export default function ConversationDetailScreen() {
           isTyping={isTyping}
           showPresenceDot={isPrivateConversation}
           onBack={handleBack}
+          onOpenInfo={handleOpenInfo}
         />
 
         {trackedMessages.length > 0 ? (
@@ -647,6 +653,19 @@ export default function ConversationDetailScreen() {
                     return;
                   }
                   void Linking.openURL(url);
+                }}
+                onContactPress={(message) => {
+                  const profileId = message.contactShare?.profileId;
+                  if (!profileId) return;
+                  void (async () => {
+                    try {
+                      const privateConversationId = await createPrivateConversation(profileId);
+                      router.push({ pathname: '/(app)/conversations/[id]', params: { id: privateConversationId } });
+                    } catch (error) {
+                      const msg = error instanceof Error ? error.message : 'Nao foi possivel abrir contato.';
+                      Alert.alert('Falha ao abrir contato', msg);
+                    }
+                  })();
                 }}
               />
             );
@@ -900,4 +919,3 @@ export default function ConversationDetailScreen() {
     </SafeAreaView>
   );
 }
-

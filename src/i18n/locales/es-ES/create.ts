@@ -30,7 +30,7 @@ export const esESCreate = {
     gameLevel: "Nivel del Juego",
     facilities: "Facilidades",
     ageRestrictions: "Restricciones de edad",
-    ageRestrictionsHint: "Solo atletas entre 16 y 80 años pueden inscribirse",
+    ageRestrictionsHint: "Solo atletas entre 14 y 80 años pueden inscribirse",
     minimumLevelsAccepted: "Niveles Mínimos Aceptados",
     positionsHint: "Tocar para abrir / bloquear plazas",
     hostPosition: "Tú (Anfitrión) - Portero",

@@ -87,7 +87,7 @@ export const enUSStore = {
     description: 'PIX, credit card, or Apple/Google Pay. No lock-in. Full refund in the first 7 days.'
   },
   hero: {
-    kicker: 'Match Hub - Pro',
+    kicker: 'Futly Go - Pro',
     title: 'More matches. More visibility. More football.',
     description: 'Unlock wider search range, unlimited match creation, and priority in competitive slots.'
   }
