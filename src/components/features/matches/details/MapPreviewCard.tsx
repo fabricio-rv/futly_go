@@ -19,7 +19,7 @@ type MapPreviewCardProps = {
   embeddedInCard?: boolean;
 };
 
-export function MapPreviewCard({
+export default function MapPreviewCard({
   addressLine,
   districtLine,
   mapImageUrls = [],

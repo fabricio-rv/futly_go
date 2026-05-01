@@ -1,18 +1,45 @@
-﻿@tailwind base;
+﻿/* 1. Importação das fontes do Google para o Navegador */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* 2. Configurações Base de UI */
+@layer base {
+  html, body {
+    /* Força o fundo escuro e a cor do texto para evitar o "branco" no carregamento */
+    background-color: #05070B;
+    color: #F5F7FA;
+    font-family: 'Inter', sans-serif;
+    
+    /* Remove o "azul" ao clicar em botões no Safari/Chrome Mobile */
+    -webkit-tap-highlight-color: transparent;
+    
+    /* Garante que o app ocupe a tela toda sem scroll bizarro */
+    overflow-x: hidden;
+    height: 100%;
+    width: 100%;
+  }
+}
+
+/* 3. Seus ajustes de Input e Textarea (Mantidos) */
 input,
 textarea {
-	outline: none !important;
-	box-shadow: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: transparent;
 }
 
 input:focus,
 textarea:focus,
 input:focus-visible,
 textarea:focus-visible {
-	outline: none !important;
-	box-shadow: none !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
+/* 4. Reset para remover bordas padrão no Mobile */
+button, input, optgroup, select, textarea {
+    font-family: inherit;
+}

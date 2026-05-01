@@ -13,7 +13,6 @@ import { showLocation } from "react-native-map-link";
 
 import {
   MatchBackground,
-  MapPreviewCard,
   MatchTopNav,
   PlayerRow,
   SectionTitle,
@@ -21,6 +20,9 @@ import {
   StatusStamp,
   matchTheme as fixedDarkMatchTheme,
 } from "@/src/components/features/matches";
+
+// IMPORTAÇÃO DIRETA E FORA DAS CHAVES
+import MapPreviewCard from "@/src/components/features/matches/details/MapPreviewCard";
 import { TacticalPitch } from "@/src/components/fifa/TacticalPitch";
 import { Button, Card, Screen, Text } from "@/src/components/ui";
 import { useMatches } from "@/src/features/matches/hooks/useMatches";

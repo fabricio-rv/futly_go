@@ -5,7 +5,6 @@ export { SegmentedControl } from './create/SegmentedControl';
 export { ToggleRow } from './create/ToggleRow';
 
 export { InfraGrid } from './details/InfraGrid';
-export { MapPreviewCard } from './details/MapPreviewCard';
 export { MatchBackground } from './details/MatchBackground';
 export { MatchTopNav } from './details/MatchTopNav';
 

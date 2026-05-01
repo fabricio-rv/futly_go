@@ -18,21 +18,17 @@ module.exports = {
           4: '#222C4D',
           hairline: '#1F2A44',
           hairlineSoft: 'rgba(255,255,255,0.06)',
-          // Light mode variants
           'light-0': '#F4F6F9',
           'light-1': '#FAFBFC',
           'light-2': '#EEF1F5',
           'light-3': '#E8ECF3',
           'light-4': '#DDE2ED',
         },
-        // Light-mode surface tokens
         'surf1-light': '#F4F6F9',
         'surf2-light': '#FAFBFC',
         'surf3-light': '#EEF1F5',
-        // Light-mode line tokens
         'line-light': 'rgba(0,0,0,0.08)',
         'line2-light': 'rgba(0,0,0,0.12)',
-        // Light-mode foreground tokens
         'fg2-light': 'rgba(0,0,0,0.70)',
         'fg3-light': 'rgba(0,0,0,0.45)',
         'fg4-light': 'rgba(0,0,0,0.28)',
@@ -108,6 +104,16 @@ module.exports = {
         goldA: '#F6D27A',
         goldB: '#D4A13A',
       },
+      fontFamily: {
+        // Mapeamento Web (Primeiro item) + Native (Segundo item)
+        sans: ['Inter', 'Inter_400Regular', 'system-ui', 'sans-serif'],
+        display: ['Inter', 'Inter_700Bold', 'system-ui', 'sans-serif'],
+        number: ['Bebas Neue', 'BebasNeue_400Regular', 'Geist_700Bold', 'sans-serif'],
+        mono: ['Geist Mono', 'GeistMono_400Regular', 'Menlo', 'monospace'],
+        geist: ['Geist', 'Inter_500Medium', 'system-ui', 'sans-serif'],
+        geistBold: ['Geist', 'Inter_700Bold', 'system-ui', 'sans-serif'],
+        bebas: ['Bebas Neue', 'BebasNeue_400Regular', 'cursive'],
+      },
       borderRadius: {
         xs: '6px',
         sm: '10px',
@@ -116,15 +122,6 @@ module.exports = {
         xl: '24px',
         '2xl': '32px',
         pill: '999px',
-      },
-      fontFamily: {
-        sans: ['Inter_400Regular', 'System'],
-        display: ['Inter_700Bold', 'System'],
-        number: ['BebasNeue_400Regular', 'Geist_700Bold', 'System'],
-        mono: ['GeistMono_400Regular', 'Menlo'],
-        geist: ['Inter_500Medium', 'System'],
-        geistBold: ['Inter_700Bold', 'System'],
-        bebas: ['BebasNeue_400Regular', 'System'],
       },
       spacing: {
         18: '72px',
