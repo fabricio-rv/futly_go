@@ -2,7 +2,7 @@ import { Check, CheckCheck, CornerUpLeft, FileText, Forward, Mic, Pause, Pin, Pl
 import { Image, Platform, Pressable, type GestureResponderEvent, View, useWindowDimensions } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { getChatTokens } from '@/src/lib/chatTokens';
@@ -79,9 +79,24 @@ function AudioAttachmentCard({
   const isPlayingAudio = audioStatus.playing;
   const audioDurationMs = audioStatus.duration * 1000;
   const audioPositionMs = audioStatus.currentTime * 1000;
-  const probedDurationMs = message.attachment?.durationSec && message.attachment.durationSec > 0
+  const metadataDurationMs = message.attachment?.durationSec && message.attachment.durationSec > 0
     ? message.attachment.durationSec * 1000
-    : audioDurationMs;
+    : 0;
+  const playbackTargetDurationMs = metadataDurationMs || audioDurationMs;
+  const probedDurationMs = playbackTargetDurationMs;
+
+  useEffect(() => {
+    // Garante reprodução no volume máximo permitido pelo sistema.
+    audioPlayer.volume = 1.0;
+  }, [audioPlayer]);
+
+  useEffect(() => {
+    if (!isPlayingAudio || playbackTargetDurationMs <= 0) return;
+    if (audioPositionMs >= playbackTargetDurationMs - 90) {
+      audioPlayer.pause();
+      audioPlayer.seekTo(0);
+    }
+  }, [audioPlayer, audioPositionMs, isPlayingAudio, playbackTargetDurationMs]);
 
   const toggleAudioPlayback = () => {
     if (!message.attachment?.url || message.attachment.kind !== 'audio') return;
@@ -126,7 +141,7 @@ function AudioAttachmentCard({
         </View>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
           {Array.from({ length: 32 }).map((_, idx) => {
-            const totalMs = audioDurationMs || probedDurationMs || ((message.attachment?.durationSec ?? 0) * 1000);
+            const totalMs = playbackTargetDurationMs || ((message.attachment?.durationSec ?? 0) * 1000);
             const playedRatio = totalMs > 0 ? audioPositionMs / totalMs : 0;
             const activeBar = idx / 32 <= playedRatio;
             const heights = [5, 8, 12, 7, 10, 14, 6, 9, 13, 5, 11, 8, 15, 6, 10, 7, 12, 9, 14, 5, 8, 13, 6, 11, 7, 10, 15, 8, 6, 12, 9, 5];
@@ -149,7 +164,7 @@ function AudioAttachmentCard({
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingLeft: 82 }}>
         <Text variant="micro" style={{ color: mine ? 'rgba(255,255,255,0.85)' : textSecondary, fontSize: 12 }}>
-          {formatAudioTime(audioDurationMs || probedDurationMs || ((message.attachment?.durationSec ?? 0) * 1000) || audioPositionMs)}
+          {formatAudioTime(playbackTargetDurationMs || ((message.attachment?.durationSec ?? 0) * 1000) || audioPositionMs)}
         </Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           {isPinned ? <Pin size={10} color={mine ? 'rgba(255,255,255,0.68)' : brandGold} /> : null}

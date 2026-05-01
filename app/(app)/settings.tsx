@@ -1,4 +1,4 @@
-import {
+﻿import {
 	Bell,
 	CircleHelp,
 	FileText,
@@ -7,7 +7,7 @@ import {
 	LogOut,
 	MapPin,
 	MessageCircle,
-	// Moon, Star, Store, Sun — removidos temporariamente (ver src/_future/settings-plans-theme.tsx)
+	// Moon, Star, Store, Sun â€” removidos temporariamente (ver src/_future/settings-plans-theme.tsx)
 	Trash2,
 	UserRound,
 } from 'lucide-react-native';
@@ -15,7 +15,6 @@ import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthFeedbackModal } from '@/src/components/features/auth';
@@ -121,12 +120,12 @@ export default function SettingsScreen() {
 			id: 'security',
 			icon: <Lock size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: t('settings.security', 'Senha e segurança'),
+			title: t('settings.security', 'Senha e seguranÃ§a'),
 			subtitle: t('settings.securitySubtitle', 'Trocar senha com OTP'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/security'),
 		},
-		// [FUTURAS IMPLEMENTAÇÕES] Plano e pagamento + Planos — ver src/_future/settings-plans-theme.tsx
+		// [FUTURAS IMPLEMENTAÃ‡Ã•ES] Plano e pagamento + Planos â€” ver src/_future/settings-plans-theme.tsx
 		// { id: 'plan', ... },
 		// { id: 'store', ... },
 	];
@@ -149,7 +148,7 @@ export default function SettingsScreen() {
 			id: 'location',
 			icon: <MapPin size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'default',
-			title: t('settings.location', 'Localização'),
+			title: t('settings.location', 'LocalizaÃ§Ã£o'),
 			subtitle: t('settings.locationSubtitle', 'Encontrar partidas perto'),
 			rightNode: (
 				<ToggleSwitch value={settings?.locationEnabled ?? true} onValueChange={updateLocation} />
@@ -165,7 +164,7 @@ export default function SettingsScreen() {
 			showArrow: true,
 			onPress: () => setShowLanguageModal(true),
 		},
-		// [FUTURAS IMPLEMENTAÇÕES] Tema claro/escuro — ver src/_future/settings-plans-theme.tsx
+		// [FUTURAS IMPLEMENTAÃ‡Ã•ES] Tema claro/escuro â€” ver src/_future/settings-plans-theme.tsx
 		// { id: 'theme', ... },
 	];
 
@@ -205,7 +204,7 @@ export default function SettingsScreen() {
 			icon: <LogOut size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'bad',
 			title: t('settings.logout', 'Sair da conta'),
-			subtitle: t('settings.logoutSubtitle', 'Você precisara entrar de novo'),
+			subtitle: t('settings.logoutSubtitle', 'VocÃª precisara entrar de novo'),
 			danger: true,
 			onPress: () => setShowLogoutModal(true),
 		},
@@ -220,44 +219,15 @@ export default function SettingsScreen() {
 		},
 	];
 
-	const initials = (profile?.full_name ?? 'Atleta')
-		.split(' ')
-		.filter(Boolean)
-		.slice(0, 2)
-		.map((part) => part[0]?.toUpperCase())
-		.join('');
-
 	const bgColor = theme === 'light' ? '#F4F6F9' : '#05070B';
 	return (
 		<View style={{ flex: 1, backgroundColor: bgColor, paddingTop: insets.top }}>
 			<ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
 				<HubTopNav title={t('settings.title', 'Configuracoes')} subtitle="v 1.4.2" plainBack />
 
-				<LinearGradient
-					colors={theme === 'dark' ? ['#0F3A24', '#072314'] : ['#E3F5EC', '#D6EEE3']}
-					start={{ x: 0, y: 0 }}
-					end={{ x: 1, y: 1 }}
-					style={{ marginHorizontal: 18, marginBottom: 8, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(34,183,108,0.30)', paddingHorizontal: 14, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}
-				>
-					<View className="h-[46px] w-[46px] rounded-full border-2 border-goldB dark:bg-[#1B3A5F] bg-[#E3F5EC] items-center justify-center">
-						<Text variant="label" className="font-bold text-white dark:text-white" style={{ color: theme === 'light' ? '#1A7A4A' : '#FFFFFF' }}>
-							{initials || 'AA'}
-						</Text>
-					</View>
-
-					<View className="flex-1">
-						<Text variant="label" className="font-bold text-[#111827] dark:text-white">
-							{profile?.full_name ?? 'Atleta Futly'}
-						</Text>
-						<Text variant="micro" className="mt-0.5 tracking-[0.5px]" style={{ color: theme === 'light' ? '#2F6C54' : '#86E5B4' }}>
-							{profile?.email ?? 'email@example.com'}
-						</Text>
-					</View>
-
-					{/* [FUTURAS IMPLEMENTAÇÕES] Botão de atalho para editar perfil no header — ver src/_future/settings-plans-theme.tsx */}
-				</LinearGradient>
-
-				<SettingsGroup title={t('settings.accountGroup', 'Conta')} rows={accountRows} />
+				<View style={{ marginTop: -18 }}>
+					<SettingsGroup title={t('settings.accountGroup', 'Conta')} rows={accountRows} />
+				</View>
 				<SettingsGroup title={t('settings.preferencesGroup', 'Preferencias')} rows={preferenceRows} />
 				<SettingsGroup title={t('settings.supportGroup', 'Suporte')} rows={supportRows} />
 				<SettingsGroup title={t('settings.dangerGroup', 'Zona perigosa')} rows={dangerRows} />
@@ -270,7 +240,7 @@ export default function SettingsScreen() {
 				</View>
 			</ScrollView>
 
-			{/* navbar removido — settings não faz parte da navegação principal */}
+			{/* navbar removido â€” settings nÃ£o faz parte da navegaÃ§Ã£o principal */}
 
 			<AuthFeedbackModal
 				visible={showLogoutModal}
@@ -288,7 +258,7 @@ export default function SettingsScreen() {
 				visible={showDeleteModal}
 				tone="error"
 				title={t('settings.deleteModalTitle', 'Excluir conta permanentemente?')}
-				message={t('settings.deleteModalMessage', 'Tem certeza? Todos os seus dados, mensagens e histórico serao apagados para sempre. Esta ação não pode ser desfeita.')}
+				message={t('settings.deleteModalMessage', 'Tem certeza? Todos os seus dados, mensagens e histÃ³rico serao apagados para sempre. Esta aÃ§Ã£o nÃ£o pode ser desfeita.')}
 				primaryLabel={deleting ? t('settings.deleting', 'Deletando...') : t('settings.confirmDelete', 'Sim, excluir tudo')}
 				onPrimaryPress={handleConfirmDeleteAccount}
 				secondaryLabel={t('actions.cancel', 'Cancelar')}
@@ -366,3 +336,4 @@ export default function SettingsScreen() {
 		</View>
 	);
 }
+

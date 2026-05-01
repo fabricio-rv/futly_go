@@ -185,7 +185,7 @@ export default function AgendaScreen() {
             activeId={tab}
             onChange={(id) => setTab(id as AgendaTab)}
             appearance="flat"
-            radius={28}
+            radius={12}
             containerColor={matchTheme.colors.bgSurfaceA}
             borderColor="rgba(34,183,108,0.35)"
           />

@@ -1,25 +1,63 @@
 ﻿import { router } from 'expo-router';
 import { Check } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View, Alert } from 'react-native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { cities as getBrazilianCities, states as getBrazilianStates } from 'estados-cidades';
 
 import { MatchBottomNav } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
-import { Button, IconButton, Input, Text } from '@/src/components/ui';
+import { Button, IconButton, Input, SelectField, Text } from '@/src/components/ui';
 import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
+import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
+import { formatCep } from '@/src/features/location/cep';
+
+function formatDdd(value: string) {
+  return value.replace(/\D/g, '').slice(0, 2);
+}
+
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 9);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
 
 export default function EditProfileScreen() {
   const { t } = useTranslation('profile');
   const { profile, loadProfile, saveProfile, saving } = useProfile();
 
   const [fullName, setFullName] = useState('');
+  const [ddd, setDdd] = useState('');
   const [phone, setPhone] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
+  const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [cep, setCep] = useState('');
+
+  const availableStateCodes = useMemo(() => getBrazilianStates(), []);
+  const stateOptions = useMemo(
+    () =>
+      BRAZIL_STATE_OPTIONS.filter((state) => availableStateCodes.includes(state.value)).map((state) => ({
+        value: state.value,
+        label: state.label,
+        description: state.value,
+      })),
+    [availableStateCodes],
+  );
+
+  const cityOptions = useMemo(() => {
+    if (!selectedState) return [];
+
+    try {
+      return getBrazilianCities(selectedState).map((city) => ({
+        value: city,
+        label: city,
+      }));
+    } catch {
+      return [];
+    }
+  }, [selectedState]);
 
   useEffect(() => {
     loadProfile().catch(() => undefined);
@@ -29,20 +67,37 @@ export default function EditProfileScreen() {
     if (!profile) return;
 
     setFullName(profile.full_name ?? '');
-    setPhone(profile.phone ?? '');
-    setCity(profile.city ?? '');
-    setState(profile.state ?? '');
+    const phoneDigits = (profile.phone ?? '').replace(/\D/g, '');
+    setDdd(phoneDigits.slice(0, 2));
+    setPhone(formatPhone(phoneDigits.slice(2)));
+    setSelectedState(profile.state ?? null);
+    setSelectedCity(profile.city ?? null);
     setCep(profile.cep ?? '');
   }, [profile]);
 
+  useEffect(() => {
+    if (!selectedState) {
+      setSelectedCity(null);
+      return;
+    }
+
+    setSelectedCity((previous) =>
+      previous && cityOptions.some((item) => item.value === previous)
+        ? previous
+        : cityOptions[0]?.value ?? null,
+    );
+  }, [selectedState, cityOptions]);
+
   async function handleSaveProfile() {
     try {
+      const normalizedPhone = `${ddd}${phone}`.replace(/\D/g, '');
+
       await saveProfile({
         fullName: fullName || undefined,
-        phone: phone || null,
-        city: city || null,
-        state: state || null,
-        cep: cep || null,
+        phone: normalizedPhone || null,
+        city: selectedCity || null,
+        state: selectedState || null,
+        cep: cep.replace(/\D/g, '') || null,
       });
 
       Alert.alert(t('success.profileUpdated', 'Perfil atualizado'), t('messages.profileSaved', 'Seus dados foram salvos com sucesso.'));
@@ -88,12 +143,22 @@ export default function EditProfileScreen() {
           </View>
 
           <View className="flex-row gap-2 mb-3">
+            <View style={{ width: 86 }}>
+              <Input
+                label={t('placeholders.dddLabel', 'DDD')}
+                value={ddd}
+                onChangeText={(value) => setDdd(formatDdd(value))}
+                placeholder={t('placeholders.ddd', '11')}
+                keyboardType="number-pad"
+                maxLength={2}
+              />
+            </View>
             <View className="flex-1">
               <Input
                 label={t('personal.phone', 'Telefone')}
                 value={phone}
-                onChangeText={setPhone}
-                placeholder={t('placeholders.phone', 'Ex.: (11) 9999-9999')}
+                onChangeText={(value) => setPhone(formatPhone(value))}
+                placeholder={t('placeholders.phone', 'Ex.: 99999-9999')}
                 keyboardType="phone-pad"
               />
             </View>
@@ -101,19 +166,24 @@ export default function EditProfileScreen() {
 
           <View className="flex-row gap-2 mb-3">
             <View className="flex-1">
-              <Input
+              <SelectField
                 label={t('placeholders.stateLabel', 'Estado')}
-                value={state}
-                onChangeText={setState}
-                placeholder={t('placeholders.state', 'Ex.: SP')}
+                value={selectedState}
+                onChange={setSelectedState}
+                options={stateOptions}
+                placeholder={t('placeholders.selectState', 'Selecione o estado')}
+                searchable
               />
             </View>
             <View className="flex-1">
-              <Input
+              <SelectField
                 label={t('personal.location', 'Cidade')}
-                value={city}
-                onChangeText={setCity}
-                placeholder={t('placeholders.city', 'Ex.: Sao Paulo')}
+                value={selectedCity}
+                onChange={setSelectedCity}
+                options={cityOptions}
+                placeholder={t('placeholders.selectCity', 'Selecione a cidade')}
+                searchable
+                disabled={!selectedState}
               />
             </View>
           </View>
@@ -122,12 +192,12 @@ export default function EditProfileScreen() {
             <Input
               label={t('placeholders.cepLabel', 'CEP')}
               value={cep}
-              onChangeText={setCep}
+              onChangeText={(value) => setCep(formatCep(value))}
               placeholder={t('placeholders.cep', 'Ex.: 01310-100')}
               keyboardType="number-pad"
+              maxLength={9}
             />
           </View>
-
         </View>
 
         <View className="mx-[18px] mt-4 mb-4">

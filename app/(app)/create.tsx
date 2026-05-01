@@ -341,7 +341,7 @@ export default function CreateMatchScreen() {
             activeId={activeStep}
             onChange={(value) => goToStep(value as CreateStep)}
             appearance="flat"
-            radius={28}
+            radius={12}
             containerColor={matchTheme.colors.bgSurfaceA}
             borderColor="rgba(34,183,108,0.35)"
           />

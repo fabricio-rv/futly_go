@@ -1,5 +1,5 @@
-import { ChevronDown } from 'lucide-react-native';
-import { Modal, Pressable, TextInput, useWindowDimensions, View } from 'react-native';
+﻿import { ChevronDown } from 'lucide-react-native';
+import { Modal, Pressable, useWindowDimensions, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../matches/shared/theme';
@@ -9,7 +9,6 @@ import { useState } from 'react';
 export interface CourtFilters {
   state?: string;
   city?: string;
-  location?: string;
 }
 
 type Props = {
@@ -171,33 +170,6 @@ export function CourtFilterPanel({ filters, onFiltersChange, states, cities }: P
                 value={filters.city}
                 placeholder={t('filters.selectCity', 'Selecione a cidade')}
                 onPress={() => setCityPickerVisible(true)}
-              />
-            </View>
-          </View>
-
-          <View className={isCompact ? 'gap-2 mt-1' : 'flex-row gap-2 mt-1'}>
-            <View className={isCompact ? 'w-full gap-2' : 'flex-1 gap-2'}>
-              <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
-                {t('filters.location', 'Localização')}
-              </Text>
-              <View
-                className="h-12 rounded-[12px] border px-3 flex-row items-center"
-                style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
-              >
-                <TextInput
-                  value={filters.location ?? ''}
-                  onChangeText={(value) => onFiltersChange({ ...filters, location: value })}
-                  placeholder={t('filters.locationPlaceholder', 'Buscar por local')}
-                  placeholderTextColor={matchTheme.colors.fgMuted}
-                  style={{ color: matchTheme.colors.fgPrimary, fontSize: 14, flex: 1 }}
-                />
-              </View>
-            </View>
-            <View className={isCompact ? 'w-full' : 'flex-1'}>
-              <FieldButton
-                label={t('filters.floor', 'Piso')}
-                placeholder={t('filters.floorPlaceholder', 'Em breve')}
-                disabled
               />
             </View>
           </View>

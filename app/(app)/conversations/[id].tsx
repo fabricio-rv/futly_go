@@ -5,8 +5,9 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useIsFocused } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, View } from 'react-native';
+import { Alert, Image, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 
@@ -73,6 +74,7 @@ export default function ConversationDetailScreen() {
   const theme = useAppColorScheme();
   const params = useLocalSearchParams<{ id?: string }>();
   const conversationId = params.id ?? '';
+  const isFocused = useIsFocused();
 
   const [draft, setDraft] = useState('');
   const [attachVisible, setAttachVisible] = useState(false);
@@ -102,9 +104,10 @@ export default function ConversationDetailScreen() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingRef = useRef<Audio.Recording | null>(null);
-  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingLastSpokenMsRef = useRef(0);
   const listRef = useRef<any>(null);
   const hasScrolledToBottomRef = useRef(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const {
     loading,
@@ -128,7 +131,7 @@ export default function ConversationDetailScreen() {
     deleteMessage,
     notifyComposerChanged,
     updateTypingState,
-  } = useConversationThread(conversationId);
+  } = useConversationThread(conversationId, { isScreenActive: isFocused });
   const { visibleActive: forwardActiveConversations, visibleArchived: forwardArchivedConversations } = useChatList();
 
   useEffect(() => {
@@ -139,6 +142,34 @@ export default function ConversationDetailScreen() {
       }, 50);
     }
   }, [loading, messages.length]);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      setIsKeyboardVisible(true);
+      setTimeout(() => {
+        listRef.current?.scrollToEnd?.({ animated: true });
+      }, 40);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const lastMessageId = messages.length > 0 ? messages[messages.length - 1]?.id : null;
+  useEffect(() => {
+    if (!lastMessageId || !isKeyboardVisible) return;
+    setTimeout(() => {
+      listRef.current?.scrollToEnd?.({ animated: true });
+    }, 30);
+  }, [isKeyboardVisible, lastMessageId]);
 
   const participantNameById = useMemo(() => new Map(participants.map((p) => [p.user_id, p.full_name])), [participants]);
   const typingNames = useMemo(() => typingUserIds.map((id) => participantNameById.get(id) ?? t('detail.athleteFallback', 'Atleta')), [participantNameById, t, typingUserIds]);
@@ -273,6 +304,11 @@ export default function ConversationDetailScreen() {
 
     try {
       await send(text, metadata ? { metadata } : undefined);
+      if (isKeyboardVisible) {
+        setTimeout(() => {
+          listRef.current?.scrollToEnd?.({ animated: true });
+        }, 30);
+      }
     } catch {
       setDraft(message);
       Alert.alert(
@@ -280,7 +316,7 @@ export default function ConversationDetailScreen() {
         t('errors.sendFailedMessage', 'Nao foi possivel enviar a mensagem agora.'),
       );
     }
-  }, [canSend, draft, getMessagePreview, getReplyAuthor, replyTo, send, t]);
+  }, [canSend, draft, getMessagePreview, getReplyAuthor, isKeyboardVisible, replyTo, send, t]);
 
   const handleSendAttachment = useCallback(async (input: {
     uri: string;
@@ -423,14 +459,31 @@ export default function ConversationDetailScreen() {
         try { await recordingRef.current.stopAndUnloadAsync(); } catch { /* já parado */ }
         recordingRef.current = null;
       }
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+      recordingLastSpokenMsRef.current = 0;
+      const { recording } = await Audio.Recording.createAsync({
+        ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        isMeteringEnabled: true,
+      });
       recordingRef.current = recording;
       setIsRecording(true);
       setRecordingDuration(0);
-      recordingTimerRef.current = setInterval(() => setRecordingDuration((prev) => prev + 1), 1000);
+      recording.setProgressUpdateInterval(120);
+      recording.setOnRecordingStatusUpdate((status) => {
+        if (!status.isRecording) return;
+        const durationMs = Number(status.durationMillis ?? 0);
+        setRecordingDuration(Math.max(0, Math.round(durationMs / 1000)));
+        const metering = typeof status.metering === 'number' ? status.metering : null;
+        if (metering !== null && metering > -42) {
+          recordingLastSpokenMsRef.current = durationMs;
+        }
+      });
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
       Alert.alert(t('common.error', 'Erro'), detail || t('errors.startRecordingError', 'Não foi possível iniciar a gravação.'));
@@ -438,25 +491,46 @@ export default function ConversationDetailScreen() {
   }, [t]);
 
   const handleStopRecording = useCallback(async (cancelled: boolean) => {
-    if (recordingTimerRef.current) {
-      clearInterval(recordingTimerRef.current);
-      recordingTimerRef.current = null;
-    }
-    const durationSec = recordingDuration;
+    let durationSec = recordingDuration;
     setIsRecording(false);
     setRecordingDuration(0);
 
     try {
       const recording = recordingRef.current;
       recordingRef.current = null;
+      let totalDurationMs = 0;
+      try {
+        const statusBeforeStop = await recording?.getStatusAsync();
+        totalDurationMs = Number(statusBeforeStop?.durationMillis ?? 0);
+      } catch {
+        // fallback para contador local
+      }
       if (recording) {
         await recording.stopAndUnloadAsync();
       }
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: false,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
       if (cancelled || !recording) return;
 
       const uri = recording.getURI();
       if (!uri) throw new Error('Nao foi possivel ler o arquivo de audio.');
+
+      const lastSpokenMs = recordingLastSpokenMsRef.current;
+      const spokenWithGraceMs = lastSpokenMs > 0 ? lastSpokenMs + 220 : 0;
+      const effectiveMs = spokenWithGraceMs > 0
+        ? Math.min(totalDurationMs || spokenWithGraceMs, spokenWithGraceMs)
+        : totalDurationMs;
+      if (effectiveMs > 0) {
+        durationSec = Math.max(1, Math.round(effectiveMs / 1000));
+      } else {
+        durationSec = Math.max(1, durationSec);
+      }
+      recordingLastSpokenMsRef.current = 0;
 
       await handleSendAttachment({
         uri,
@@ -533,7 +607,7 @@ export default function ConversationDetailScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: bgColor }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'height' : 'height'} keyboardVerticalOffset={0}>
         <ConversationHeader
           title={header?.title ?? t('detail.title', 'Conversa')}
           subtitle={headerSubtitle}
@@ -582,6 +656,8 @@ export default function ConversationDetailScreen() {
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 16 }}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
           ListHeaderComponent={(
             <>
               <View className="self-center rounded-full px-3 py-1 mb-3 mt-1" style={{ backgroundColor: theme === 'light' ? '#E9EFF8' : 'rgba(255,255,255,0.05)' }}>
@@ -708,7 +784,7 @@ export default function ConversationDetailScreen() {
           isSending={sending}
           isRecording={isRecording}
           recordingDuration={recordingDuration}
-          bottomInset={insets.bottom}
+          bottomInset={isKeyboardVisible ? 0 : insets.bottom}
           onChangeText={handleDraftChange}
           onSend={handleSend}
           onAddAttachment={() => setAttachVisible((v) => !v)}

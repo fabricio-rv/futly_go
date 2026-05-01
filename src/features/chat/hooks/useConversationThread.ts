@@ -114,7 +114,11 @@ function mergeServerAndPendingMessages(serverMessages: ChatMessage[], pendingMes
   });
 }
 
-export function useConversationThread(conversationId: string) {
+type UseConversationThreadOptions = {
+  isScreenActive?: boolean;
+};
+
+export function useConversationThread(conversationId: string, options: UseConversationThreadOptions = {}) {
   const { t, currentLanguage } = useTranslation('chat');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,6 +132,7 @@ export function useConversationThread(conversationId: string) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [typingUserIds, setTypingUserIds] = useState<string[]>([]);
   const [onlineUserIds, setOnlineUserIds] = useState<string[]>([]);
+  const isScreenActive = options.isScreenActive ?? true;
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const channelSubscribedRef = useRef(false);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -444,11 +449,13 @@ export function useConversationThread(conversationId: string) {
       setReactions(reactionMap);
       setPinnedMessageIds(pinnedIds);
       setSavedMessageIds(savedIds);
-      void Promise.allSettled([
-        markConversationMessagesDelivered(incomingMessageIds),
-        markConversationMessagesRead(incomingMessageIds),
-        markConversationAsRead(conversationId),
-      ]);
+      void markConversationMessagesDelivered(incomingMessageIds).catch(() => undefined);
+      if (isScreenActive) {
+        void Promise.allSettled([
+          markConversationMessagesRead(incomingMessageIds),
+          markConversationAsRead(conversationId),
+        ]);
+      }
     } catch (err) {
       if (!mountedRef.current || loadSequence !== loadSequenceRef.current) return;
       const message = err instanceof Error ? err.message : t('errors.loadConversationFailed', 'Erro ao carregar conversa.');
@@ -460,7 +467,7 @@ export function useConversationThread(conversationId: string) {
     } finally {
       if (mountedRef.current && loadSequence === loadSequenceRef.current) setLoading(false);
     }
-  }, [conversationId, currentLanguage, queueToMessages, t]);
+  }, [conversationId, currentLanguage, isScreenActive, queueToMessages, t]);
 
   const flushQueuedMessages = useCallback(async () => {
     if (!conversationId || flushingQueueRef.current || queuedMessagesRef.current.length === 0) return;
@@ -545,7 +552,7 @@ export function useConversationThread(conversationId: string) {
   }, [conversationId, currentUserId, flushQueuedMessages, hydrateQueue, load]);
 
   useEffect(() => {
-    if (!currentUserId || messages.length === 0) return;
+    if (!isScreenActive || !currentUserId || messages.length === 0) return;
 
     const syncReadReceipts = () => {
       const incomingMessageIds = messages
@@ -562,7 +569,7 @@ export function useConversationThread(conversationId: string) {
     return () => {
       clearInterval(intervalId);
     };
-  }, [currentUserId, messages]);
+  }, [currentUserId, isScreenActive, messages]);
 
   useEffect(() => {
     if (!conversationId || !currentUserId) return;
@@ -783,7 +790,9 @@ export function useConversationThread(conversationId: string) {
         );
         return persisted.id;
       }
-      await markConversationAsRead(conversationId);
+      if (isScreenActive) {
+        await markConversationAsRead(conversationId);
+      }
     } catch (error) {
       setMessages((previous) => {
         if (shouldPersistInQueue) {
@@ -798,7 +807,7 @@ export function useConversationThread(conversationId: string) {
       throw error;
     }
     return null;
-  }, [conversationId, currentLanguage, currentUserId, load, persistQueue, updateTypingState]);
+  }, [conversationId, currentLanguage, currentUserId, isScreenActive, load, persistQueue, updateTypingState]);
 
   const markUnread = useCallback(async () => {
     await markConversationAsUnread(conversationId);

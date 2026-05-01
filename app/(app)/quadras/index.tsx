@@ -103,15 +103,6 @@ export default function QuadrasScreen() {
       result = result.filter((court) => extractCity(court) === filters.city);
     }
 
-    if (filters.location) {
-      const loc = normalize(filters.location.trim());
-      if (loc) {
-        result = result.filter((court) =>
-          normalize(`${court.location_preview} ${court.address}`).includes(loc),
-        );
-      }
-    }
-
     return result;
   }, [allCourts, query, filters]);
 
