@@ -747,7 +747,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
               </View>
 
               <View className="mt-3 gap-2">
-                {details.slots.map((slot) => {
+                {details.slots.filter((slot) => slot.open).map((slot) => {
                   const isAvailable = slot.open && !slot.occupied;
                   const isSelected = selectedSlot?.index === slot.index;
 

@@ -113,7 +113,7 @@ export default function SettingsScreen() {
 			icon: <UserRound size={16} color="currentColor" strokeWidth={2} />,
 			iconTone: 'ok',
 			title: t('settings.editProfile', 'Editar perfil'),
-			subtitle: t('settings.editProfileSubtitle', 'Nome, bio, telefone, cidade'),
+			subtitle: t('settings.editProfileSubtitle', 'Nome, telefone, cidade'),
 			showArrow: true,
 			onPress: () => router.push('/(app)/edit-profile'),
 		},
@@ -366,4 +366,3 @@ export default function SettingsScreen() {
 		</View>
 	);
 }
-

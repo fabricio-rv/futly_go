@@ -9,7 +9,6 @@ import type { Partida } from '@/src/features/matches/types';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { AvatarStack } from '../shared/AvatarStack';
 import { MatchPricePill } from './MatchPricePill';
-import { StatBadge } from '../shared/StatBadge';
 import { StatusStamp } from '../shared/StatusStamp';
 import { matchShadows, useMatchTheme } from '../shared/theme';
 
@@ -20,18 +19,15 @@ type MatchCardProps = {
   bannerPalette?: [string, string, string];
 };
 
-function levelToneToBadge(levelTone: Partida['levelTone']) {
-  if (levelTone === 'gold') return 'gold';
-  if (levelTone === 'sky') return 'sky';
-  return 'neutral';
-}
-
 const defaultBanner: [string, string, string] = ['#0F3A24', '#072314', '#021109'];
 
 export function MatchCard({ partida, onPress, rightAction, bannerPalette = defaultBanner }: MatchCardProps) {
   const matchTheme = useMatchTheme();
   const { t, currentLanguage } = useTranslation('matches');
   const fillPercent = partida.totalSlots > 0 ? Math.round((partida.occupiedSlots / partida.totalSlots) * 100) : 0;
+  const levelPartsRaw = partida.levelLabels && partida.levelLabels.length > 0
+    ? partida.levelLabels.slice(0, 2)
+    : [partida.levelLabel];
   const formattedMatchDate = partida.matchDate
     ? new Date(`${partida.matchDate}T12:00:00`).toLocaleDateString(currentLanguage, {
         day: '2-digit',
@@ -85,12 +81,13 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
     return label;
   };
 
-  const translateLevelLabel = (label: string) => {
+  const translateSingleLevel = (label: string) => {
     if (label === 'Casual') return t('levelCasual', 'Casual');
     if (label.includes('Intermediário') || label.includes('Intermédio') || label.includes('Intermedio')) return t('levelIntermediate', 'Intermediate');
     if (label.includes('Avançado') || label.includes('Avanzado')) return t('levelAdvanced', 'Advanced');
     return label;
   };
+  const translatedLevelParts = levelPartsRaw.map((part) => translateSingleLevel(part.trim()));
 
   return (
     <MotiView
@@ -199,7 +196,39 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
           </View>
 
           <View style={{ alignItems: 'flex-end', justifyContent: 'space-between' }}>
-            <StatBadge label={translateLevelLabel(partida.levelLabel)} tone={levelToneToBadge(partida.levelTone)} />
+            <View className="flex-row flex-wrap justify-end gap-1 max-w-[130px]">
+              {translatedLevelParts.map((level, index) => {
+                const accent =
+                  index === 0
+                    ? (partida.levelTone === 'gold'
+                        ? '#D4A13A'
+                        : partida.levelTone === 'sky'
+                          ? '#5AB1FF'
+                          : matchTheme.colors.fgSecondary)
+                    : 'rgba(148,163,184,0.9)';
+                return (
+                  <View
+                    key={`${level}-${index}`}
+                    className="px-2 py-[2px] rounded-full border"
+                    style={{
+                      borderColor: accent,
+                      backgroundColor: 'transparent',
+                    }}
+                  >
+                    <Text
+                      variant="caption"
+                      className="font-semibold"
+                      style={{
+                        color: index === 0 ? matchTheme.colors.fgPrimary : matchTheme.colors.fgSecondary,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {level}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
             {rightAction}
             <View className="flex-row items-center gap-1">
               <Clock3 size={12} color={partida.status === 'done' ? matchTheme.colors.warn : matchTheme.colors.ok} />

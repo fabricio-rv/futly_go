@@ -4,6 +4,9 @@ export interface Court {
   location_preview: string;
   address: string;
   phone: string;
+  state?: string;
+  city?: string;
+  cep?: string;
   rating: number;
   review_count: number;
   amenities: string[];

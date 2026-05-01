@@ -9,7 +9,6 @@ export type UpdateProfileInput = {
   city?: string | null;
   state?: string | null;
   cep?: string | null;
-  bio?: string | null;
 };
 
 export type UserPositionStat = {
@@ -66,8 +65,6 @@ export async function updateMyProfile(input: UpdateProfileInput) {
     payload.cep = input.cep;
     userMetadata.cep = input.cep;
   }
-  if (input.bio !== undefined) payload.bio = input.bio;
-
   if (Object.keys(userMetadata).length > 0) {
     await supabase.auth.updateUser({ data: userMetadata }).catch(() => undefined);
   }

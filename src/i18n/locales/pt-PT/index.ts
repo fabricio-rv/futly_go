@@ -17,6 +17,7 @@ import { ptPTRating } from './rating';
 import { ptPTHelp } from './help';
 import { ptPTSupport } from './support';
 import { ptPTLegal } from './legal';
+import { ptPTQuadras } from './quadras';
 import type { TranslationResource } from '../../types';
 
 export const ptPTTranslations: TranslationResource = {
@@ -38,4 +39,5 @@ export const ptPTTranslations: TranslationResource = {
   help: ptPTHelp,
   support: ptPTSupport,
   legal: ptPTLegal,
+  quadras: ptPTQuadras,
 };

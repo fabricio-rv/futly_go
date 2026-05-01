@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
 
-import { MatchBottomNav, useMatchTheme } from '@/src/components/features/matches';
+import { useMatchTheme } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
 import { BaseCard, Text, Button, SkeletonList, TouchableScale } from '@/src/components/ui';
 import { useNotifications } from '@/src/features/notifications/hooks/useNotifications';
@@ -243,12 +243,13 @@ export default function NotificationsScreen() {
 bounces
         overScrollMode="always"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 24 }}
         ListHeaderComponent={(
           <View className="px-[18px]">
             <View className="pt-1 pb-2">
               <HubTopNav
                 title={title}
+                plainBack
                 centerNode={(
                   <View className="flex-row items-center gap-2 py-0.5">
                     <Bell size={16} color="#86E5B4" />
@@ -257,7 +258,6 @@ bounces
                     </Text>
                   </View>
                 )}
-                hideBack
               />
             </View>
 
@@ -415,8 +415,6 @@ bounces
           </View>
         )}
       />
-
-      <MatchBottomNav active="notifications" />
 
       <Modal visible={ratingModalVisible} transparent animationType="fade" onRequestClose={() => setRatingModalVisible(false)}>
         <Pressable className="flex-1 bg-black/60 justify-center px-6" onPress={() => setRatingModalVisible(false)}>

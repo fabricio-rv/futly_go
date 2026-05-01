@@ -20,7 +20,6 @@ export default function EditProfileScreen() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [cep, setCep] = useState('');
-  const [bio, setBio] = useState('');
 
   useEffect(() => {
     loadProfile().catch(() => undefined);
@@ -34,7 +33,6 @@ export default function EditProfileScreen() {
     setCity(profile.city ?? '');
     setState(profile.state ?? '');
     setCep(profile.cep ?? '');
-    setBio(profile.bio ?? '');
   }, [profile]);
 
   async function handleSaveProfile() {
@@ -45,7 +43,6 @@ export default function EditProfileScreen() {
         city: city || null,
         state: state || null,
         cep: cep || null,
-        bio: bio || null,
       });
 
       Alert.alert(t('success.profileUpdated', 'Perfil atualizado'), t('messages.profileSaved', 'Seus dados foram salvos com sucesso.'));
@@ -131,16 +128,6 @@ export default function EditProfileScreen() {
             />
           </View>
 
-          <View>
-            <Input
-              label={t('personal.bio', 'Bio')}
-              value={bio}
-              onChangeText={setBio}
-              placeholder={t('personal.bioPlaceholder', 'Conte um pouco sobre você...')}
-              multiline
-              numberOfLines={4}
-            />
-          </View>
         </View>
 
         <View className="mx-[18px] mt-4 mb-4">

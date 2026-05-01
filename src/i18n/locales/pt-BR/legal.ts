@@ -17,7 +17,7 @@ export const ptBRLegal = {
     contact: '8. Contato'
   },
   terms: {
-    serviceText: 'Futly Hub conecta atletas para organizar partidas.',
+    serviceText: 'Futly Go conecta atletas para organizar partidas.',
     responsibilityText: 'Você e responsavel por sua conta e suas ações no app.',
     conductText: 'Respeite outros usuários e evite comportamento ofensivo.',
     cancellationText: 'Você pode cancelar sua conta a qualquer momento nas configurações.',

@@ -1,4 +1,4 @@
-import { supabase } from "@/src/lib/supabase";
+﻿import { supabase } from "@/src/lib/supabase";
 import {
   MATCH_POSITIONS,
   type MatchLevel,
@@ -113,7 +113,7 @@ export type MatchDetails = {
 async function getCurrentUserId() {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user)
-    throw new Error("Faça login novamente para continuar.");
+    throw new Error("FaÃ§a login novamente para continuar.");
   return data.user.id;
 }
 
@@ -246,9 +246,10 @@ async function getOccupiedSlotsByMatchIds(matchIds: string[]) {
     .from("match_participants")
     .select("match_id,status")
     .in("match_id", matchIds)
-    .eq("status", "confirmado");
+    .eq("status", "confirmado")
+    .eq("is_host", false);
 
-  if (error) throw new Error("Não foi possível carregar os participantes.");
+  if (error) throw new Error("NÃ£o foi possÃ­vel carregar os participantes.");
 
   const counts = new Map<string, number>();
 
@@ -277,7 +278,7 @@ async function getMatchById(matchId: string) {
     .select("*")
     .eq("id", matchId)
     .single();
-  if (error || !data) throw new Error("Partida não encontrada.");
+  if (error || !data) throw new Error("Partida nÃ£o encontrada.");
   return data;
 }
 
@@ -288,9 +289,10 @@ async function getParticipantsWithProfiles(matchId: string) {
       "id,match_id,user_id,position_key,position_label,status,is_host,joined_at,updated_at",
     )
     .eq("match_id", matchId)
-    .eq("status", "confirmado");
+    .eq("status", "confirmado")
+    .eq("is_host", false);
 
-  if (error) throw new Error("Não foi possível carregar participantes.");
+  if (error) throw new Error("NÃ£o foi possÃ­vel carregar participantes.");
 
   const participants = (data ?? []) as ParticipantRow[];
   const userIds = participants.map((item) => item.user_id);
@@ -303,7 +305,7 @@ async function getParticipantsWithProfiles(matchId: string) {
       .in("id", userIds);
 
     if (profileError)
-      throw new Error("Não foi possível carregar perfis dos participantes.");
+      throw new Error("NÃ£o foi possÃ­vel carregar perfis dos participantes.");
     profiles = (profileRows ?? []) as ProfileRow[];
   }
 
@@ -326,7 +328,7 @@ async function getPendingRequests(matchId: string) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    throw new Error("Não foi possível carregar solicitacoes desta partida.");
+    throw new Error("NÃ£o foi possÃ­vel carregar solicitacoes desta partida.");
   }
 
   return (data ?? []) as ParticipationRequestRow[];
@@ -381,33 +383,13 @@ export async function createMatch(input: CreateMatchInput) {
   if (error || !match) {
     if (error?.code === "23505") {
       throw new Error(
-        "Você já criou uma partida igual para esse mesmo horário.",
+        "VocÃª jÃ¡ criou uma partida igual para esse mesmo horÃ¡rio.",
       );
     }
 
-    throw new Error("Não foi possível criar a partida.");
+    throw new Error("NÃ£o foi possÃ­vel criar a partida.");
   }
-
-  const hostSlot = MATCH_POSITIONS[input.modality][0];
-  const { error: participantError } = await supabase
-    .from("match_participants")
-    .insert({
-      match_id: match.id,
-      user_id: userId,
-      is_host: true,
-      status: "confirmado",
-      position_key: hostSlot.key,
-      position_label: hostSlot.label,
-    });
-
-  if (participantError) {
-    await supabase.from("matches").delete().eq("id", match.id);
-    throw new Error(
-      "Não foi possível registrar o host da partida. Tente novamente.",
-    );
-  }
-
-  // Enviar email de confirmação ao host
+  // Enviar email de confirmaÃ§Ã£o ao host
   const { data: hostProfile } = await supabase
     .from("profiles")
     .select("email, full_name")
@@ -449,7 +431,7 @@ export async function fetchAvailableMatches(
   const { data, error } = await query;
 
   if (error) {
-    throw new Error("Não foi possível listar partidas disponíveis.");
+    throw new Error("NÃ£o foi possÃ­vel listar partidas disponÃ­veis.");
   }
 
   const list = (data ?? []).sort(sortByScheduleAsc);
@@ -474,9 +456,10 @@ export async function fetchAvailableMatches(
 export async function getMatchDetails(matchId: string): Promise<MatchDetails> {
   const currentUserId = await getCurrentUserId();
   const match = await getMatchById(matchId);
+  const isHost = match.created_by === currentUserId;
   const [{ participants, profileById }, requestRows] = await Promise.all([
     getParticipantsWithProfiles(matchId),
-    getPendingRequests(matchId),
+    isHost ? getPendingRequests(matchId) : Promise.resolve([] as ParticipationRequestRow[]),
   ]);
 
   const slots = normalizeSlots(
@@ -506,7 +489,7 @@ export async function getMatchDetails(matchId: string): Promise<MatchDetails> {
       .select("*")
       .in("id", requestUserIds);
     if (error)
-      throw new Error("Não foi possível carregar perfis das solicitacoes.");
+      throw new Error("NÃ£o foi possÃ­vel carregar perfis das solicitacoes.");
     requestProfiles = (data ?? []) as ProfileRow[];
   }
 
@@ -571,7 +554,7 @@ export async function getMatchDetails(matchId: string): Promise<MatchDetails> {
     card,
     slots,
     participants: participantsList,
-    isHost: match.created_by === currentUserId,
+    isHost,
     myParticipant,
     myRequest,
     pendingRequests,
@@ -588,11 +571,11 @@ export async function joinMatch(params: {
   const match = await getMatchById(params.matchId);
 
   if (match.created_by === userId) {
-    throw new Error("O host não pode solicitar a propria partida.");
+    throw new Error("O host nÃ£o pode solicitar a propria partida.");
   }
 
   if (match.status !== "publicada") {
-    throw new Error("Esta partida não esta com inscricoes abertas.");
+    throw new Error("Esta partida nÃ£o esta com inscricoes abertas.");
   }
 
   const { data: existingParticipant } = await supabase
@@ -604,7 +587,7 @@ export async function joinMatch(params: {
     .maybeSingle();
 
   if (existingParticipant) {
-    throw new Error("Você já esta confirmado nesta partida.");
+    throw new Error("VocÃª jÃ¡ esta confirmado nesta partida.");
   }
 
   const { error } = await supabase.from("match_participation_requests").upsert(
@@ -623,7 +606,7 @@ export async function joinMatch(params: {
   );
 
   if (error) {
-    throw new Error("Não foi possível enviar sua solicitação para a partida.");
+    throw new Error("NÃ£o foi possÃ­vel enviar sua solicitaÃ§Ã£o para a partida.");
   }
 }
 
@@ -640,7 +623,7 @@ export async function processParticipationRequest(
 
   if (error) {
     throw new Error(
-      error.message || "Não foi possível processar a solicitação.",
+      error.message || "NÃ£o foi possÃ­vel processar a solicitaÃ§Ã£o.",
     );
   }
 }
@@ -666,7 +649,7 @@ export async function fetchHostPendingRequests(): Promise<
     .eq("created_by", userId);
 
   if (createdError)
-    throw new Error("Não foi possível carregar as partidas criadas.");
+    throw new Error("NÃ£o foi possÃ­vel carregar as partidas criadas.");
 
   const createdMatchIds = (createdMatches ?? []).map((m) => m.id);
   if (createdMatchIds.length === 0) {
@@ -682,7 +665,7 @@ export async function fetchHostPendingRequests(): Promise<
     .eq("status", "pending");
 
   if (requestError)
-    throw new Error("Não foi possível carregar as solicitacoes.");
+    throw new Error("NÃ£o foi possÃ­vel carregar as solicitacoes.");
 
   if (!requestRows || requestRows.length === 0) {
     return [];
@@ -699,7 +682,7 @@ export async function fetchHostPendingRequests(): Promise<
       .in("id", userIds);
 
     if (profileError)
-      throw new Error("Não foi possível carregar perfis dos solicitantes.");
+      throw new Error("NÃ£o foi possÃ­vel carregar perfis dos solicitantes.");
     profiles = (profileData ?? []) as ProfileRow[];
   }
 
@@ -722,7 +705,7 @@ export async function leaveMatch(matchId: string) {
   const match = await getMatchById(matchId);
 
   if (match.created_by === userId) {
-    throw new Error("O host não pode desmarcar a propria partida.");
+    throw new Error("O host nÃ£o pode desmarcar a propria partida.");
   }
 
   const { data: existingParticipant } = await supabase
@@ -742,7 +725,7 @@ export async function leaveMatch(matchId: string) {
       .eq("is_host", false);
 
     if (error) {
-      throw new Error("Não foi possível desmarcar sua presença.");
+      throw new Error("NÃ£o foi possÃ­vel desmarcar sua presenÃ§a.");
     }
 
     return;
@@ -760,7 +743,7 @@ export async function leaveMatch(matchId: string) {
     .eq("status", "pending");
 
   if (error) {
-    throw new Error("Não foi possível cancelar sua solicitação.");
+    throw new Error("NÃ£o foi possÃ­vel cancelar sua solicitaÃ§Ã£o.");
   }
 }
 
@@ -793,7 +776,7 @@ export async function submitMatchRating(params: {
 
   if (existingError) {
     throw new Error(
-      existingError.message || "Não foi possível verificar avaliação existente.",
+      existingError.message || "NÃ£o foi possÃ­vel verificar avaliaÃ§Ã£o existente.",
     );
   }
 
@@ -812,7 +795,7 @@ export async function submitMatchRating(params: {
 
     if (updateError) {
       throw new Error(
-        updateError.message || "Não foi possível atualizar a avaliação.",
+        updateError.message || "NÃ£o foi possÃ­vel atualizar a avaliaÃ§Ã£o.",
       );
     }
     return;
@@ -840,11 +823,11 @@ export async function submitMatchRating(params: {
 
     throw new Error(
       updateAfterDuplicateError.message ||
-        "Não foi possível atualizar a avaliação.",
+        "NÃ£o foi possÃ­vel atualizar a avaliaÃ§Ã£o.",
     );
   }
 
-  throw new Error(error.message || "Não foi possível salvar a avaliação.");
+  throw new Error(error.message || "NÃ£o foi possÃ­vel salvar a avaliaÃ§Ã£o.");
 }
 
 export async function getUserAgenda(): Promise<AgendaResult> {
@@ -878,13 +861,13 @@ export async function getUserAgenda(): Promise<AgendaResult> {
   ]);
 
   if (createdError)
-    throw new Error("Não foi possível carregar partidas criadas.");
+    throw new Error("NÃ£o foi possÃ­vel carregar partidas criadas.");
   if (joinedError)
-    throw new Error("Não foi possível carregar partidas marcadas.");
+    throw new Error("NÃ£o foi possÃ­vel carregar partidas marcadas.");
   if (pendingError)
-    throw new Error("Não foi possível carregar solicitacoes pendentes.");
+    throw new Error("NÃ£o foi possÃ­vel carregar solicitacoes pendentes.");
   if (ratingTaskError)
-    throw new Error("Não foi possível carregar tarefas de avaliação.");
+    throw new Error("NÃ£o foi possÃ­vel carregar tarefas de avaliaÃ§Ã£o.");
 
   const joinedMatchIds = Array.from(
     new Set((joinedRows ?? []).map((row) => row.match_id)),
@@ -902,7 +885,7 @@ export async function getUserAgenda(): Promise<AgendaResult> {
       .neq("created_by", userId);
 
     if (error)
-      throw new Error("Não foi possível carregar as partidas marcadas.");
+      throw new Error("NÃ£o foi possÃ­vel carregar as partidas marcadas.");
     joinedData = data ?? [];
   }
 
@@ -913,7 +896,7 @@ export async function getUserAgenda(): Promise<AgendaResult> {
       .select("*")
       .in("id", pendingMatchIds);
     if (error)
-      throw new Error("Não foi possível carregar as partidas pendentes.");
+      throw new Error("NÃ£o foi possÃ­vel carregar as partidas pendentes.");
     pendingData = data ?? [];
   }
 
@@ -955,7 +938,7 @@ export async function getUserAgenda(): Promise<AgendaResult> {
     return {
       ...partida,
       status: "confirmed" as const,
-      statusLabel: "Solicitação pendente",
+      statusLabel: "SolicitaÃ§Ã£o pendente",
       isDimmed: true,
     };
   });
@@ -986,3 +969,4 @@ export async function getUserAgenda(): Promise<AgendaResult> {
 
   return { criadas, marcadas, pendentes, ratingTasks };
 }
+

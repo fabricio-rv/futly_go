@@ -86,6 +86,11 @@ export function mapMatchRowToPartida(
   const isFinished =
     match.status === "finalizada" || when.getTime() <= Date.now();
 
+  const levelLabels = (match.accepted_levels ?? [])
+    .slice(0, 2)
+    .map((level) => getMatchLevelLabel(level))
+    .filter(Boolean);
+
   return {
     id: match.id,
     title: match.title,
@@ -103,6 +108,7 @@ export function mapMatchRowToPartida(
       match.city ||
       "Sem local",
     levelLabel: getMatchLevelLabel(match.accepted_levels[0]),
+    levelLabels: levelLabels.length > 0 ? levelLabels : undefined,
     levelTone: getLevelTone(Number(match.price_per_person)),
     pricePerPlayer: Number(match.price_per_person),
     occupiedSlots,

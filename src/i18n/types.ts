@@ -20,6 +20,7 @@ export interface TranslationResource {
   help: Record<string, any>;
   support: Record<string, any>;
   legal: Record<string, any>;
+  quadras: Record<string, any>;
 }
 
 export interface I18nConfig {
@@ -33,5 +34,5 @@ export const I18N_CONFIG: I18nConfig = {
   defaultLanguage: 'en-US',
   fallbackLanguage: 'pt-BR',
   supportedLanguages: ['pt-BR', 'pt-PT', 'en-US', 'es-ES'],
-  namespaces: ['common', 'login', 'dashboard', 'matches', 'profile', 'errors', 'auth', 'settings', 'store', 'chat', 'create', 'explore', 'agenda', 'notifications', 'rating', 'help', 'support', 'legal'],
+  namespaces: ['common', 'login', 'dashboard', 'matches', 'profile', 'errors', 'auth', 'settings', 'store', 'chat', 'create', 'explore', 'agenda', 'notifications', 'rating', 'help', 'support', 'legal', 'quadras'],
 };

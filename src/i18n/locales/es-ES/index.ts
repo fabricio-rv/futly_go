@@ -17,6 +17,7 @@ import { esESRating } from './rating';
 import { esESHelp } from './help';
 import { esESSupport } from './support';
 import { esESLegal } from './legal';
+import { esESQuadras } from './quadras';
 import type { TranslationResource } from '../../types';
 
 export const esESTranslations: TranslationResource = {
@@ -38,4 +39,5 @@ export const esESTranslations: TranslationResource = {
   help: esESHelp,
   support: esESSupport,
   legal: esESLegal,
+  quadras: esESQuadras,
 };

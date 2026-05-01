@@ -17,8 +17,8 @@ export default function TermsScreen() {
   const bgColor = theme === 'light' ? '#FFFFFF' : '#05070B';
 
   const termsSections = [
-    { title: t('sections.acceptance', '1. Acceptance of Terms'), body: t('sections.acceptanceText', 'By accessing and using Futly Hub...') },
-    { title: t('sections.service', '2. Service Description'), body: t('terms.serviceText', 'Futly Hub connects athletes to organize matches.') },
+    { title: t('sections.acceptance', '1. Acceptance of Terms'), body: t('sections.acceptanceText', 'By accessing and using Futly Go...') },
+    { title: t('sections.service', '2. Service Description'), body: t('terms.serviceText', 'Futly Go connects athletes to organize matches.') },
     { title: t('sections.responsibility', '3. User Responsibility'), body: t('terms.responsibilityText', 'You are responsible for your account and your actions in the app.') },
     { title: t('sections.conduct', '4. Code of Conduct'), body: t('terms.conductText', 'Respect other users and avoid offensive behavior.') },
     { title: t('sections.cancellation', '5. Account Cancellation'), body: t('terms.cancellationText', 'You can cancel your account at any time in settings.') },

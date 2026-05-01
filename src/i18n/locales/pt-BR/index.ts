@@ -17,6 +17,7 @@ import { ptBRRating } from './rating';
 import { ptBRHelp } from './help';
 import { ptBRSupport } from './support';
 import { ptBRLegal } from './legal';
+import { ptBRQuadras } from './quadras';
 
 export const ptBRTranslations = {
   common: ptBRCommon,
@@ -37,4 +38,5 @@ export const ptBRTranslations = {
   help: ptBRHelp,
   support: ptBRSupport,
   legal: ptBRLegal,
+  quadras: ptBRQuadras,
 };

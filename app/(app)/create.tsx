@@ -115,6 +115,7 @@ export default function CreateMatchScreen() {
   const [cep, setCep] = useState("");
   const [venueName, setVenueName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
 
   const [matchDate, setMatchDate] = useState(() => {
     const initialDate = new Date();
@@ -390,6 +391,36 @@ export default function CreateMatchScreen() {
               dateValue={hasSelectedDate ? formatDateField(matchDate) : ""}
               timeValue={hasSelectedTime ? formatTimeField(matchTime) : ""}
               turno={turno}
+              selectedCourtId={selectedCourtId}
+              onSelectCourt={(court) => {
+                if (!court) {
+                  setSelectedCourtId(null);
+                  return;
+                }
+                setSelectedCourtId(court.id);
+                setVenueName(court.name);
+                setAddress(court.address);
+
+                const previewParts = court.location_preview
+                  .split(",")
+                  .map((s) => s.trim());
+                const districtFromPreview = previewParts[0] ?? "";
+                const cityFromPreview = previewParts[previewParts.length - 1] ?? "";
+                setDistrict(districtFromPreview);
+                setCity(cityFromPreview);
+
+                const stateMatch = court.address.match(/,\s*([A-Z]{2})(?:\s*,|\s*$)/);
+                if (stateMatch) {
+                  setStateCode(stateMatch[1]);
+                }
+
+                const cepMatch = court.address.match(/(\d{5}-?\d{3})/);
+                if (cepMatch) {
+                  setCep(formatCep(cepMatch[1]));
+                } else {
+                  setCep("");
+                }
+              }}
               onCepChange={async (value) => {
                 const formatted = formatCep(value);
                 setCep(formatted);

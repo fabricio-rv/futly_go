@@ -1,8 +1,11 @@
 import { View } from "react-native";
 
 import { DateTimeField } from "@/src/components/features/matches/create/DateTimeField";
-import { Card, Input, SelectField } from "@/src/components/ui";
+import { Card, Input, SelectField, Text } from "@/src/components/ui";
 import { useMatchTheme } from "@/src/components/features/matches/shared/theme";
+import { CourtPicker } from "@/src/components/features/courts";
+import type { Court } from "@/src/data/quadras";
+import { useTranslation } from "@/src/i18n/hooks/useTranslation";
 
 type StepOption = {
   value: string;
@@ -44,6 +47,8 @@ type CreateMatchStep1Props = {
   dateValue: string;
   timeValue: string;
   turno: string;
+  selectedCourtId?: string | null;
+  onSelectCourt: (court: Court | null) => void;
   onCepChange: (value: string) => void;
   onDistrictChange: (value: string) => void;
   onVenueNameChange: (value: string) => void;
@@ -71,6 +76,8 @@ export function CreateMatchStep1({
   dateValue,
   timeValue,
   turno,
+  selectedCourtId,
+  onSelectCourt,
   onCepChange,
   onDistrictChange,
   onVenueNameChange,
@@ -82,6 +89,10 @@ export function CreateMatchStep1({
   onTurnoChange,
   onContactPhoneChange,
 }: CreateMatchStep1Props) {
+  const { t } = useTranslation("quadras");
+  const isLocked = !!selectedCourtId;
+  const lockedOpacity = 0.55;
+
   return (
     <View className="gap-[14px]">
       <Card
@@ -128,30 +139,53 @@ export function CreateMatchStep1({
             placeholder={labels.contactPhonePlaceholder}
           />
 
-          <Input
-            label={labels.cep}
-            value={cep}
-            onChangeText={onCepChange}
-            keyboardType="number-pad"
-            placeholder="00000-000"
-          />
+          <CourtPicker selectedCourtId={selectedCourtId} onSelect={onSelectCourt} />
 
-          <Input
-            label={labels.district}
-            value={district}
-            onChangeText={onDistrictChange}
-            placeholder={labels.districtPlaceholder}
-          />
+          <View style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+            <Input
+              label={labels.cep}
+              value={cep}
+              onChangeText={onCepChange}
+              keyboardType="number-pad"
+              placeholder="00000-000"
+              editable={!isLocked}
+            />
+          </View>
 
-          <Input
-            label={labels.venueName}
-            value={venueName}
-            onChangeText={onVenueNameChange}
-            placeholder={labels.venueNamePlaceholder}
-          />
+          {isLocked ? (
+            <Text
+              variant="caption"
+              style={{ color: matchTheme.colors.okSoft, fontSize: 12 }}
+            >
+              {t(
+                "picker.selectedHint",
+                "Dados preenchidos automaticamente da quadra selecionada.",
+              )}
+            </Text>
+          ) : null}
+
+          <View style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+            <Input
+              label={labels.district}
+              value={district}
+              onChangeText={onDistrictChange}
+              placeholder={labels.districtPlaceholder}
+              editable={!isLocked}
+            />
+          </View>
+
+          <View style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+            <Input
+              label={labels.venueName}
+              value={venueName}
+              onChangeText={onVenueNameChange}
+              placeholder={labels.venueNamePlaceholder}
+              editable={!isLocked}
+            />
+          </View>
 
           <View className="flex-row gap-2">
-            <View className="flex-1">
+            <View className="flex-1" style={{ opacity: isLocked ? lockedOpacity : 1 }}>
               <SelectField
                 label={labels.state}
                 value={stateCode}
@@ -159,24 +193,29 @@ export function CreateMatchStep1({
                 searchable
                 placeholder={labels.selectState}
                 onChange={onStateChange}
+                disabled={isLocked}
               />
             </View>
-            <View className="flex-1">
+            <View className="flex-1" style={{ opacity: isLocked ? lockedOpacity : 1 }}>
               <Input
                 label={labels.city}
                 value={city}
                 onChangeText={onCityChange}
                 placeholder={labels.cityPlaceholder}
+                editable={!isLocked}
               />
             </View>
           </View>
 
-          <Input
-            label={labels.address}
-            value={address}
-            onChangeText={onAddressChange}
-            placeholder={labels.addressPlaceholder}
-          />
+          <View style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+            <Input
+              label={labels.address}
+              value={address}
+              onChangeText={onAddressChange}
+              placeholder={labels.addressPlaceholder}
+              editable={!isLocked}
+            />
+          </View>
         </View>
       </Card>
     </View>

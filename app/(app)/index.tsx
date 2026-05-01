@@ -16,6 +16,10 @@ import { SkeletonList } from '@/src/components/ui';
 import type { AdvancedFilters } from '@/src/components/features/matches/explore/AdvancedFilterPanel';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useUnreadChatCount } from '@/src/features/chat/hooks/useUnreadChatCount';
+import {
+  fetchUnreadNotificationsCount,
+  subscribeNotifications,
+} from '@/src/features/notifications/services/notificationsService';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { selectionTick } from '@/src/lib/haptics';
@@ -42,6 +46,7 @@ export default function ExploreMatchesScreen() {
   const [query, setQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({});
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -52,6 +57,28 @@ export default function ExploreMatchesScreen() {
   useEffect(() => {
     fetchAvailableMatches().catch(() => undefined);
   }, [fetchAvailableMatches]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadUnread = async () => {
+      try {
+        const count = await fetchUnreadNotificationsCount();
+        if (isMounted) setUnreadNotifications(count);
+      } catch {
+        if (isMounted) setUnreadNotifications(0);
+      }
+    };
+
+    void loadUnread();
+    const unsubscribe = subscribeNotifications(() => {
+      void loadUnread();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -106,7 +133,12 @@ bounces
         contentContainerStyle={{ paddingBottom: 120 }}
         ListHeaderComponent={(
           <>
-            <HubHeader onMessagesPress={() => router.push('/(app)/conversations')} unreadCount={unreadChatCount} />
+            <HubHeader
+              onMessagesPress={() => router.push('/(app)/conversations')}
+              unreadCount={unreadChatCount}
+              onNotificationsPress={() => router.push('/(app)/notifications')}
+              unreadNotifications={unreadNotifications}
+            />
 
             <SearchInput
               value={query}

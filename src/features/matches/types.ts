@@ -55,6 +55,7 @@ export interface Partida {
   location: string;
   distanceKm?: number;
   levelLabel: string;
+  levelLabels?: string[];
   levelTone: 'gold' | 'sky' | 'neutral';
   pricePerPlayer: number;
   occupiedSlots: number;

@@ -1,20 +1,15 @@
 import type { ReactNode } from 'react';
-import { Bell, CalendarDays, Plus, Search, UserRound } from 'lucide-react-native';
+import { CalendarDays, MapPinned, Plus, Search, UserRound } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
-import {
-  fetchUnreadNotificationsCount,
-  subscribeNotifications,
-} from '@/src/features/notifications/services/notificationsService';
 import { selectionTick } from '@/src/lib/haptics';
 import { TouchableScale } from '@/src/components/ui/TouchableScale';
 
 type BottomNavProps = {
-  active: 'buscar' | 'agenda' | 'new' | 'notifications' | 'profile' | 'none';
+  active: 'buscar' | 'agenda' | 'new' | 'quadras' | 'profile' | 'none';
   compactBottomInset?: boolean;
 };
 
@@ -48,39 +43,11 @@ function NavItem({
 export function MatchBottomNav({ active, compactBottomInset = false }: BottomNavProps) {
   const insets = useSafeAreaInsets();
   const theme = useAppColorScheme();
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const iconMuted = theme === 'light' ? '#7A8597' : 'rgba(255,255,255,0.45)';
   const barBg = theme === 'light' ? 'rgba(245,248,252,0.96)' : 'rgba(10,14,24,0.95)';
   const barBorder = theme === 'light' ? '#D6DFEB' : 'rgba(255,255,255,0.10)';
   const plusBg = theme === 'light' ? '#E6EDF7' : '#1A2338';
   const plusBorder = theme === 'light' ? '#C3D0E0' : '#2A3650';
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadUnread = async () => {
-      try {
-        const count = await fetchUnreadNotificationsCount();
-        if (isMounted) {
-          setUnreadNotifications(count);
-        }
-      } catch {
-        if (isMounted) {
-          setUnreadNotifications(0);
-        }
-      }
-    };
-
-    void loadUnread();
-    const unsubscribe = subscribeNotifications(() => {
-      void loadUnread();
-    });
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, []);
 
   return (
     <View
@@ -127,22 +94,11 @@ export function MatchBottomNav({ active, compactBottomInset = false }: BottomNav
           </View>
         </TouchableScale>
         <NavItem
-          active={active === 'notifications'}
-          icon={(
-            <View className="relative">
-              <Bell color={active === 'notifications' ? '#22B76C' : iconMuted} size={20} />
-              {unreadNotifications > 0 ? (
-                <View className="absolute -right-2 -top-2 min-w-[17px] h-[17px] rounded-full bg-[#22B76C] items-center justify-center px-1">
-                  <Text className="text-[10px] font-bold text-[#05070B]">
-                    {unreadNotifications > 99 ? '99+' : String(unreadNotifications)}
-                  </Text>
-                </View>
-              ) : null}
-            </View>
-          )}
+          active={active === 'quadras'}
+          icon={<MapPinned color={active === 'quadras' ? '#22B76C' : iconMuted} size={21} />}
           onPress={() => {
             void selectionTick();
-            router.replace('/(app)/notifications');
+            router.replace('/(app)/quadras');
           }}
         />
         <NavItem

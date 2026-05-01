@@ -17,6 +17,7 @@ import { enUSRating } from './rating';
 import { enUSHelp } from './help';
 import { enUSSupport } from './support';
 import { enUSLegal } from './legal';
+import { enUSQuadras } from './quadras';
 import type { TranslationResource } from '../../types';
 
 export const enUSTranslations: TranslationResource = {
@@ -38,4 +39,5 @@ export const enUSTranslations: TranslationResource = {
   help: enUSHelp,
   support: enUSSupport,
   legal: enUSLegal,
+  quadras: enUSQuadras,
 };

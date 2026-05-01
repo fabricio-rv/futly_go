@@ -9,7 +9,7 @@ import {
   HubHeader,
   MatchBottomNav,
   MatchCard,
-  PillTabs,
+  SegmentedControl,
   SectionTitle,
   useMatchTheme,
 } from "@/src/components/features/matches";
@@ -175,27 +175,24 @@ export default function AgendaScreen() {
       <View>
         <HubHeader />
 
-        <PillTabs
-          tabs={[
-            { id: "criadas", label: t("tabs.created", "Criadas") },
-            { id: "marcadas", label: t("tabs.booked", "Marcadas") },
-            { id: "pendentes", label: t("tabs.pending", "Pendentes") },
-          ]}
-          activeId={tab}
-          onChange={(id) => setTab(id as AgendaTab)}
-        />
+        <View className="px-[18px] pb-2">
+          <SegmentedControl
+            options={[
+              { id: "criadas", label: t("tabs.created", "Criadas") },
+              { id: "marcadas", label: t("tabs.booked", "Marcadas") },
+              { id: "pendentes", label: t("tabs.pending", "Pendentes") },
+            ]}
+            activeId={tab}
+            onChange={(id) => setTab(id as AgendaTab)}
+            appearance="flat"
+            radius={28}
+            containerColor={matchTheme.colors.bgSurfaceA}
+            borderColor="rgba(34,183,108,0.35)"
+          />
+        </View>
 
         <View className="px-[18px]">
-          {!isPendingTab ? (
-            <SectionTitle
-              title={
-                tab === "criadas"
-                  ? t("sections.asHost", "Como Anfitriao")
-                  : t("sections.asPlayer", "Como Jogador")
-              }
-              badge={String(activeMatches.length + finishedMatches.length)}
-            />
-          ) : null}
+          {!isPendingTab ? <View style={{ height: 6 }} /> : null}
 
           {loadingAgenda ? <SkeletonList rows={2} /> : null}
 
@@ -424,11 +421,11 @@ export default function AgendaScreen() {
                   {tab === "criadas"
                     ? t(
                         "empty.noCreatedMatches",
-                        "Nenhuma partida criada ainda.",
+                        "Você ainda não criou partidas. Quando criar, elas aparecem aqui.",
                       )
                     : t(
                         "empty.noBookedMatches",
-                        "Nenhuma partida marcada ainda.",
+                        "Você ainda não marcou partidas. Assim que entrar em uma, ela aparece aqui.",
                       )}
                 </Text>
               </View>
@@ -452,20 +449,15 @@ export default function AgendaScreen() {
                 rightAction={
                   tab === "criadas" || tab === "marcadas" ? (
                     <TouchableScale
-                      className="h-10 rounded-[10px] px-3 flex-row items-center"
-                      style={{ backgroundColor: matchTheme.colors.ok }}
+                      className="h-9 w-9 rounded-full items-center justify-center"
+                      style={{ backgroundColor: "transparent" }}
                       onPress={() => void handleChatPress(item.partida.id)}
                     >
-                      <View className="flex-row items-center">
-                        <MessageCircle size={13} stroke="#05070B" />
-                        <Text
-                          variant="caption"
-                          className="ml-1 font-semibold"
-                          style={{ color: "#05070B" }}
-                        >
-                          {t("actions.chat", "Chat")}
-                        </Text>
-                      </View>
+                      <MessageCircle
+                        size={16}
+                        color={isLight ? "#1A8F57" : "#86E5B4"}
+                        strokeWidth={2.2}
+                      />
                     </TouchableScale>
                   ) : undefined
                 }
