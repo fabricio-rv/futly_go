@@ -323,6 +323,8 @@ export type ChatMessage = {
 		downloadUrl?: string | null;
 		previewUrl?: string | null;
 		durationSec?: number | null;
+		durationMs?: number | null;
+		waveform?: number[] | null;
 	};
 	author?: string;
 	avatarUrl?: string | null;

@@ -19,6 +19,7 @@ import { MatchTopNav, useMatchTheme } from '@/src/components/features/matches';
 import { Text } from '@/src/components/ui';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { COURTS_DATA, type Court } from '@/src/data/quadras';
+import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
 import { useUserCourts } from '@/src/features/courts/useUserCourts';
 
 const ORDERED_DAYS = [
@@ -41,6 +42,24 @@ const DAY_ALIASES: Record<string, string[]> = {
   'Domingo': ['Domingo'],
 };
 
+const STATE_NAME_BY_UF = BRAZIL_STATE_OPTIONS.reduce<Record<string, string>>((acc, option) => {
+  acc[option.value] = option.label;
+  return acc;
+}, {});
+
+function formatStateForDetails(rawState: string): string {
+  const trimmed = rawState.trim();
+  if (!trimmed) return '';
+
+  const normalized = trimmed.toUpperCase();
+  const byUf = STATE_NAME_BY_UF[normalized];
+  if (byUf) return `${byUf} (${normalized})`;
+
+  const byName = BRAZIL_STATE_OPTIONS.find((state) => state.label.toLowerCase() === trimmed.toLowerCase());
+  if (byName) return `${byName.label} (${byName.value})`;
+
+  return trimmed;
+}
 function amenityIcon(name: string, color: string): ReactNode {
   if (name === 'Churrasqueira') return <ChefHat size={16} color={color} />;
   if (name === 'Vesti·rio' || name === 'Vesti√°rio') return <ShowerHead size={16} color={color} />;
@@ -168,26 +187,20 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
     );
     const appUrl = `whatsapp://send?phone=${e164Phone}&text=${text}`;
     const webUrl = `https://wa.me/${e164Phone}?text=${text}`;
+    const apiUrl = `https://api.whatsapp.com/send?phone=${e164Phone}&text=${text}`;
+    const candidates = [appUrl, webUrl, apiUrl];
 
-    try {
-      const appSupported = await Linking.canOpenURL(appUrl);
-      if (appSupported) {
-        await Linking.openURL(appUrl);
+    for (const url of candidates) {
+      try {
+        await Linking.openURL(url);
         return;
+      } catch {
+        // tenta o proximo formato de URL (iOS pode falhar no scheme app direto).
       }
-
-      const webSupported = await Linking.canOpenURL(webUrl);
-      if (webSupported) {
-        await Linking.openURL(webUrl);
-        return;
-      }
-
-      Alert.alert(t('details.phone', 'Telefone'), court.phone);
-    } catch {
-      Alert.alert(t('details.phone', 'Telefone'), court.phone);
     }
-  };
 
+    Alert.alert(t('details.phone', 'Telefone'), court.phone);
+  };
   const ratingDisplay = court.rating > 0 ? court.rating.toFixed(1) : '--';
   const reviewLabel = court.review_count > 0
     ? `${court.review_count} ${t('card.rating', 'avaliacoes')}`

@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock3, MapPin } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { MotiView } from 'moti';
 
 import { Text, TouchableScale } from '@/src/components/ui';
@@ -20,6 +20,10 @@ type MatchCardProps = {
 };
 
 const defaultBanner: [string, string, string] = ['#0F3A24', '#072314', '#021109'];
+const isWeb = Platform.OS === 'web';
+const cardSemiBoldFont = isWeb ? 'Geist' : 'Geist_600SemiBold';
+const cardRegularFont = isWeb ? 'Geist' : 'Geist_400Regular';
+const cardNumberFont = isWeb ? 'Bebas Neue' : 'BebasNeue_400Regular';
 
 export function MatchCard({ partida, onPress, rightAction, bannerPalette = defaultBanner }: MatchCardProps) {
   const matchTheme = useMatchTheme();
@@ -119,7 +123,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
               className="font-semibold tracking-[2px] uppercase"
               style={{
                 color: 'rgba(255,255,255,0.78)',
-                fontFamily: 'Geist_600SemiBold',
+                fontFamily: cardSemiBoldFont,
                 fontSize: 14,
                 marginBottom: 3,
               }}
@@ -131,7 +135,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
               className="text-[34px] leading-[34px]"
               style={{
                 color: '#FFFFFF',
-                fontFamily: 'BebasNeue_400Regular',
+                fontFamily: cardNumberFont,
                 fontWeight: '400',
                 letterSpacing: 0,
                 textTransform: 'uppercase',
@@ -169,7 +173,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
                 numberOfLines={1}
                 style={{
                   color: matchTheme.colors.fgSecondary,
-                  fontFamily: 'Geist_400Regular',
+                  fontFamily: cardRegularFont,
                   fontSize: 12,
                   lineHeight: 12,
                   letterSpacing: 0,
@@ -181,7 +185,7 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
                   variant="number"
                   style={{
                     color: matchTheme.colors.fgPrimary,
-                    fontFamily: 'BebasNeue_400Regular',
+                    fontFamily: cardNumberFont,
                     fontSize: 24,
                     lineHeight: 24,
                     letterSpacing: 0,

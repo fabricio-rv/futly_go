@@ -2,7 +2,7 @@ import { Check, CheckCheck, CornerUpLeft, FileText, Forward, Mic, Pause, Pin, Pl
 import { Image, Platform, Pressable, type GestureResponderEvent, View, useWindowDimensions } from 'react-native';
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { VideoView, useVideoPlayer } from 'expo-video';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { getChatTokens } from '@/src/lib/chatTokens';
@@ -32,6 +32,48 @@ function formatAudioTime(ms: number) {
   const min = Math.floor(total / 60).toString().padStart(1, '0');
   const sec = (total % 60).toString().padStart(2, '0');
   return `${min}:${sec}`;
+}
+
+function normalizeWaveformBars(values: number[] | null | undefined, bars = 32) {
+  if (!values || values.length === 0) return [] as number[];
+
+  const safe = values
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+    .map((value) => Math.max(0, Math.min(1, value)));
+
+  if (safe.length === 0) return [] as number[];
+  if (safe.length === bars) return safe;
+
+  const resized: number[] = [];
+  for (let i = 0; i < bars; i += 1) {
+    const start = Math.floor((i * safe.length) / bars);
+    const end = Math.max(start + 1, Math.floor(((i + 1) * safe.length) / bars));
+    let peak = 0;
+    for (let j = start; j < end && j < safe.length; j += 1) {
+      if (safe[j] > peak) peak = safe[j];
+    }
+    resized.push(peak);
+  }
+
+  return resized;
+}
+
+function seededFallbackWaveform(seed: string, bars = 32) {
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  const values: number[] = [];
+  for (let i = 0; i < bars; i += 1) {
+    hash = Math.imul(hash ^ (i + 1), 2246822519);
+    const unit = ((hash >>> 0) % 1000) / 1000;
+    values.push(0.14 + (unit * 0.72));
+  }
+
+  return values;
 }
 
 function VideoAttachmentPreview({ url }: { url: string }) {
@@ -79,11 +121,17 @@ function AudioAttachmentCard({
   const isPlayingAudio = audioStatus.playing;
   const audioDurationMs = audioStatus.duration * 1000;
   const audioPositionMs = audioStatus.currentTime * 1000;
-  const metadataDurationMs = message.attachment?.durationSec && message.attachment.durationSec > 0
-    ? message.attachment.durationSec * 1000
-    : 0;
+  const metadataDurationMs = message.attachment?.durationMs && message.attachment.durationMs > 0
+    ? message.attachment.durationMs
+    : message.attachment?.durationSec && message.attachment.durationSec > 0
+      ? message.attachment.durationSec * 1000
+      : 0;
   const playbackTargetDurationMs = metadataDurationMs || audioDurationMs;
-  const probedDurationMs = playbackTargetDurationMs;
+  const waveformBars = useMemo(() => {
+    const normalized = normalizeWaveformBars(message.attachment?.waveform, 32);
+    if (normalized.length > 0) return normalized;
+    return seededFallbackWaveform(`${message.id}:${Math.round(playbackTargetDurationMs)}`, 32);
+  }, [message.attachment?.waveform, message.id, playbackTargetDurationMs]);
 
   useEffect(() => {
     // Garante reprodução no volume máximo permitido pelo sistema.
@@ -140,12 +188,11 @@ function AudioAttachmentCard({
           )}
         </View>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-          {Array.from({ length: 32 }).map((_, idx) => {
+          {waveformBars.map((wave, idx) => {
             const totalMs = playbackTargetDurationMs || ((message.attachment?.durationSec ?? 0) * 1000);
-            const playedRatio = totalMs > 0 ? audioPositionMs / totalMs : 0;
-            const activeBar = idx / 32 <= playedRatio;
-            const heights = [5, 8, 12, 7, 10, 14, 6, 9, 13, 5, 11, 8, 15, 6, 10, 7, 12, 9, 14, 5, 8, 13, 6, 11, 7, 10, 15, 8, 6, 12, 9, 5];
-            const barH = heights[idx % heights.length];
+            const playedRatio = totalMs > 0 ? Math.max(0, Math.min(1, audioPositionMs / totalMs)) : 0;
+            const activeBar = idx / Math.max(waveformBars.length, 1) <= playedRatio;
+            const barH = 4 + Math.round(Math.max(0, Math.min(1, wave)) * 12);
             return (
               <View
                 key={`${message.id}-bar-${idx}`}

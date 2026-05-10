@@ -11,6 +11,7 @@ import { useMatchTheme } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
 import { BaseCard, Text, Button, SkeletonList, TouchableScale } from '@/src/components/ui';
 import { useNotifications } from '@/src/features/notifications/hooks/useNotifications';
+import { markChatNotificationsAsReadForConversation } from '@/src/features/notifications/services/notificationsService';
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { supabase } from '@/src/lib/supabase';
@@ -51,7 +52,7 @@ function groupNotifications(notifications: NotificationItem[]): DisplayItem[] {
     }
 
     const convId: string = n.metadata?.conversationId ?? n.metadata?.conversation_id ?? '';
-    const senderName: string = n.title;
+    const senderName = String(n.metadata?.senderName ?? n.metadata?.sender_name ?? n.title ?? '').trim() || n.title;
     const key = `${convId}:${senderName}`;
 
     if (chatSeen.has(key)) {
@@ -187,7 +188,7 @@ export default function NotificationsScreen() {
   const { t } = useTranslation('notifications');
   const theme = useAppColorScheme();
   const matchTheme = useMatchTheme();
-  const { notifications, recentActions, unreadCount, loading, error, setAllRead, refresh } = useNotifications();
+  const { notifications, recentActions, unreadCount, loading, error, refresh } = useNotifications();
   const { processParticipationRequest, submitMatchRating, submitting } = useMatches();
 
   const [ratingModalVisible, setRatingModalVisible] = useState(false);
@@ -356,10 +357,20 @@ export default function NotificationsScreen() {
     }
   }, [ratingData, ratingScore, ratingComment, submitMatchRating, refresh, t, getRatingKey]);
 
+  const openChatConversation = useCallback((conversationId?: string) => {
+    if (!conversationId) {
+      router.push('/(app)/conversations');
+      return;
+    }
+
+    void markChatNotificationsAsReadForConversation(conversationId).catch(() => undefined);
+    router.push(`/(app)/conversations/${conversationId}`);
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      void Promise.allSettled([setAllRead(), refresh()]);
-    }, [setAllRead, refresh]),
+      void refresh();
+    }, [refresh]),
   );
 
   return (
@@ -459,35 +470,60 @@ export default function NotificationsScreen() {
         }
         renderItem={({ item }: { item: DisplayItem }) => {
           if (item.chatCount !== undefined) {
+            const conversationType = item.metadata?.conversationType === 'private' ? 'private' : 'group';
+            const conversationName = String(item.metadata?.conversationName ?? '').trim();
+            const senderName = String(item.senderName ?? item.title ?? '').trim() || 'Atleta';
+            const chatCount = Math.max(1, item.chatCount ?? 1);
+            const countLabel = chatCount === 1
+              ? t('chat.oneNewMessage', '1 nova mensagem')
+              : `${chatCount} ${t('chat.manyNewMessages', 'novas mensagens')}`;
+            const titleText = conversationType === 'private' ? senderName : (conversationName || senderName);
+            const subtitleText = conversationType === 'private'
+              ? countLabel
+              : `${senderName} - ${countLabel}`;
+
             return (
               <View className="px-[18px]">
                 <TouchableScale
-                  onPress={() => item.conversationId ? router.push(`/(app)/conversations/${item.conversationId}`) : router.push('/(app)/conversations')}
+                  onPress={() => openChatConversation(item.conversationId)}
                 >
                   <BaseCard className="mb-3" style={{ backgroundColor: item.isRead ? matchTheme.colors.bgSurfaceA : 'rgba(34,183,108,0.08)' }}>
                     <View className="flex-row items-center gap-3">
-                      <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(34,183,108,0.15)', alignItems: 'center', justifyContent: 'center' }}>
-                        <MessageCircle size={18} color="#22B76C" />
-                      </View>
                       <View className="flex-1">
                         <View className="flex-row items-center gap-2 flex-wrap">
-                          <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{item.senderName}</Text>
-                          {item.metadata?.conversationType === 'private' ? (
+                          <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{titleText}</Text>
+                          {conversationType === 'private' ? (
                             <View style={{ backgroundColor: 'rgba(90,177,255,0.18)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
                               <Text variant="micro" style={{ color: '#7AC0FF', fontWeight: '700', fontSize: 10 }}>Privada</Text>
                             </View>
-                          ) : item.metadata?.conversationName ? (
-                            <Text variant="micro" className="text-[#4B5563] dark:text-fg3" numberOfLines={1}>{item.metadata.conversationName}</Text>
                           ) : null}
-                          {(item.chatCount ?? 0) > 1 ? (
+                          {chatCount > 1 ? (
                             <View style={{ backgroundColor: '#22B76C', borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>
-                              <Text variant="micro" style={{ color: '#05070B', fontWeight: '700', fontSize: 10 }}>{item.chatCount}</Text>
+                              <Text variant="micro" style={{ color: '#05070B', fontWeight: '700', fontSize: 10 }}>{chatCount}</Text>
                             </View>
                           ) : null}
                         </View>
+                        <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-0.5" numberOfLines={1}>{subtitleText}</Text>
                         <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-0.5" numberOfLines={1}>{item.body}</Text>
                       </View>
-                      <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(item.createdAt)}</Text>
+                      <View className="items-end gap-2">
+                        <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(item.createdAt)}</Text>
+                        <Pressable
+                          onPress={() => openChatConversation(item.conversationId)}
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
+                            backgroundColor: 'rgba(34,183,108,0.16)',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderWidth: 1,
+                            borderColor: 'rgba(34,183,108,0.32)',
+                          }}
+                        >
+                          <MessageCircle size={16} color="#22B76C" />
+                        </Pressable>
+                      </View>
                     </View>
                   </BaseCard>
                 </TouchableScale>

@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type MatchPricePillProps = {
@@ -7,6 +7,8 @@ type MatchPricePillProps = {
 
 export function MatchPricePill({ price }: MatchPricePillProps) {
   const { t } = useTranslation('matches');
+  const bodyFont = Platform.OS === 'web' ? 'Geist' : 'Geist_400Regular';
+  const numberFont = Platform.OS === 'web' ? 'Bebas Neue' : 'BebasNeue_400Regular';
   return (
     <View
       style={{
@@ -23,7 +25,7 @@ export function MatchPricePill({ price }: MatchPricePillProps) {
     >
       <Text
         style={{
-          fontFamily: 'Geist_400Regular',
+          fontFamily: bodyFont,
           fontSize: 15,
           lineHeight: 15,
           color: 'rgba(255,255,255,0.45)',
@@ -36,7 +38,7 @@ export function MatchPricePill({ price }: MatchPricePillProps) {
 
       <Text
         style={{
-          fontFamily: 'BebasNeue_400Regular',
+          fontFamily: numberFont,
           fontSize: 24,
           lineHeight: 24,
           color: '#F5F7FA',
@@ -49,7 +51,7 @@ export function MatchPricePill({ price }: MatchPricePillProps) {
 
       <Text
         style={{
-          fontFamily: 'Geist_400Regular',
+          fontFamily: bodyFont,
           fontSize: 14,
           lineHeight: 14,
           color: 'rgba(255,255,255,0.45)',

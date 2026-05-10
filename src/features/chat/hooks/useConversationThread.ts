@@ -85,6 +85,19 @@ function cleanMessageText(text: string) {
   return normalized;
 }
 
+function parseAttachmentWaveform(metadata?: Record<string, unknown>) {
+  const raw = metadata?.attachment_waveform;
+  if (!Array.isArray(raw)) return null;
+
+  const normalized = raw
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+    .map((value) => Math.max(0, Math.min(1, value)))
+    .slice(0, 64);
+
+  return normalized.length > 0 ? normalized : null;
+}
+
 function buildQueueKey(conversationId: string) {
   return `futly_go_chat_queue:${conversationId}`;
 }
@@ -370,6 +383,10 @@ export function useConversationThread(conversationId: string, options: UseConver
               : mime.startsWith('audio/')
                 ? 'audio'
                 : 'document';
+          const durationSecRaw = Number(metadata?.attachment_duration_sec ?? 0);
+          const durationMsRaw = Number(metadata?.attachment_duration_ms ?? 0);
+          const durationMs = durationMsRaw > 0 ? durationMsRaw : (durationSecRaw > 0 ? durationSecRaw * 1000 : 0);
+          const waveform = parseAttachmentWaveform(metadata);
           return {
             id: firstAttachment.id,
             kind,
@@ -380,7 +397,9 @@ export function useConversationThread(conversationId: string, options: UseConver
             previewUrl: kind === 'document' && (firstAttachment.mime_type ?? '').includes('pdf')
               ? `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(attachmentUrlById[firstAttachment.id] || '')}`
               : null,
-            durationSec: Number(metadata?.attachment_duration_sec ?? 0) || null,
+            durationSec: durationSecRaw > 0 ? durationSecRaw : null,
+            durationMs: durationMs > 0 ? durationMs : null,
+            waveform,
           } as ChatMessage['attachment'];
         })();
 

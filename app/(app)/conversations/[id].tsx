@@ -46,6 +46,11 @@ type MessageAction = {
   onPress: () => void;
 };
 
+type RecordingMeterSample = {
+  atMs: number;
+  metering: number;
+};
+
 // Lê um arquivo local e retorna ArrayBuffer.
 // fetch(file://) é instável em dispositivos iOS físicos e Blob não é confiável
 // no React Native para uploads ao Supabase Storage — usar FileSystem + base64.
@@ -66,6 +71,35 @@ async function readFileAsArrayBuffer(uri: string): Promise<ArrayBuffer> {
 function VideoPreview({ uri }: { uri: string }) {
   const player = useVideoPlayer({ uri }, (p) => { p.loop = false; });
   return <VideoView player={player} style={{ width: '100%', height: '100%' }} nativeControls contentFit="cover" />;
+}
+
+function buildWaveformFromMeterSamples(samples: RecordingMeterSample[], bars = 32) {
+  if (samples.length === 0) return null;
+
+  const barCount = Math.max(16, Math.min(48, bars));
+  const bucketSize = samples.length / barCount;
+  const waveform: number[] = [];
+
+  for (let i = 0; i < barCount; i += 1) {
+    const start = Math.floor(i * bucketSize);
+    const end = Math.max(start + 1, Math.floor((i + 1) * bucketSize));
+    let peak = 0;
+
+    for (let j = start; j < end && j < samples.length; j += 1) {
+      const db = samples[j]?.metering ?? -160;
+      const normalized = Math.max(0, Math.min(1, (db + 60) / 60));
+      if (normalized > peak) peak = normalized;
+    }
+
+    waveform.push(Number(peak.toFixed(3)));
+  }
+
+  const hasSignal = waveform.some((value) => value > 0.06);
+  if (!hasSignal) {
+    return waveform.map((_, idx) => (idx % 4 === 0 ? 0.24 : 0.14));
+  }
+
+  return waveform;
 }
 
 export default function ConversationDetailScreen() {
@@ -94,6 +128,8 @@ export default function ConversationDetailScreen() {
     mimeType: string;
     kind: 'image' | 'video' | 'audio' | 'document';
     durationSec?: number;
+    durationMs?: number;
+    waveform?: number[];
   } | null>(null);
   const [openedAttachment, setOpenedAttachment] = useState<{
     kind: 'image' | 'video' | 'audio' | 'document';
@@ -105,6 +141,7 @@ export default function ConversationDetailScreen() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const recordingRef = useRef<Audio.Recording | null>(null);
   const recordingLastSpokenMsRef = useRef(0);
+  const recordingMeterSamplesRef = useRef<RecordingMeterSample[]>([]);
   const listRef = useRef<any>(null);
   const hasScrolledToBottomRef = useRef(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -324,6 +361,8 @@ export default function ConversationDetailScreen() {
     mimeType: string;
     kind: 'image' | 'video' | 'audio' | 'document';
     durationSec?: number;
+    durationMs?: number;
+    waveform?: number[];
   }) => {
     if (!conversationId) return;
 
@@ -347,12 +386,16 @@ export default function ConversationDetailScreen() {
           mimeType: input.mimeType,
           url: input.kind === 'image' || input.kind === 'video' || input.kind === 'audio' ? input.uri : null,
           durationSec: input.durationSec ?? null,
+          durationMs: input.durationMs ?? null,
+          waveform: input.waveform ?? null,
         },
         metadata: {
           attachment_kind: input.kind,
           attachment_name: input.fileName,
           attachment_mime: input.mimeType,
           attachment_duration_sec: input.durationSec ?? null,
+          attachment_duration_ms: input.durationMs ?? null,
+          attachment_waveform: input.waveform ?? null,
           attachment_label: marker,
         },
       });
@@ -374,7 +417,7 @@ export default function ConversationDetailScreen() {
     } finally {
       setSending(false);
     }
-  }, [conversationId, send]);
+  }, [conversationId, refresh, send, t]);
 
   const handlePickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -467,8 +510,22 @@ export default function ConversationDetailScreen() {
         playThroughEarpieceAndroid: false,
       });
       recordingLastSpokenMsRef.current = 0;
+      recordingMeterSamplesRef.current = [];
       const { recording } = await Audio.Recording.createAsync({
         ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
+        ios: {
+          ...(Audio.RecordingOptionsPresets.HIGH_QUALITY.ios ?? {}),
+          audioQuality: Audio.IOSAudioQuality.MAX,
+          sampleRate: 48000,
+          bitRate: 192000,
+          numberOfChannels: 1,
+        },
+        android: {
+          ...(Audio.RecordingOptionsPresets.HIGH_QUALITY.android ?? {}),
+          sampleRate: 48000,
+          bitRate: 192000,
+          numberOfChannels: 1,
+        },
         isMeteringEnabled: true,
       });
       recordingRef.current = recording;
@@ -480,6 +537,11 @@ export default function ConversationDetailScreen() {
         const durationMs = Number(status.durationMillis ?? 0);
         setRecordingDuration(Math.max(0, Math.round(durationMs / 1000)));
         const metering = typeof status.metering === 'number' ? status.metering : null;
+        if (metering !== null) {
+          const samples = recordingMeterSamplesRef.current;
+          samples.push({ atMs: durationMs, metering });
+          if (samples.length > 3600) samples.shift();
+        }
         if (metering !== null && metering > -42) {
           recordingLastSpokenMsRef.current = durationMs;
         }
@@ -492,6 +554,7 @@ export default function ConversationDetailScreen() {
 
   const handleStopRecording = useCallback(async (cancelled: boolean) => {
     let durationSec = recordingDuration;
+    let durationMs: number | undefined;
     setIsRecording(false);
     setRecordingDuration(0);
 
@@ -515,22 +578,35 @@ export default function ConversationDetailScreen() {
         shouldDuckAndroid: true,
         playThroughEarpieceAndroid: false,
       });
-      if (cancelled || !recording) return;
+      if (cancelled || !recording) {
+        recordingLastSpokenMsRef.current = 0;
+        recordingMeterSamplesRef.current = [];
+        return;
+      }
 
       const uri = recording.getURI();
       if (!uri) throw new Error('Nao foi possivel ler o arquivo de audio.');
 
       const lastSpokenMs = recordingLastSpokenMsRef.current;
-      const spokenWithGraceMs = lastSpokenMs > 0 ? lastSpokenMs + 220 : 0;
+      const spokenWithGraceMs = lastSpokenMs > 0 ? lastSpokenMs + 120 : 0;
       const effectiveMs = spokenWithGraceMs > 0
         ? Math.min(totalDurationMs || spokenWithGraceMs, spokenWithGraceMs)
         : totalDurationMs;
-      if (effectiveMs > 0) {
-        durationSec = Math.max(1, Math.round(effectiveMs / 1000));
-      } else {
-        durationSec = Math.max(1, durationSec);
-      }
+      durationMs = effectiveMs > 0
+        ? Math.max(350, Math.round(effectiveMs))
+        : undefined;
+      durationSec = durationMs
+        ? Math.max(1, Math.round(durationMs / 1000))
+        : Math.max(1, durationSec);
+
+      const samples = recordingMeterSamplesRef.current;
+      const safeDurationMs = durationMs && durationMs > 0 ? durationMs : null;
+      const trimmedSamples = safeDurationMs
+        ? samples.filter((sample) => sample.atMs <= safeDurationMs + 120)
+        : samples;
+      const waveform = buildWaveformFromMeterSamples(trimmedSamples, 32) ?? undefined;
       recordingLastSpokenMsRef.current = 0;
+      recordingMeterSamplesRef.current = [];
 
       await handleSendAttachment({
         uri,
@@ -538,13 +614,16 @@ export default function ConversationDetailScreen() {
         mimeType: 'audio/m4a',
         kind: 'audio',
         durationSec,
+        durationMs,
+        waveform,
       });
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
-      Alert.alert(t('common.error', 'Erro'), detail || t('errors.audioProcessError', 'Não foi possível processar o áudio gravado.'));
+      Alert.alert(t('common.error', 'Erro'), detail || t('errors.audioProcessError', 'Nao foi possivel processar o audio gravado.'));
+      recordingLastSpokenMsRef.current = 0;
+      recordingMeterSamplesRef.current = [];
     }
   }, [handleSendAttachment, recordingDuration, t]);
-
   // No iOS, o Modal do action sheet precisa estar completamente fechado antes de
   // abrir qualquer picker nativo (UIImagePickerController, UIDocumentPickerViewController).
   // Chamar o picker enquanto o Modal ainda está montado resulta em erro silencioso.
