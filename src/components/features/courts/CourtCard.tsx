@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Beer, Car, ChefHat, Coffee, MapPin, ShowerHead, Star } from 'lucide-react-native';
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { MotiView } from 'moti';
 
 import { Text, TouchableScale } from '@/src/components/ui';
@@ -16,6 +16,9 @@ type CourtCardProps = {
 };
 
 const defaultBanner: [string, string, string] = ['#0F3A24', '#072314', '#021109'];
+const isWeb = Platform.OS === 'web';
+const cardSemiBoldFont = isWeb ? 'Geist' : 'Geist_600SemiBold';
+const cardNumberFont = isWeb ? 'Bebas Neue' : 'BebasNeue_400Regular';
 
 function amenityIcon(name: string, color: string): ReactNode {
   if (name === 'Churrasqueira') return <ChefHat size={12} color={color} />;
@@ -71,7 +74,7 @@ export function CourtCard({ court, onPress, bannerPalette = defaultBanner }: Cou
                 className="font-semibold tracking-[2px] uppercase"
                 style={{
                   color: 'rgba(255,255,255,0.78)',
-                  fontFamily: 'Geist_600SemiBold',
+                  fontFamily: cardSemiBoldFont,
                   fontSize: 12,
                   marginBottom: 3,
                 }}
@@ -83,7 +86,7 @@ export function CourtCard({ court, onPress, bannerPalette = defaultBanner }: Cou
                 className="text-[28px] leading-[28px]"
                 style={{
                   color: '#FFFFFF',
-                  fontFamily: 'BebasNeue_400Regular',
+                  fontFamily: cardNumberFont,
                   fontWeight: '400',
                   letterSpacing: 0,
                   textTransform: 'uppercase',
