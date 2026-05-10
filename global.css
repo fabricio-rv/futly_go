@@ -1,45 +1,49 @@
-﻿/* 1. Importação das fontes do Google para o Navegador */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+﻿/* 1. Importacao das fontes do Google para o navegador (somente web) */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geist+Mono:wght@400&family=Geist:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 2. Configurações Base de UI */
+/* 2. Configuracoes base de UI */
 @layer base {
   html, body {
-    /* Força o fundo escuro e a cor do texto para evitar o "branco" no carregamento */
+    /* Forca o fundo escuro e a cor do texto para evitar o "branco" no carregamento */
     background-color: #05070B;
     color: #F5F7FA;
     font-family: 'Inter', sans-serif;
-    
-    /* Remove o "azul" ao clicar em botões no Safari/Chrome Mobile */
+
+    /* Remove o destaque azul ao tocar em botoes no Safari/Chrome Mobile */
     -webkit-tap-highlight-color: transparent;
-    
-    /* Garante que o app ocupe a tela toda sem scroll bizarro */
+
+    /* Garante que o app ocupe a tela toda sem scroll horizontal */
     overflow-x: hidden;
     height: 100%;
     width: 100%;
   }
 }
 
-/* 3. Seus ajustes de Input e Textarea (Mantidos) */
+/* 3. Ajustes de input e textarea */
 input,
 textarea {
-    outline: none !important;
-    box-shadow: none !important;
-    background-color: transparent;
+  outline: none !important;
+  box-shadow: none !important;
+  background-color: transparent;
 }
 
 input:focus,
 textarea:focus,
 input:focus-visible,
 textarea:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-/* 4. Reset para remover bordas padrão no Mobile */
-button, input, optgroup, select, textarea {
-    font-family: inherit;
+/* 4. Reset para remover bordas padrao no mobile */
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
 }

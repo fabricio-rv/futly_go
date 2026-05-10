@@ -143,8 +143,7 @@ export default function SignupScreen() {
 		() =>
 			BRAZIL_STATE_OPTIONS.filter((state) => availableStateCodes.includes(state.value)).map((state) => ({
 				value: state.value,
-				label: state.label,
-				description: state.value,
+				label: `${state.label} (${state.value})`,
 			})),
 		[availableStateCodes],
 	);
@@ -445,6 +444,7 @@ export default function SignupScreen() {
 									label={t('signup.state', 'Estado')}
 									value={selectedState}
 									options={stateOptions}
+									selectedLabel={(option) => option.value}
 									onChange={(value) => {
 										setSelectedState(value);
 										setSelectedCity(null);

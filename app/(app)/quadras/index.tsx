@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { LayoutAnimation, Platform, UIManager, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,21 +23,48 @@ import { COURTS_DATA, type Court } from '@/src/data/quadras';
 import { useUserCourts } from '@/src/features/courts/useUserCourts';
 
 function extractState(court: Court): string {
+  const stateFromField = court.state?.trim().toUpperCase();
+  if (stateFromField) return stateFromField;
+
   const match = court.address.match(/,\s*([A-Z]{2})(?:\s*,|\s*$)/);
-  if (match) return match[1];
+  if (match) return match[1].toUpperCase();
+
+  const previewParts = court.location_preview.split(',').map((s) => s.trim()).filter(Boolean);
+  const tail = previewParts[previewParts.length - 1];
+  if (tail && /^[A-Z]{2}$/i.test(tail)) return tail.toUpperCase();
+
   return '';
 }
 
 function extractCity(court: Court): string {
-  const parts = court.location_preview.split(',').map((s) => s.trim());
-  return parts[parts.length - 1] ?? '';
+  const cityFromField = court.city?.trim();
+  if (cityFromField) return cityFromField;
+
+  const parts = court.location_preview.split(',').map((s) => s.trim()).filter(Boolean);
+  if (parts.length === 0) return '';
+
+  if (parts.length >= 2) {
+    const lastPart = parts[parts.length - 1];
+    const firstPart = parts[0];
+
+    // Formato novo: "Cidade, UF"
+    if (/^[A-Z]{2}$/i.test(lastPart)) return firstPart;
+
+    // Formato legado: "Bairro, Cidade"
+    return lastPart;
+  }
+
+  const fromAddress = court.address.match(/-\s*([^,]+)\s*,\s*[A-Z]{2}(?:\s*,|\s*$)/i);
+  if (fromAddress?.[1]) return fromAddress[1].trim();
+
+  return parts[0] ?? '';
 }
 
 function normalize(value: string): string {
   return value
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '');
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 export default function QuadrasScreen() {
@@ -190,3 +217,4 @@ export default function QuadrasScreen() {
     </SafeAreaView>
   );
 }
+

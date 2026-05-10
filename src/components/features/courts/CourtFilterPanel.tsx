@@ -1,10 +1,11 @@
 ﻿import { ChevronDown } from 'lucide-react-native';
 import { Modal, Pressable, useWindowDimensions, View } from 'react-native';
+import { useState } from 'react';
 
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../matches/shared/theme';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
-import { useState } from 'react';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 export interface CourtFilters {
   state?: string;
@@ -27,30 +28,36 @@ type FieldButtonProps = {
 };
 
 function FieldButton({ label, value, placeholder, onPress, disabled }: FieldButtonProps) {
-  const matchTheme = useMatchTheme();
+  const theme = useAppColorScheme();
+
+  const borderColor = theme === 'light' ? '#DDE2ED' : '#1F2A44';
+  const backgroundColor = theme === 'light' ? '#FAFBFC' : '#101626';
+  const labelColor = theme === 'light' ? '#475569' : 'rgba(255,255,255,0.70)';
+  const valueColor = value ? (theme === 'light' ? '#18181B' : '#FAFAFA') : (theme === 'light' ? '#64748B' : '#7A8699');
+  const iconColor = theme === 'light' ? 'rgba(31,41,55,0.60)' : 'rgba(255,255,255,0.60)';
 
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      className="gap-2"
+      className="w-full"
       style={{ opacity: disabled ? 0.55 : 1 }}
     >
-      <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
+      <Text variant="label" className="mb-2.5 font-semibold" style={{ color: labelColor }}>
         {label}
       </Text>
       <View
-        className="h-12 rounded-[12px] border px-3 flex-row items-center justify-between"
-        style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
+        className="h-12 rounded-[28px] border-[0.5px] px-4 flex-row items-center justify-between"
+        style={{ backgroundColor, borderColor }}
       >
         <Text
           variant="body"
           numberOfLines={1}
-          style={{ color: value ? matchTheme.colors.fgPrimary : matchTheme.colors.fgMuted, flex: 1 }}
+          style={{ color: valueColor, flex: 1 }}
         >
           {value || placeholder}
         </Text>
-        <ChevronDown size={18} color={matchTheme.colors.fgMuted} />
+        <ChevronDown size={16} color={iconColor} />
       </View>
     </Pressable>
   );

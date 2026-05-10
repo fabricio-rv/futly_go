@@ -89,6 +89,23 @@ function daysInMonth(year: number, monthIndex: number) {
   return new Date(year, monthIndex + 1, 0).getDate();
 }
 
+function extractStateFromCourtPreview(preview: string) {
+  const parts = preview.split(",").map((part) => part.trim()).filter(Boolean);
+  const tail = parts[parts.length - 1] ?? "";
+  return /^[A-Z]{2}$/i.test(tail) ? tail.toUpperCase() : "";
+}
+
+function extractCityFromCourtPreview(preview: string) {
+  const parts = preview.split(",").map((part) => part.trim()).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length >= 2) {
+    const tail = parts[parts.length - 1];
+    if (/^[A-Z]{2}$/i.test(tail)) return parts[0];
+    return tail;
+  }
+  return parts[0];
+}
+
 export default function CreateMatchScreen() {
   const { t, currentLanguage } = useTranslation("create");
   const theme = useAppColorScheme();
@@ -128,8 +145,8 @@ export default function CreateMatchScreen() {
     initialTime.setHours(19, 30, 0, 0);
     return initialTime;
   });
-  const [hasSelectedDate, setHasSelectedDate] = useState(false);
-  const [hasSelectedTime, setHasSelectedTime] = useState(false);
+  const [hasSelectedDate, setHasSelectedDate] = useState(true);
+  const [hasSelectedTime, setHasSelectedTime] = useState(true);
   const [showWebDateModal, setShowWebDateModal] = useState(false);
   const [showWebTimeModal, setShowWebTimeModal] = useState(false);
   const [webDateCursor, setWebDateCursor] = useState(
@@ -149,9 +166,49 @@ export default function CreateMatchScreen() {
 
   const stateOptions = BRAZIL_STATE_OPTIONS.map((state) => ({
     value: state.value,
-    label: state.label,
-    description: state.value,
+    label: `${state.label} (${state.value})`,
   }));
+
+  const resetCreateForm = () => {
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + 1);
+    nextDate.setHours(0, 0, 0, 0);
+
+    const nextTime = new Date();
+    nextTime.setHours(19, 30, 0, 0);
+
+    setMode("futsal");
+    setRestBreak(false);
+    setReferee(false);
+    setDescription("");
+    setSelectedPositionIndexesByMode({
+      futsal: [],
+      society: [],
+      campo: [],
+    });
+    setStateCode("");
+    setCity("");
+    setAddress("");
+    setDistrict("");
+    setCep("");
+    setVenueName("");
+    setContactPhone("");
+    setSelectedCourtId(null);
+    setMatchDate(nextDate);
+    setMatchTime(nextTime);
+    setHasSelectedDate(true);
+    setHasSelectedTime(true);
+    setWebDateCursor(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+    setWebHour(nextTime.getHours());
+    setWebMinute(nextTime.getMinutes());
+    setTurno("");
+    setPricePerPerson("");
+    setDurationMinutes("");
+    setMinAge(14);
+    setMaxAge(80);
+    setActiveStep("1");
+    setAcceptedLevels([]);
+  };
 
   const toggleLevel = (value: MinLevelValue) => {
     setAcceptedLevels((prev) =>
@@ -289,7 +346,15 @@ export default function CreateMatchScreen() {
 
       Alert.alert(t("form.matchCreatedTitle"), successMessage, [
         {
-          text: t("common.confirm", "Confirm"),
+          text: t("actions.viewCreatedMatches", "Ver partidas criadas"),
+          onPress: () => router.replace("/(app)/agenda"),
+        },
+        {
+          text: t("actions.createAnother", "Criar outra"),
+          onPress: () => resetCreateForm(),
+        },
+        {
+          text: t("common.confirm", "Ir para início"),
           onPress: () => router.replace("/(app)"),
         },
       ]);
@@ -403,16 +468,21 @@ export default function CreateMatchScreen() {
 
                 const previewParts = court.location_preview
                   .split(",")
-                  .map((s) => s.trim());
+                  .map((s) => s.trim())
+                  .filter(Boolean);
                 const districtFromPreview = previewParts[0] ?? "";
-                const cityFromPreview = previewParts[previewParts.length - 1] ?? "";
+                const cityFromPreview =
+                  court.city?.trim()
+                  || extractCityFromCourtPreview(court.location_preview)
+                  || "";
                 setDistrict(districtFromPreview);
                 setCity(cityFromPreview);
 
                 const stateMatch = court.address.match(/,\s*([A-Z]{2})(?:\s*,|\s*$)/);
-                if (stateMatch) {
-                  setStateCode(stateMatch[1]);
-                }
+                const nextState = court.state?.trim().toUpperCase()
+                  || stateMatch?.[1]?.toUpperCase()
+                  || extractStateFromCourtPreview(court.location_preview);
+                setStateCode(nextState || "");
 
                 const cepMatch = court.address.match(/(\d{5}-?\d{3})/);
                 if (cepMatch) {

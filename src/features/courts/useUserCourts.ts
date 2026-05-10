@@ -76,13 +76,19 @@ function mergeUniqueCourts(...lists: Court[][]): Court[] {
 
 function extractStateFromLocation(locationPreview: string): string {
   const parts = locationPreview.split(',').map((s) => s.trim()).filter(Boolean);
-  return parts[parts.length - 1] ?? '';
+  const tail = parts[parts.length - 1] ?? '';
+  return /^[A-Z]{2}$/i.test(tail) ? tail.toUpperCase() : '';
 }
 
 function extractCityFromLocation(locationPreview: string): string {
   const parts = locationPreview.split(',').map((s) => s.trim()).filter(Boolean);
-  if (parts.length >= 2) return parts[0];
-  return parts[0] ?? '';
+  if (parts.length === 0) return '';
+  if (parts.length >= 2) {
+    const tail = parts[parts.length - 1];
+    if (/^[A-Z]{2}$/i.test(tail)) return parts[0];
+    return tail;
+  }
+  return parts[0];
 }
 
 async function loadFromStorage(): Promise<Court[]> {

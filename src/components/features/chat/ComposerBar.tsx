@@ -19,7 +19,7 @@ type ComposerBarProps = {
   onChangeText: (value: string) => void;
   onSend: () => void;
   onAddAttachment: () => void;
-  onOpenCamera: () => void;
+  onPickImage: () => void;
   onOpenEmoji: () => void;
   onCancelReply: () => void;
   onStartRecording: () => void;
@@ -52,7 +52,7 @@ export function ComposerBar({
   onChangeText,
   onSend,
   onAddAttachment,
-  onOpenCamera,
+  onPickImage,
   onOpenEmoji,
   onCancelReply,
   onStartRecording,
@@ -79,7 +79,7 @@ export function ComposerBar({
 
   return (
     <View
-      className="border-t"
+      className="absolute left-0 right-0 bottom-0 border-t"
       style={{
         paddingHorizontal: 10,
         paddingTop: 7,
@@ -131,7 +131,6 @@ export function ComposerBar({
           </Pressable>
         ) : (
           <Pressable
-            onPress={onStartRecording}
             onLongPress={onStartRecording}
             delayLongPress={200}
             accessibilityRole="button"
@@ -237,14 +236,12 @@ export function ComposerBar({
                 style={{
                   color: tk.inputText,
                   fontSize: 14,
-                  lineHeight: 20,
+                  lineHeight: 18,
                   height: inputHeight,
                   maxHeight: INPUT_MAX_H,
-                  paddingTop: 0,
-                  paddingBottom: 0,
                   paddingVertical: 0,
                   paddingRight: 0,
-                  includeFontPadding: true,
+                  includeFontPadding: false,
                   textAlignVertical: 'top',
                 }}
               />
@@ -265,10 +262,10 @@ export function ComposerBar({
               </Pressable>
 
               <Pressable
-                onPress={onOpenCamera}
+                onPress={onPickImage}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Abrir câmera"
+                accessibilityLabel="Enviar imagem"
                 style={{ paddingHorizontal: 11 }}
               >
                 <Camera size={20} color={tk.placeholderColor} strokeWidth={1.8} />

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -90,10 +90,11 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
   const theme = useAppColorScheme();
   const { t } = useTranslation('quadras');
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
 
   const verticalMargin = Math.max(insets.top, 12) + Math.max(insets.bottom, 12);
   const maxModalHeight = Math.max(windowHeight - verticalMargin, 340);
+  const compactHoursLayout = windowWidth < 430;
 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -117,8 +118,7 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
     () =>
       BRAZIL_STATE_OPTIONS.filter((state) => availableStateCodes.includes(state.value)).map((state) => ({
         value: state.value,
-        label: state.label,
-        description: state.value,
+        label: `${state.label} (${state.value})`,
       })),
     [availableStateCodes],
   );
@@ -184,6 +184,10 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
     );
   };
 
+  const handleWorkingHoursChange = useCallback((day: string, value: string) => {
+    setWorkingHours((prev) => (prev[day] === value ? prev : { ...prev, [day]: value }));
+  }, []);
+
   const handleSave = async () => {
     const next: Record<string, string> = {};
 
@@ -239,6 +243,7 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
         style={{ flex: 1 }}
       >
         <View
@@ -268,6 +273,7 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
               maxHeight: maxModalHeight,
               flexShrink: 1,
               width: '100%',
+              maxWidth: 720,
               alignSelf: 'center',
             }}
             onPress={(e) => e.stopPropagation()}
@@ -303,7 +309,7 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
               nestedScrollEnabled
               removeClippedSubviews={Platform.OS === 'android'}
               scrollEventThrottle={16}
-              contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 18 }}
+              contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: Math.max(insets.bottom, 18) + 12 }}
               showsVerticalScrollIndicator
             >
               <FieldRow label={t('add.name', 'Nome da Quadra')} required error={errors.name}>
@@ -345,6 +351,7 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
                     value={selectedState}
                     onChange={(value) => setSelectedState(value)}
                     options={stateOptions}
+                    selectedLabel={(option) => option.value}
                     placeholder={t('filters.selectState', 'Selecione o estado')}
                     searchable
                     error={errors.state}
@@ -426,20 +433,26 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
                 </Text>
                 <View className="gap-2 mt-1">
                   {DAYS_ORDER.map((day) => (
-                    <View key={day} className="flex-row items-center gap-2">
+                    <View
+                      key={day}
+                      className={compactHoursLayout ? 'gap-1.5' : 'flex-row items-center gap-2'}
+                    >
                       <Text
                         variant="caption"
-                        style={{ color: matchTheme.colors.fgPrimary, width: 100, fontSize: 12 }}
+                        style={{ color: matchTheme.colors.fgPrimary, width: compactHoursLayout ? undefined : 100, fontSize: 12 }}
                       >
                         {t(`days.${day}`, day)}
                       </Text>
                       <View className="flex-1">
                         <Input
                           value={workingHours[day]}
-                          onChangeText={(value) =>
-                            setWorkingHours((prev) => ({ ...prev, [day]: value }))
-                          }
+                          onChangeText={(value) => handleWorkingHoursChange(day, value)}
                           placeholder={t('add.workingHoursPlaceholder', '08:00 - 23:00')}
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
+                          returnKeyType="next"
+                          blurOnSubmit={false}
                         />
                       </View>
                     </View>

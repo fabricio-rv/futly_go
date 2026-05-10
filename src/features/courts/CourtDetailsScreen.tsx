@@ -6,6 +6,7 @@ import {
   Clock,
   Coffee,
   MapPin,
+  MessageCircle,
   Phone,
   ShowerHead,
   Star,
@@ -22,21 +23,97 @@ import { useUserCourts } from '@/src/features/courts/useUserCourts';
 
 const ORDERED_DAYS = [
   'Segunda-feira',
-  'Terça-feira',
+  'Ter�a-feira',
   'Quarta-feira',
   'Quinta-feira',
   'Sexta-feira',
-  'Sábado',
+  'S�bado',
   'Domingo',
 ];
 
+const DAY_ALIASES: Record<string, string[]> = {
+  'Segunda-feira': ['Segunda-feira'],
+  'Ter�a-feira': ['Ter�a-feira', 'Terca-feira', 'Terça-feira'],
+  'Quarta-feira': ['Quarta-feira'],
+  'Quinta-feira': ['Quinta-feira'],
+  'Sexta-feira': ['Sexta-feira'],
+  'S�bado': ['S�bado', 'Sabado', 'Sábado'],
+  'Domingo': ['Domingo'],
+};
+
 function amenityIcon(name: string, color: string): ReactNode {
   if (name === 'Churrasqueira') return <ChefHat size={16} color={color} />;
-  if (name === 'Vestiário') return <ShowerHead size={16} color={color} />;
+  if (name === 'Vesti�rio' || name === 'Vestiário') return <ShowerHead size={16} color={color} />;
   if (name === 'Lanchonete') return <Coffee size={16} color={color} />;
   if (name === 'Estacionamento c/ Seguro') return <Car size={16} color={color} />;
   if (name === 'Bar') return <Beer size={16} color={color} />;
   return null;
+}
+
+function extractState(court: Court): string {
+  const fromField = court.state?.trim().toUpperCase();
+  if (fromField) return fromField;
+
+  const previewParts = court.location_preview
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const previewState = previewParts.find((part) => /^[A-Z]{2}$/i.test(part));
+  if (previewState) return previewState.toUpperCase();
+
+  const addressMatch = court.address.match(/,\s*([A-Z]{2})(?:\s*,|\s*$)/);
+  if (addressMatch?.[1]) return addressMatch[1].toUpperCase();
+
+  return '';
+}
+
+function extractCity(court: Court): string {
+  const fromField = court.city?.trim();
+  if (fromField) return fromField;
+
+  const parts = court.location_preview.split(',').map((part) => part.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    const tail = parts[parts.length - 1];
+    if (/^[A-Z]{2}$/i.test(tail)) return parts[0];
+    return tail;
+  }
+
+  const addressMatch = court.address.match(/-\s*([^,]+)\s*,\s*[A-Z]{2}(?:\s*,|\s*$)/i);
+  return addressMatch?.[1]?.trim() ?? '';
+}
+
+function extractCep(court: Court): string {
+  const fromField = court.cep?.trim();
+  if (fromField) return fromField;
+
+  const addressMatch = court.address.match(/\b\d{5}-?\d{3}\b/);
+  return addressMatch?.[0] ?? '';
+}
+
+function sanitizePhoneDigits(phone: string) {
+  return phone.replace(/\D/g, '');
+}
+
+function toBrazilE164(phone: string): string | null {
+  const digits = sanitizePhoneDigits(phone);
+  if (!digits) return null;
+  if (digits.startsWith('55') && (digits.length === 12 || digits.length === 13)) return digits;
+  if (digits.length === 10 || digits.length === 11) return `55${digits}`;
+  return null;
+}
+
+function isWhatsAppCompatible(e164Phone: string) {
+  const localNumber = e164Phone.startsWith('55') ? e164Phone.slice(2) : e164Phone;
+  return localNumber.length === 11 && localNumber[2] === '9';
+}
+
+function getWorkingHoursForDay(court: Court, day: string) {
+  const aliases = DAY_ALIASES[day] ?? [day];
+  for (const alias of aliases) {
+    const value = court.working_hours[alias];
+    if (typeof value === 'string' && value.trim()) return value;
+  }
+  return '';
 }
 
 export function CourtDetailsScreen({ courtId }: { courtId: string }) {
@@ -60,12 +137,17 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
     );
   }
 
-  const phoneIsValid = court.phone && court.phone !== 'Não informado';
+  const normalizedPhone = sanitizePhoneDigits(court.phone ?? '');
+  const e164Phone = toBrazilE164(court.phone ?? '');
+  const phoneIsValid = normalizedPhone.length >= 10;
+  const canOpenWhatsApp = Boolean(e164Phone && isWhatsAppCompatible(e164Phone));
+  const stateValue = extractState(court) || t('details.notInformed', 'Nao informado');
+  const cityValue = extractCity(court) || t('details.notInformed', 'Nao informado');
+  const cepValue = extractCep(court) || t('details.notInformed', 'Nao informado');
 
   const handleCallPhone = async () => {
     if (!phoneIsValid) return;
-    const sanitized = court.phone.replace(/[^\d+]/g, '');
-    const url = `tel:${sanitized}`;
+    const url = `tel:${normalizedPhone}`;
     try {
       const supported = await Linking.canOpenURL(url);
       if (supported) {
@@ -78,10 +160,38 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
     }
   };
 
+  const handleOpenWhatsApp = async () => {
+    if (!canOpenWhatsApp || !e164Phone) return;
+
+    const text = encodeURIComponent(
+      t('details.whatsappPreset', 'Ola! Vim pelo Futly Go e gostaria de falar sobre a quadra.'),
+    );
+    const appUrl = `whatsapp://send?phone=${e164Phone}&text=${text}`;
+    const webUrl = `https://wa.me/${e164Phone}?text=${text}`;
+
+    try {
+      const appSupported = await Linking.canOpenURL(appUrl);
+      if (appSupported) {
+        await Linking.openURL(appUrl);
+        return;
+      }
+
+      const webSupported = await Linking.canOpenURL(webUrl);
+      if (webSupported) {
+        await Linking.openURL(webUrl);
+        return;
+      }
+
+      Alert.alert(t('details.phone', 'Telefone'), court.phone);
+    } catch {
+      Alert.alert(t('details.phone', 'Telefone'), court.phone);
+    }
+  };
+
   const ratingDisplay = court.rating > 0 ? court.rating.toFixed(1) : '--';
   const reviewLabel = court.review_count > 0
-    ? `${court.review_count} ${t('card.rating', 'avaliações')}`
-    : t('card.noRating', 'Sem avaliações');
+    ? `${court.review_count} ${t('card.rating', 'avaliacoes')}`
+    : t('card.noRating', 'Sem avaliacoes');
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#020617' }}>
@@ -158,7 +268,6 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
             </LinearGradient>
           </View>
 
-          {/* Address */}
           <View
             className="rounded-[16px] border p-4 mb-3"
             style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}
@@ -170,7 +279,7 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
                 className="font-semibold uppercase tracking-[1.5px]"
                 style={{ color: matchTheme.colors.okSoft, fontSize: 11 }}
               >
-                {t('details.address', 'Endereço')}
+                {t('details.address', 'Endereco')}
               </Text>
             </View>
             <Text variant="body" style={{ color: matchTheme.colors.fgPrimary, lineHeight: 20 }}>
@@ -178,7 +287,48 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
             </Text>
           </View>
 
-          {/* Phone */}
+          <View
+            className="rounded-[16px] border p-4 mb-3"
+            style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}
+          >
+            <View className="flex-row items-center gap-2 mb-3">
+              <MapPin size={14} color={matchTheme.colors.okSoft} />
+              <Text
+                variant="caption"
+                className="font-semibold uppercase tracking-[1.5px]"
+                style={{ color: matchTheme.colors.okSoft, fontSize: 11 }}
+              >
+                {t('details.locationData', 'Localizacao')}
+              </Text>
+            </View>
+            <View className="gap-2">
+              <View className="flex-row items-center justify-between">
+                <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                  {t('filters.state', 'Estado')}
+                </Text>
+                <Text variant="body" style={{ color: matchTheme.colors.fgPrimary }}>
+                  {stateValue}
+                </Text>
+              </View>
+              <View className="flex-row items-center justify-between">
+                <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                  {t('filters.city', 'Cidade')}
+                </Text>
+                <Text variant="body" style={{ color: matchTheme.colors.fgPrimary }}>
+                  {cityValue}
+                </Text>
+              </View>
+              <View className="flex-row items-center justify-between">
+                <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
+                  CEP
+                </Text>
+                <Text variant="body" style={{ color: matchTheme.colors.fgPrimary }}>
+                  {cepValue}
+                </Text>
+              </View>
+            </View>
+          </View>
+
           <View
             className="rounded-[16px] border p-4 mb-3"
             style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}
@@ -194,26 +344,41 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center justify-between gap-2">
               <Text variant="body" style={{ color: matchTheme.colors.fgPrimary, flex: 1 }}>
-                {phoneIsValid ? court.phone : t('details.notInformed', 'Não informado')}
+                {phoneIsValid ? court.phone : t('details.notInformed', 'Nao informado')}
               </Text>
+
               {phoneIsValid ? (
-                <Pressable
-                  onPress={handleCallPhone}
-                  className="rounded-[10px] px-3 py-2 flex-row items-center gap-1"
-                  style={{ backgroundColor: matchTheme.colors.ok }}
-                >
-                  <Phone size={14} color="#05070B" />
-                  <Text variant="caption" className="font-semibold" style={{ color: '#05070B', fontSize: 12 }}>
-                    {t('details.callPhone', 'Ligar')}
-                  </Text>
-                </Pressable>
+                <View className="flex-row items-center gap-2">
+                  {canOpenWhatsApp ? (
+                    <Pressable
+                      onPress={handleOpenWhatsApp}
+                      className="rounded-[10px] px-3 py-2 flex-row items-center gap-1"
+                      style={{ backgroundColor: '#22B76C' }}
+                    >
+                      <MessageCircle size={14} color="#05070B" />
+                      <Text variant="caption" className="font-semibold" style={{ color: '#05070B', fontSize: 12 }}>
+                        {t('details.whatsapp', 'WhatsApp')}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+
+                  <Pressable
+                    onPress={handleCallPhone}
+                    className="rounded-[10px] px-3 py-2 flex-row items-center gap-1"
+                    style={{ backgroundColor: matchTheme.colors.ok }}
+                  >
+                    <Phone size={14} color="#05070B" />
+                    <Text variant="caption" className="font-semibold" style={{ color: '#05070B', fontSize: 12 }}>
+                      {t('details.callPhone', 'Ligar')}
+                    </Text>
+                  </Pressable>
+                </View>
               ) : null}
             </View>
           </View>
 
-          {/* Amenities */}
           <View
             className="rounded-[16px] border p-4 mb-3"
             style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}
@@ -230,7 +395,7 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
 
             {court.amenities.length === 0 ? (
               <Text variant="caption" style={{ color: matchTheme.colors.fgMuted }}>
-                {t('details.notInformed', 'Não informado')}
+                {t('details.notInformed', 'Nao informado')}
               </Text>
             ) : (
               <View className="flex-row gap-2 flex-wrap">
@@ -260,7 +425,6 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
             )}
           </View>
 
-          {/* Working Hours */}
           <View
             className="rounded-[16px] border p-4 mb-3"
             style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}
@@ -272,13 +436,13 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
                 className="font-semibold uppercase tracking-[1.5px]"
                 style={{ color: matchTheme.colors.okSoft, fontSize: 11 }}
               >
-                {t('details.workingHours', 'Horário de Funcionamento')}
+                {t('details.workingHours', 'Horario de Funcionamento')}
               </Text>
             </View>
 
             <View className="gap-2">
               {ORDERED_DAYS.map((day) => {
-                const hours = court.working_hours[day];
+                const hours = getWorkingHoursForDay(court, day);
                 if (!hours) return null;
                 const isClosed = hours.toLowerCase().includes('fechado');
                 return (

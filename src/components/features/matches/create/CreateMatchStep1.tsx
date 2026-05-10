@@ -190,6 +190,7 @@ export function CreateMatchStep1({
                 label={labels.state}
                 value={stateCode}
                 options={stateOptions}
+                selectedLabel={(option) => option.value}
                 searchable
                 placeholder={labels.selectState}
                 onChange={onStateChange}

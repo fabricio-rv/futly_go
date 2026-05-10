@@ -105,14 +105,15 @@ module.exports = {
         goldB: '#D4A13A',
       },
       fontFamily: {
-        // Mapeamento Web (Primeiro item) + Native (Segundo item)
-        sans: ['Inter', 'Inter_400Regular', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'Inter_700Bold', 'system-ui', 'sans-serif'],
-        number: ['Bebas Neue', 'BebasNeue_400Regular', 'Geist_700Bold', 'sans-serif'],
-        mono: ['Geist Mono', 'GeistMono_400Regular', 'Menlo', 'monospace'],
-        geist: ['Geist', 'Inter_500Medium', 'system-ui', 'sans-serif'],
-        geistBold: ['Geist', 'Inter_700Bold', 'system-ui', 'sans-serif'],
-        bebas: ['Bebas Neue', 'BebasNeue_400Regular', 'cursive'],
+        // No iOS/Android, Nativewind usa apenas o primeiro item da lista.
+        // Por isso o alias nativo precisa vir primeiro para nao quebrar as fontes mobile.
+        sans: ['Inter_400Regular', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Inter_700Bold', 'Inter', 'system-ui', 'sans-serif'],
+        number: ['BebasNeue_400Regular', 'Bebas Neue', 'Geist_700Bold', 'sans-serif'],
+        mono: ['GeistMono_400Regular', 'Geist Mono', 'Menlo', 'monospace'],
+        geist: ['Geist_400Regular', 'Geist', 'Inter_500Medium', 'system-ui', 'sans-serif'],
+        geistBold: ['Geist_700Bold', 'Geist', 'Inter_700Bold', 'system-ui', 'sans-serif'],
+        bebas: ['BebasNeue_400Regular', 'Bebas Neue', 'cursive'],
       },
       borderRadius: {
         xs: '6px',

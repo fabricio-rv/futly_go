@@ -125,6 +125,37 @@ export async function markAllNotificationsRead() {
   }
 }
 
+export async function markChatNotificationsAsReadForConversation(conversationId: string) {
+  if (!conversationId) return;
+
+  const userId = await getCurrentUserId();
+  const readPayload = { is_read: true, read_at: new Date().toISOString() };
+
+  const attempts = await Promise.allSettled([
+    supabase
+      .from('notifications')
+      .update(readPayload)
+      .eq('user_id', userId)
+      .eq('is_read', false)
+      .contains('metadata', { kind: 'chat_message', conversation_id: conversationId }),
+    supabase
+      .from('notifications')
+      .update(readPayload)
+      .eq('user_id', userId)
+      .eq('is_read', false)
+      .contains('metadata', { kind: 'chat_message', conversationId }),
+  ]);
+
+  const hasUnexpectedError = attempts.some((attempt) => {
+    if (attempt.status !== 'fulfilled') return true;
+    return Boolean(attempt.value.error);
+  });
+
+  if (hasUnexpectedError) {
+    throw new Error('Não foi possível sincronizar notificacoes de conversa.');
+  }
+}
+
 export async function fetchRecentActions(t?: (key: string, fallback: string) => string) {
   const translate = t || ((_, fallback) => fallback);
   const userId = await getCurrentUserId();

@@ -35,6 +35,7 @@ import type { ChatMessage } from '@/src/components/features/store/data';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { supabase } from '@/src/lib/supabase';
 import { decryptMessage, encryptMessage } from '@/src/features/chat/services/chatCrypto';
+import { markChatNotificationsAsReadForConversation } from '@/src/features/notifications/services/notificationsService';
 
 type HeaderData = {
   title: string;
@@ -454,6 +455,7 @@ export function useConversationThread(conversationId: string, options: UseConver
         void Promise.allSettled([
           markConversationMessagesRead(incomingMessageIds),
           markConversationAsRead(conversationId),
+          markChatNotificationsAsReadForConversation(conversationId),
         ]);
       }
     } catch (err) {
@@ -699,6 +701,11 @@ export function useConversationThread(conversationId: string, options: UseConver
 
     return () => clearInterval(intervalId);
   }, [currentUserId]);
+
+  useEffect(() => {
+    if (!conversationId || !isScreenActive) return;
+    void markChatNotificationsAsReadForConversation(conversationId).catch(() => undefined);
+  }, [conversationId, isScreenActive]);
 
   const notifyComposerChanged = useCallback((value: string) => {
     const typing = value.trim().length > 0;

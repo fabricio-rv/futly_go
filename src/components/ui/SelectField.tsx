@@ -27,6 +27,7 @@ type SelectFieldProps<T extends string> = {
   value: T | null | undefined;
   options: ReadonlyArray<SelectOption<T>>;
   onChange: (value: T) => void;
+  selectedLabel?: (option: SelectOption<T>) => string;
   error?: string;
   searchable?: boolean;
   disabled?: boolean;
@@ -38,6 +39,7 @@ export function SelectField<T extends string>({
   value,
   options,
   onChange,
+  selectedLabel,
   error,
   searchable = false,
   disabled = false,
@@ -46,6 +48,9 @@ export function SelectField<T extends string>({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const selectedOption = options.find((option) => option.value === value) ?? null;
+  const selectedValueLabel = selectedOption
+    ? selectedLabel?.(selectedOption) ?? selectedOption.label
+    : null;
 
   const visibleOptions = useMemo(() => {
     if (!searchable) return options;
@@ -91,7 +96,7 @@ export function SelectField<T extends string>({
                 />
               ) : null}
               <Text variant="body" tone="primary" numberOfLines={1} style={{ color: theme === 'light' ? '#111827' : '#F5F7FA' }}>
-                {selectedOption.label}
+                {selectedValueLabel}
               </Text>
             </>
           ) : (

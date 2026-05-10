@@ -40,8 +40,7 @@ export default function EditProfileScreen() {
     () =>
       BRAZIL_STATE_OPTIONS.filter((state) => availableStateCodes.includes(state.value)).map((state) => ({
         value: state.value,
-        label: state.label,
-        description: state.value,
+        label: `${state.label} (${state.value})`,
       })),
     [availableStateCodes],
   );
@@ -171,6 +170,7 @@ export default function EditProfileScreen() {
                 value={selectedState}
                 onChange={setSelectedState}
                 options={stateOptions}
+                selectedLabel={(option) => option.value}
                 placeholder={t('placeholders.selectState', 'Selecione o estado')}
                 searchable
               />

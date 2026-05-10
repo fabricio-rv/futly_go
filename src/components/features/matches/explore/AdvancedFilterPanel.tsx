@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Modal, Pressable, TextInput, useWindowDimensions, View } from 'react-native';
+﻿import { useMemo, useState } from 'react';
+import { Modal, Pressable, useWindowDimensions, View } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
 
-import { Button, Text } from '@/src/components/ui';
+import { Button, Input, SelectField, Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
+import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 
 export interface AdvancedFilters {
   state?: string;
@@ -25,7 +26,10 @@ type FieldButtonProps = {
   value?: string;
   placeholder: string;
   onPress: () => void;
+  disabled?: boolean;
 };
+
+type ShiftSelectValue = NonNullable<AdvancedFilters['shift']> | '__all__';
 
 const TURNO_OPTIONS: Array<{ value: NonNullable<AdvancedFilters['shift']>; labelKey: string; fallback: string }> = [
   { value: 'manha', labelKey: 'filters.shiftMorning', fallback: 'Manha' },
@@ -68,22 +72,28 @@ function parseIsoTime(value?: string) {
   return { hour: h, minute: min };
 }
 
-function FieldButton({ label, value, placeholder, onPress }: FieldButtonProps) {
-  const matchTheme = useMatchTheme();
+function FieldButton({ label, value, placeholder, onPress, disabled = false }: FieldButtonProps) {
+  const theme = useAppColorScheme();
+
+  const borderColor = theme === 'light' ? '#DDE2ED' : '#1F2A44';
+  const backgroundColor = theme === 'light' ? '#FAFBFC' : '#101626';
+  const labelColor = theme === 'light' ? '#475569' : 'rgba(255,255,255,0.70)';
+  const valueColor = value ? (theme === 'light' ? '#18181B' : '#FAFAFA') : (theme === 'light' ? '#64748B' : '#7A8699');
+  const iconColor = theme === 'light' ? 'rgba(31,41,55,0.60)' : 'rgba(255,255,255,0.60)';
 
   return (
-    <Pressable onPress={onPress} className="gap-2">
-      <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
+    <Pressable onPress={onPress} disabled={disabled} className="w-full" style={{ opacity: disabled ? 0.6 : 1 }}>
+      <Text variant="label" className="mb-2.5 font-semibold" style={{ color: labelColor }}>
         {label}
       </Text>
       <View
-        className="h-12 rounded-[12px] border px-3 flex-row items-center justify-between"
-        style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
+        className="h-12 rounded-[28px] border-[0.5px] px-4 flex-row items-center justify-between"
+        style={{ backgroundColor, borderColor }}
       >
-        <Text variant="body" style={{ color: value ? matchTheme.colors.fgPrimary : matchTheme.colors.fgMuted }}>
+        <Text variant="body" numberOfLines={1} style={{ color: valueColor, flex: 1 }}>
           {value || placeholder}
         </Text>
-        <ChevronDown size={18} color={matchTheme.colors.fgMuted} />
+        <ChevronDown size={16} color={iconColor} />
       </View>
     </Pressable>
   );
@@ -91,16 +101,17 @@ function FieldButton({ label, value, placeholder, onPress }: FieldButtonProps) {
 
 export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilterPanelProps) {
   const matchTheme = useMatchTheme();
+  const theme = useAppColorScheme();
   const { t, currentLanguage } = useTranslation('matches');
   const { width } = useWindowDimensions();
   const isCompact = width < 380;
+  const selectValue: ShiftSelectValue = filters.shift ?? '__all__';
 
   const selectedDate = parseIsoDate(filters.date) ?? new Date();
   const parsedTime = parseIsoTime(filters.time);
 
   const [showWebDateModal, setShowWebDateModal] = useState(false);
   const [showWebTimeModal, setShowWebTimeModal] = useState(false);
-  const [showShiftDropdown, setShowShiftDropdown] = useState(false);
   const [webDateCursor, setWebDateCursor] = useState(() => new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   const [webHour, setWebHour] = useState(parsedTime?.hour ?? 19);
   const [webMinute, setWebMinute] = useState(parsedTime?.minute ?? 0);
@@ -113,10 +124,16 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
   const leadingEmpty = Array.from({ length: firstWeekday });
   const dayNumbers = Array.from({ length: monthDays }, (_, idx) => idx + 1);
 
-  const handleShiftChange = (shift: NonNullable<AdvancedFilters['shift']>) => {
-    const nextShift = filters.shift === shift ? undefined : shift;
-    onFiltersChange({ ...filters, shift: nextShift });
-  };
+  const shiftOptions: Array<{ value: ShiftSelectValue; label: string }> = useMemo(
+    () => [
+      { value: '__all__', label: t('filters.allShifts', 'Todos os turnos') },
+      ...TURNO_OPTIONS.map((option) => ({
+        value: option.value,
+        label: t(option.labelKey, option.fallback),
+      })),
+    ],
+    [t],
+  );
 
   const handlePriceChange = (price: string) => {
     const cleanValue = price.replace(/[^\d]/g, '');
@@ -156,9 +173,9 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             </View>
             <View className={isCompact ? 'w-full' : 'flex-1'}>
               <FieldButton
-                label={t('filters.time', 'Horário')}
+                label={t('filters.time', 'Horario')}
                 value={filters.time ?? ''}
-                placeholder={t('filters.selectTime', 'Selecione o horário')}
+                placeholder={t('filters.selectTime', 'Selecione o horario')}
                 onPress={() => {
                   const time = parseIsoTime(filters.time);
                   setWebHour(time?.hour ?? 19);
@@ -171,51 +188,22 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
 
           <View className={isCompact ? 'gap-2 mt-1' : 'flex-row gap-2 mt-1'}>
             <View className={isCompact ? 'w-full' : 'flex-1'}>
-              <View className="gap-2">
-                <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
-                  {t('filters.shift', 'Turno')}
-                </Text>
-                <Pressable
-                  onPress={() => setShowShiftDropdown(true)}
-                  className="h-12 rounded-[12px] border px-3 flex-row items-center justify-between"
-                  style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
-                >
-                  <Text
-                    variant="body"
-                    style={{
-                      color: matchTheme.colors.fgPrimary,
-                    }}
-                  >
-                    {(() => {
-                      const current = TURNO_OPTIONS.find((item) => item.value === filters.shift);
-                      if (!current) return t('filters.allShifts', 'Todos os turnos');
-                      return t(current.labelKey, current.fallback);
-                    })()}
-                  </Text>
-                  <ChevronDown size={18} color={matchTheme.colors.fgMuted} />
-                </Pressable>
-              </View>
+              <SelectField<ShiftSelectValue>
+                label={t('filters.shift', 'Turno')}
+                value={selectValue}
+                options={shiftOptions}
+                onChange={(nextValue) => onFiltersChange({ ...filters, shift: nextValue === '__all__' ? undefined : nextValue })}
+              />
             </View>
-            <View className={isCompact ? 'w-full gap-2' : 'flex-1 gap-2'}>
-              <Text variant="caption" className="font-semibold" style={{ color: matchTheme.colors.fgSecondary }}>
-                {t('filters.maxPrice', 'Preço máximo')}
-              </Text>
-              <View
-                className="h-12 rounded-[12px] border px-3 flex-row items-center gap-2"
-                style={{ backgroundColor: matchTheme.colors.bgSurfaceB, borderColor: matchTheme.colors.lineStrong }}
-              >
-                <Text variant="body" style={{ color: matchTheme.colors.fgMuted }}>
-                  R$
-                </Text>
-                <TextInput
-                  value={filters.maxPrice?.toString() ?? ''}
-                  onChangeText={handlePriceChange}
-                  placeholder="50"
-                  placeholderTextColor={matchTheme.colors.fgMuted}
-                  keyboardType="number-pad"
-                  style={{ color: matchTheme.colors.fgPrimary, fontSize: 14, flex: 1 }}
-                />
-              </View>
+            <View className={isCompact ? 'w-full' : 'flex-1'}>
+              <Input
+                label={t('filters.maxPrice', 'Preco maximo')}
+                value={filters.maxPrice?.toString() ?? ''}
+                onChangeText={handlePriceChange}
+                placeholder="50"
+                keyboardType="number-pad"
+                leftIcon={<Text variant="body" style={{ color: theme === 'light' ? '#64748B' : '#7A8699' }}>R$</Text>}
+              />
             </View>
           </View>
 
@@ -312,7 +300,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
         <View className="flex-1 items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.62)' }}>
           <View className="w-full max-w-[420px] rounded-[18px] border p-4" style={{ backgroundColor: matchTheme.colors.bgSurfaceA, borderColor: matchTheme.colors.lineStrong }}>
             <Text variant="label" className="font-bold mb-3" style={{ color: matchTheme.colors.fgPrimary }}>
-              {t('filters.selectTime', 'Selecione o horário')}
+              {t('filters.selectTime', 'Selecione o horario')}
             </Text>
             <View className="flex-row items-center justify-center gap-4">
               <Button label="-" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 23) % 24)} />
@@ -343,52 +331,6 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
             />
           </View>
         </View>
-      </Modal>
-
-      <Modal transparent visible={showShiftDropdown} onRequestClose={() => setShowShiftDropdown(false)}>
-        <Pressable className="flex-1 bg-black/60 justify-center px-6" onPress={() => setShowShiftDropdown(false)}>
-          <Pressable
-            className="rounded-[18px] border p-4"
-            style={{
-              borderColor: matchTheme.colors.lineStrong,
-              backgroundColor: matchTheme.colors.bgSurfaceA,
-            }}
-          >
-            <Text variant="label" className="font-bold text-[#111827] dark:text-white mb-3">{t('filters.shift', 'Turno')}</Text>
-            <View className="gap-2">
-              <Pressable
-                className="rounded-[10px] border px-3 py-3"
-                style={{ borderColor: matchTheme.colors.line, backgroundColor: !filters.shift ? matchTheme.colors.ok : matchTheme.colors.bgSurfaceB }}
-                onPress={() => {
-                  onFiltersChange({ ...filters, shift: undefined });
-                  setShowShiftDropdown(false);
-                }}
-              >
-                <Text variant="body" style={{ color: !filters.shift ? '#05070B' : matchTheme.colors.fgPrimary }}>
-                  {t('filters.allShifts', 'Todos os turnos')}
-                </Text>
-              </Pressable>
-              {TURNO_OPTIONS.map((option) => {
-                const active = filters.shift === option.value;
-                return (
-                  <Pressable
-                    key={option.value}
-                    className="rounded-[10px] border px-3 py-3"
-                    style={{ borderColor: matchTheme.colors.line, backgroundColor: active ? matchTheme.colors.ok : matchTheme.colors.bgSurfaceB }}
-                    onPress={() => {
-                      handleShiftChange(option.value);
-                      setShowShiftDropdown(false);
-                    }}
-                  >
-                    <Text variant="body" style={{ color: active ? '#05070B' : matchTheme.colors.fgPrimary }}>
-                      {t(option.labelKey, option.fallback)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </Pressable>
-        </Pressable>
       </Modal>
     </>
   );
