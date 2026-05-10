@@ -51,7 +51,7 @@ function amenityIcon(name: string, color: string): ReactNode {
 }
 
 function extractState(court: Court): string {
-  const fromField = court.state?.trim().toUpperCase();
+  const fromField = court.state?.trim();
   if (fromField) return fromField;
 
   const previewParts = court.location_preview
@@ -141,7 +141,7 @@ export function CourtDetailsScreen({ courtId }: { courtId: string }) {
   const e164Phone = toBrazilE164(court.phone ?? '');
   const phoneIsValid = normalizedPhone.length >= 10;
   const canOpenWhatsApp = Boolean(e164Phone && isWhatsAppCompatible(e164Phone));
-  const stateValue = extractState(court) || t('details.notInformed', 'Nao informado');
+  const stateValue = formatStateForDetails(extractState(court)) || t('details.notInformed', 'Nao informado');
   const cityValue = extractCity(court) || t('details.notInformed', 'Nao informado');
   const cepValue = extractCep(court) || t('details.notInformed', 'Nao informado');
 
