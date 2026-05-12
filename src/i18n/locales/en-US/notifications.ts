@@ -86,6 +86,12 @@ export const enUSNotifications = {
     unreadConversations: 'Unread conversations',
     privateConversation: 'Private conversation',
     groupConversation: 'Group',
-    newMessage: 'New message'
+    newMessage: 'New message',
+    protectedMessage: 'Protected message',
+    audioMessage: 'Audio',
+    imageMessage: 'Image',
+    videoMessage: 'Video',
+    documentMessage: 'Document'
   }
 };
+

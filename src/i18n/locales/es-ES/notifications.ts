@@ -86,6 +86,12 @@ export const esESNotifications = {
     unreadConversations: 'Conversaciones no leídas',
     privateConversation: 'Conversación privada',
     groupConversation: 'Grupo',
-    newMessage: 'Nuevo mensaje'
+    newMessage: 'Nuevo mensaje',
+    protectedMessage: 'Mensaje protegido',
+    audioMessage: 'Audio',
+    imageMessage: 'Imagen',
+    videoMessage: 'Video',
+    documentMessage: 'Documento'
   }
 };
+

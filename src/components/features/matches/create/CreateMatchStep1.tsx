@@ -34,6 +34,7 @@ type CreateMatchStep1Props = {
     shift: string;
     contactPhone: string;
     contactPhonePlaceholder: string;
+    cepPlaceholder: string;
   };
   stateOptions: StepOption[];
   shiftOptions: StepOption[];
@@ -147,7 +148,7 @@ export function CreateMatchStep1({
               value={cep}
               onChangeText={onCepChange}
               keyboardType="number-pad"
-              placeholder="00000-000"
+              placeholder={labels.cepPlaceholder}
             />
           </View>
 

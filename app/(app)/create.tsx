@@ -311,7 +311,7 @@ export default function CreateMatchScreen() {
     if (missingFields.length > 0) {
       toast.warning(
         t("form.createFailedTitle"),
-        `Preencha os campos obrigatorios: ${missingFields.join(", ")}`,
+        `${t("form.fillRequiredFields", "Preencha os campos obrigatorios")}: ${missingFields.join(", ")}`,
       );
       return;
     }
@@ -407,9 +407,9 @@ export default function CreateMatchScreen() {
         <View className="px-[18px] pb-2">
           <SegmentedControl
             options={[
-              { id: "1", label: "Informa\u00e7\u00f5es" },
-              { id: "2", label: "Detalhes" },
-              { id: "3", label: "Escala\u00e7\u00e3o" },
+              { id: "1", label: t("tabs.info", "Informacoes") },
+              { id: "2", label: t("tabs.details", "Detalhes") },
+              { id: "3", label: t("tabs.lineup", "Escalacao") },
             ]}
             activeId={activeStep}
             onChange={(value) => goToStep(value as CreateStep)}
@@ -442,7 +442,8 @@ export default function CreateMatchScreen() {
                 selectTime: t("filters.time", "Hor\u00e1rio"),
                 shift: t("filters.shift", "Turno"),
                 contactPhone: t("form.contactPhone"),
-                contactPhonePlaceholder: "(00) 00000-0000",
+                contactPhonePlaceholder: t("form.contactPhonePlaceholder", "(00) 00000-0000"),
+                cepPlaceholder: t("form.cepPlaceholder", "00000-000"),
               }}
               stateOptions={stateOptions}
               shiftOptions={TURNO_OPTIONS.map((item) => ({
@@ -538,7 +539,7 @@ export default function CreateMatchScreen() {
           {activeStep === "2" ? (
             <CreateMatchStep2
               matchTheme={matchTheme}
-              titles={{ gameLevel: "N\u00edvel do Jogo" }}
+              titles={{ gameLevel: t("form.gameLevel", "Nivel do Jogo") }}
               labels={{
                 pricePerPerson: t("form.pricePerPerson"),
                 durationMinutes: t("form.durationMinutes"),
@@ -549,6 +550,10 @@ export default function CreateMatchScreen() {
                 restBreakSubtitle: t("form.restBreakSubtitle"),
                 refereeTitle: t("form.refereeTitle"),
                 refereeSubtitle: t("form.refereeSubtitle"),
+                pricePlaceholder: t("form.pricePerPersonPlaceholder", "25"),
+                durationPlaceholder: t("form.durationMinutesPlaceholder", "60"),
+                currencySymbol: t("form.currencySymbol", "R$"),
+                minutesUnit: t("form.durationUnit", "min"),
                 levelOptionLabel: (value) => t(`form.levelOptions.${value}`),
               }}
               pricePerPerson={pricePerPerson}
@@ -585,7 +590,7 @@ export default function CreateMatchScreen() {
           {activeStep === "3" ? (
             <CreateMatchStep3
               matchTheme={matchTheme}
-              titles={{ descriptionOptional: "Descri\u00e7\u00e3o (opcional)" }}
+              titles={{ descriptionOptional: t("form.descriptionOptional", "Descricao (opcional)") }}
               labels={{
                 positionsHint: t("form.positionsHint"),
                 hostPosition: t("form.hostPosition"),

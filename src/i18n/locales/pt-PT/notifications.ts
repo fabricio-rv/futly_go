@@ -86,6 +86,12 @@ export const ptPTNotifications = {
     unreadConversations: 'Conversas por ler',
     privateConversation: 'Conversa privada',
     groupConversation: 'Grupo',
-    newMessage: 'Nova mensagem'
+    newMessage: 'Nova mensagem',
+    protectedMessage: 'Mensagem protegida',
+    audioMessage: 'Audio',
+    imageMessage: 'Imagem',
+    videoMessage: 'Video',
+    documentMessage: 'Documento'
   }
 };
+

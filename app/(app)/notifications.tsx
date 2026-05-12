@@ -1,6 +1,6 @@
 import { Bell, CircleDot, Clock3, MessageCircle, Star, UserCheck, UserX } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Modal, Pressable, TextInput } from 'react-native';
+import { View, Modal, Pressable, TextInput, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { useToast } from '@/src/contexts/ToastContext';
@@ -17,6 +17,7 @@ import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { supabase } from '@/src/lib/supabase';
 import { fetchChatList, markConversationAsRead, type ChatListRow } from '@/src/features/chat/services/chatService';
+import { toInitials } from '@/src/features/chat/utils/formatters';
 
 type NotificationItem = ReturnType<typeof useNotifications>['notifications'][number];
 
@@ -81,6 +82,48 @@ function toRelative(isoDate: string) {
   const days = Math.floor(hours / 24);
   if (days === 1) return 'yesterday';
   return `${days}d ago`;
+}
+
+function normalizeChatPreview(raw: string | null | undefined, t: (key: string, fallback: string) => string) {
+  const text = String(raw ?? '').replace(/\u200B/g, '').trim();
+  if (!text) return t('chat.newMessage', 'Nova mensagem');
+
+  if (text.toLowerCase().includes('e2ee:')) {
+    return t('chat.protectedMessage', 'Mensagem protegida');
+  }
+
+  const marker = text.match(/^\[([^\]]+)\]\s*(.*)$/);
+  if (!marker) return text;
+
+  const kindRaw = (marker[1] ?? '').toLowerCase();
+  const normalizedKind = kindRaw.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const fileName = (marker[2] ?? '').trim();
+
+  if (normalizedKind.includes('audio')) {
+    const durationMatch = kindRaw.match(/(\d+)\s*s/i);
+    const durationSec = durationMatch ? Number(durationMatch[1]) : null;
+    return durationSec ? `${t('chat.audioMessage', 'Audio')} ${durationSec}s` : t('chat.audioMessage', 'Audio');
+  }
+
+  if (normalizedKind.includes('foto') || normalizedKind.includes('imagem') || normalizedKind.includes('image')) {
+    return t('chat.imageMessage', 'Imagem');
+  }
+
+  if (normalizedKind.includes('video')) {
+    return t('chat.videoMessage', 'Video');
+  }
+
+  const extension = fileName.includes('.') ? fileName.split('.').pop()?.toUpperCase() : '';
+  return extension
+    ? `${t('chat.documentMessage', 'Documento')} (${extension})`
+    : t('chat.documentMessage', 'Documento');
+}
+
+function trimSenderPrefix(text: string, senderName: string) {
+  const safeSender = senderName.trim();
+  if (!safeSender) return text;
+  const escapedSender = safeSender.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(`^${escapedSender}\\s*[:\\-]\\s*`, 'i'), '').trim();
 }
 
 function getNotificationVisual(params: {
@@ -424,32 +467,40 @@ export default function NotificationsScreen() {
             {loading ? <SkeletonList rows={3} /> : null}
 
             {unreadConversations.length > 0 ? (
-              <BaseCard className="mb-3">
-                <View className="flex-row items-center justify-between mb-2">
-                  <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
-                    {t('chat.unreadConversations', 'Conversas não lidas')}
-                  </Text>
-                  <Text variant="micro" className="text-[#4B5563] dark:text-fg3">
-                    {unreadConversations.length}
-                  </Text>
-                </View>
-                <View className="gap-2">
-                  {unreadConversations.map((row) => {
-                    const title = row.conversation_type === 'private'
-                      ? (row.private_partner_name ?? t('chat.privateConversation', 'Conversa privada'))
-                      : (row.group_name ?? row.match_title ?? t('chat.groupConversation', 'Grupo'));
-                    const subtitle = row.last_message_content
-                      ? `${row.last_message_sender_name ? `${row.last_message_sender_name}: ` : ''}${row.last_message_content}`
-                      : t('chat.newMessage', 'Nova mensagem');
+              <View className="mb-3 gap-2">
+                {unreadConversations.map((row) => {
+                  const title = row.conversation_type === 'private'
+                    ? (row.private_partner_name ?? t('chat.privateConversation', 'Conversa privada'))
+                    : (row.group_name ?? row.match_title ?? t('chat.groupConversation', 'Grupo'));
+                  const senderName = String(row.last_message_sender_name ?? '').trim();
+                  const cleanedBody = trimSenderPrefix(String(row.last_message_content ?? ''), senderName);
+                  const preview = normalizeChatPreview(cleanedBody, t);
+                  const subtitle = senderName ? `${senderName}: ${preview}` : preview;
+                  const avatarName = row.conversation_type === 'private'
+                    ? (row.private_partner_name ?? title)
+                    : (row.group_name ?? row.match_title ?? title);
+                  const avatarUrl = row.conversation_type === 'private'
+                    ? (row.private_partner_avatar_url ?? null)
+                    : (row.group_avatar_url ?? null);
 
-                    return (
-                      <TouchableScale
-                        key={`unread-${row.conversation_id}`}
-                        className="rounded-[12px] border px-3 py-3"
-                        style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}
-                        onPress={() => openChatConversation(row.conversation_id)}
-                      >
-                        <View className="flex-row items-center justify-between gap-3">
+                  return (
+                    <TouchableScale
+                      key={`unread-${row.conversation_id}`}
+                      className="rounded-[12px] border px-3 py-3"
+                      style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}
+                      onPress={() => openChatConversation(row.conversation_id)}
+                    >
+                      <View className="flex-row items-center justify-between gap-3">
+                        <View className="flex-row items-center gap-3 flex-1">
+                          <View className="h-10 w-10 rounded-full items-center justify-center overflow-hidden" style={{ backgroundColor: '#1F2937' }}>
+                            {avatarUrl ? (
+                              <Image source={{ uri: avatarUrl }} style={{ width: 40, height: 40 }} resizeMode="cover" />
+                            ) : (
+                              <Text variant="micro" className="text-white font-bold">
+                                {toInitials(avatarName)}
+                              </Text>
+                            )}
+                          </View>
                           <View className="flex-1">
                             <Text variant="caption" className="font-semibold text-[#111827] dark:text-white" numberOfLines={1}>
                               {title}
@@ -458,17 +509,17 @@ export default function NotificationsScreen() {
                               {subtitle}
                             </Text>
                           </View>
-                          <View style={{ backgroundColor: '#22B76C', borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>
-                            <Text variant="micro" style={{ color: '#05070B', fontWeight: '700', fontSize: 10 }}>
-                              {Math.max(1, Number(row.unread_count ?? 0))}
-                            </Text>
-                          </View>
                         </View>
-                      </TouchableScale>
-                    );
-                  })}
-                </View>
-              </BaseCard>
+                        <View style={{ backgroundColor: '#22B76C', borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>
+                          <Text variant="micro" style={{ color: '#05070B', fontWeight: '700', fontSize: 10 }}>
+                            {Math.max(1, Number(row.unread_count ?? 0))}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableScale>
+                  );
+                })}
+              </View>
             ) : null}
           </View>
         )}
@@ -550,6 +601,7 @@ export default function NotificationsScreen() {
             const subtitleText = conversationType === 'private'
               ? countLabel
               : `${senderName} - ${countLabel}`;
+            const bodyPreview = normalizeChatPreview(item.body, t);
 
             return (
               <View className="px-[18px]">
@@ -575,7 +627,7 @@ export default function NotificationsScreen() {
                           ) : null}
                         </View>
                         <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-0.5" numberOfLines={1}>{subtitleText}</Text>
-                        <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-0.5" numberOfLines={1}>{item.body}</Text>
+                        <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-0.5" numberOfLines={1}>{bodyPreview}</Text>
                       </View>
                       <View className="items-end gap-2">
                         <Text variant="micro" className="text-[#4B5563] dark:text-fg3">{toRelative(item.createdAt)}</Text>
@@ -788,3 +840,5 @@ export default function NotificationsScreen() {
     </SafeAreaView>
   );
 }
+
+

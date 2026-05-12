@@ -31,6 +31,10 @@ type CreateMatchStep2Props = {
     restBreakSubtitle: string;
     refereeTitle: string;
     refereeSubtitle: string;
+    pricePlaceholder: string;
+    durationPlaceholder: string;
+    currencySymbol: string;
+    minutesUnit: string;
     levelOptionLabel: (value: MinLevelValue) => string;
   };
   pricePerPerson: string;
@@ -90,7 +94,7 @@ function MinLevelCheckbox({
             variant="micro"
             style={{ color: "#05070B", lineHeight: 14, textAlign: "center" }}
           >
-            ✓
+            {"\u2713"}
           </Text>
         ) : null}
       </View>
@@ -139,10 +143,10 @@ export function CreateMatchStep2({
               value={pricePerPerson}
               onChangeText={onPricePerPersonChange}
               keyboardType="number-pad"
-              placeholder="25"
+              placeholder={labels.pricePlaceholder}
               leftIcon={
                 <Text variant="body" tone="muted">
-                  R$
+                  {labels.currencySymbol}
                 </Text>
               }
             />
@@ -153,10 +157,10 @@ export function CreateMatchStep2({
               value={durationMinutes}
               onChangeText={onDurationMinutesChange}
               keyboardType="number-pad"
-              placeholder="60"
+              placeholder={labels.durationPlaceholder}
               rightIcon={
                 <Text variant="body" tone="muted">
-                  min
+                  {labels.minutesUnit}
                 </Text>
               }
             />
@@ -230,3 +234,4 @@ export function CreateMatchStep2({
     </View>
   );
 }
+

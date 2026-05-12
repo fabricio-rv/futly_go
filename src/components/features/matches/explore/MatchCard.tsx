@@ -155,13 +155,29 @@ export function MatchCard({ partida, onPress, rightAction, bannerPalette = defau
             <Text variant="body" className="font-semibold text-[16px]" style={{ color: matchTheme.colors.fgPrimary }}>
               {partida.title}
             </Text>
-            <View className="flex-row items-center gap-1 mt-1">
-              <MapPin size={11} color={matchTheme.colors.fgMuted} />
-              <Text variant="caption" numberOfLines={1} style={{ color: matchTheme.colors.fgMuted }}>
-                {partida.location}
-                {typeof partida.distanceKm === 'number' ? ` - ${partida.distanceKm.toFixed(1)}km` : ''}
-                {formattedMatchDate ? ` - ${formattedMatchDate}` : ''}
-              </Text>
+            <View className="mt-1" style={{ position: 'relative' }}>
+              <View className="flex-row items-center gap-1">
+                <MapPin size={11} color={matchTheme.colors.fgMuted} />
+                <Text variant="caption" numberOfLines={1} style={{ color: matchTheme.colors.fgMuted }}>
+                  {partida.location}
+                  {typeof partida.distanceKm === 'number' ? ` - ${partida.distanceKm.toFixed(1)}km` : ''}
+                </Text>
+              </View>
+              {formattedMatchDate ? (
+                <Text
+                  variant="caption"
+                  numberOfLines={1}
+                  style={{
+                    color: matchTheme.colors.fgMuted,
+                    marginLeft: 16,
+                    marginTop: 2,
+                    position: 'absolute',
+                    top: 12,
+                  }}
+                >
+                  {formattedMatchDate}
+                </Text>
+              ) : null}
             </View>
             <View className="flex-row items-center gap-2 mt-8">
               <AvatarStack players={partida.players ?? []} />
