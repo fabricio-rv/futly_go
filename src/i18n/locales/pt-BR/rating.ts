@@ -38,7 +38,8 @@
   },
   status: {
     savedTitle: 'Avaliação salva',
-    savedSubtitle: 'Pedro recebeu {{hostStars}} estrelas'
+    savedSubtitle: 'Pedro recebeu {{hostStars}} estrelas',
+    ok: 'OK'
   }
 };
 

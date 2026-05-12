@@ -47,7 +47,7 @@ export const ptPTChat = {
     viewParticipants: 'Ver participantes',
     unarchiveConversation: 'Restaurar conversa',
     archiveConversation: 'Arquivar conversa',
-    openMatchDetails: 'Abrir detalhes do jogo',
+    openMatchDetails: 'Abrir detalhes da partida',
     reply: 'Responder',
     copy: 'Copiar',
     forward: 'Encaminhar',
@@ -172,5 +172,37 @@ export const ptPTChat = {
     groupAdmin: 'Admin do grupo',
     shareContactTitle: 'Partilhar contacto',
     searchUser: 'Procurar utilizador'
+  },
+  create: {
+    newConversation: 'Nova conversa',
+    newGroup: 'Novo grupo',
+    addGroupPhoto: 'Adicionar foto do grupo',
+    groupNamePlaceholder: 'Nome do grupo',
+    groupDescriptionPlaceholder: 'Descricao (opcional)',
+    autoArchiveQuestion: 'Arquivar automaticamente 7 dias apos o jogo?',
+    searchConversationPlaceholder: 'Pesquisar conversa ou utilizador...',
+    searchUserPlaceholder: 'Pesquisar utilizador...',
+    addMembersPlaceholder: 'Adicionar membros...',
+    searching: 'A pesquisar...',
+    selected: 'Selecionado',
+    add: 'Adicionar',
+    createGroupButton: 'Criar grupo'
+  },
+  forward: {
+    title: 'Encaminhar para',
+    empty: 'Nenhuma conversa disponivel.'
+  },
+  participants: {
+    addPlaceholder: 'Adicionar participante...'
+  },
+  composer: {
+    recording: 'A gravar...',
+    cancelRecordingA11y: 'Cancelar gravacao',
+    holdToRecordA11y: 'Prima para gravar audio',
+    openEmojiA11y: 'Abrir emoji',
+    attachFileA11y: 'Anexar ficheiro',
+    sendImageA11y: 'Enviar imagem',
+    sendAudioA11y: 'Enviar audio',
+    sendMessageA11y: 'Enviar mensagem'
   }
 };

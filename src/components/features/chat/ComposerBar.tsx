@@ -4,6 +4,7 @@ import { Pressable, TextInput, View } from 'react-native';
 
 import { Text } from '@/src/components/ui';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { getChatTokens } from '@/src/lib/chatTokens';
 
 type ComposerBarProps = {
@@ -60,6 +61,7 @@ export function ComposerBar({
   onFocus,
   onBlur,
 }: ComposerBarProps) {
+  const { t } = useTranslation('chat');
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [inputHeight, setInputHeight] = useState(INPUT_MIN_H);
   const theme = useAppColorScheme();
@@ -117,7 +119,7 @@ export function ComposerBar({
           <Pressable
             onPress={() => onStopRecording(true)}
             accessibilityRole="button"
-            accessibilityLabel="Cancelar gravação"
+            accessibilityLabel={t('composer.cancelRecordingA11y', 'Cancelar grava??o')}
             style={{
               width: BTN,
               height: BTN,
@@ -134,7 +136,7 @@ export function ComposerBar({
             onLongPress={onStartRecording}
             delayLongPress={200}
             accessibilityRole="button"
-            accessibilityLabel="Segure para gravar áudio"
+            accessibilityLabel={t('composer.holdToRecordA11y', 'Segure para gravar ?udio')}
             style={{
               width: BTN,
               height: BTN,
@@ -167,7 +169,7 @@ export function ComposerBar({
             onPress={onOpenEmoji}
             hitSlop={8}
             accessibilityRole="button"
-            accessibilityLabel="Abrir emoji"
+            accessibilityLabel={t('composer.openEmojiA11y', 'Abrir emoji')}
             style={{ paddingHorizontal: 11 }}
           >
             <Smile size={20} color={tk.placeholderColor} strokeWidth={1.8} />
@@ -181,7 +183,7 @@ export function ComposerBar({
                 {formatSeconds(recordingDuration)}
               </Text>
               <Text style={{ color: tk.placeholderColor, fontSize: 12 }}>
-                Gravando...
+                {t('composer.recording', 'Gravando...')}
               </Text>
             </View>
           ) : (
@@ -255,7 +257,7 @@ export function ComposerBar({
                 onPress={onAddAttachment}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Anexar arquivo"
+                accessibilityLabel={t('composer.attachFileA11y', 'Anexar arquivo')}
                 style={{ paddingHorizontal: 9 }}
               >
                 <Paperclip size={19} color={tk.placeholderColor} strokeWidth={1.8} />
@@ -265,7 +267,7 @@ export function ComposerBar({
                 onPress={onPickImage}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Enviar imagem"
+                accessibilityLabel={t('composer.sendImageA11y', 'Enviar imagem')}
                 style={{ paddingHorizontal: 11 }}
               >
                 <Camera size={20} color={tk.placeholderColor} strokeWidth={1.8} />
@@ -279,7 +281,9 @@ export function ComposerBar({
           onPress={isRecording ? () => onStopRecording(false) : onSend}
           disabled={!canSend}
           accessibilityRole="button"
-          accessibilityLabel={isRecording ? 'Enviar áudio' : 'Enviar mensagem'}
+          accessibilityLabel={isRecording
+            ? t('composer.sendAudioA11y', 'Enviar ?udio')
+            : t('composer.sendMessageA11y', 'Enviar mensagem')}
           style={{
             width: BTN,
             height: BTN,

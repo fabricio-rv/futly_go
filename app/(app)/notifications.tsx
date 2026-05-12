@@ -1,8 +1,9 @@
 import { Bell, CircleDot, Clock3, MessageCircle, Star, UserCheck, UserX } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Modal, Pressable, TextInput, Alert } from 'react-native';
+import { View, Modal, Pressable, TextInput } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useToast } from '@/src/contexts/ToastContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
@@ -15,6 +16,7 @@ import { markChatNotificationsAsReadForConversation } from '@/src/features/notif
 import { useMatches } from '@/src/features/matches/hooks/useMatches';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { supabase } from '@/src/lib/supabase';
+import { fetchChatList, markConversationAsRead, type ChatListRow } from '@/src/features/chat/services/chatService';
 
 type NotificationItem = ReturnType<typeof useNotifications>['notifications'][number];
 
@@ -186,6 +188,7 @@ function NotificationIcon({ icon, color }: { icon: NotificationVisual['icon']; c
 
 export default function NotificationsScreen() {
   const { t } = useTranslation('notifications');
+  const toast = useToast();
   const theme = useAppColorScheme();
   const matchTheme = useMatchTheme();
   const { notifications, recentActions, unreadCount, loading, error, refresh } = useNotifications();
@@ -198,6 +201,7 @@ export default function NotificationsScreen() {
   const [showAllRecentActions, setShowAllRecentActions] = useState(false);
   const [submittedRatingKeys, setSubmittedRatingKeys] = useState<Set<string>>(new Set());
   const [requestStatusById, setRequestStatusById] = useState<Record<string, 'pending' | 'accepted' | 'rejected' | 'cancelled'>>({});
+  const [unreadConversations, setUnreadConversations] = useState<ChatListRow[]>([]);
 
   const title = useMemo(() => `${t('title', 'Notificacoes')} ${unreadCount > 0 ? `(${unreadCount})` : ''}`.trim(), [unreadCount, t]);
   const displayNotifications = useMemo(() => groupNotifications(notifications), [notifications]);
@@ -206,6 +210,18 @@ export default function NotificationsScreen() {
     [recentActions, showAllRecentActions],
   );
   const bgColor = theme === 'light' ? '#F1F5F9' : '#020617';
+
+  const loadUnreadConversations = useCallback(async () => {
+    try {
+      const rows = await fetchChatList();
+      const unreadRows = rows
+        .filter((row) => !row.is_archived && Number(row.unread_count ?? 0) > 0)
+        .sort((a, b) => Number(b.unread_count ?? 0) - Number(a.unread_count ?? 0));
+      setUnreadConversations(unreadRows);
+    } catch {
+      setUnreadConversations([]);
+    }
+  }, []);
 
   const getRatingKey = useCallback((matchId?: string | null, targetUserId?: string | null) => {
     if (!matchId || !targetUserId) return null;
@@ -295,16 +311,16 @@ export default function NotificationsScreen() {
   const handleRequestAction = useCallback(async (requestId: string, action: 'accept' | 'reject') => {
     try {
       await processParticipationRequest(requestId, action);
-      Alert.alert(
+      toast.success(
         t('common.success', 'Sucesso'),
         action === 'accept' ? t('requests.accepted', 'Solicitacao aceita!') : t('requests.rejected', 'Solicitacao recusada.'),
       );
       await loadRequestStatuses();
       await refresh();
     } catch {
-      Alert.alert(t('common.error', 'Erro'), t('requests.processError', 'Nao foi possivel processar a solicitacao.'));
+      toast.error(t('common.error', 'Erro'), t('requests.processError', 'Nao foi possivel processar a solicitacao.'));
     }
-  }, [loadRequestStatuses, processParticipationRequest, refresh, t]);
+  }, [loadRequestStatuses, processParticipationRequest, refresh, t, toast]);
 
   const handleOpenRating = useCallback((notif: NotificationItem) => {
     if (notif.metadata?.match_id && notif.metadata?.target_user_id) {
@@ -319,16 +335,16 @@ export default function NotificationsScreen() {
       return;
     }
 
-    Alert.alert(
+    toast.error(
       t('common.error', 'Erro'),
       t('rating.unavailableTask', 'Esta tarefa de avaliacao esta incompleta. Atualize as notificacoes e tente novamente.'),
     );
-  }, [t]);
+  }, [t, toast]);
 
   const handleSubmitRating = useCallback(async () => {
     if (!ratingData) return;
     if (ratingScore <= 0) {
-      Alert.alert(t('common.error', 'Erro'), t('rating.chooseScore', 'Escolha uma nota antes de enviar.'));
+      toast.warning(t('common.error', 'Erro'), t('rating.chooseScore', 'Escolha uma nota antes de enviar.'));
       return;
     }
 
@@ -349,13 +365,13 @@ export default function NotificationsScreen() {
       });
 
       setRatingModalVisible(false);
-      Alert.alert(t('common.success', 'Sucesso'), t('rating.sent', 'Avaliacao enviada!'));
+      toast.success(t('common.success', 'Sucesso'), t('rating.sent', 'Avaliacao enviada!'));
       await refresh();
     } catch (ratingSubmitError) {
       const message = ratingSubmitError instanceof Error ? ratingSubmitError.message : t('rating.sendError', 'Nao foi possivel enviar a avaliacao.');
-      Alert.alert(t('common.error', 'Erro'), message);
+      toast.error(t('common.error', 'Erro'), message);
     }
-  }, [ratingData, ratingScore, ratingComment, submitMatchRating, refresh, t, getRatingKey]);
+  }, [ratingData, ratingScore, ratingComment, submitMatchRating, refresh, t, getRatingKey, toast]);
 
   const openChatConversation = useCallback((conversationId?: string) => {
     if (!conversationId) {
@@ -363,14 +379,19 @@ export default function NotificationsScreen() {
       return;
     }
 
-    void markChatNotificationsAsReadForConversation(conversationId).catch(() => undefined);
+    setUnreadConversations((prev) => prev.filter((row) => row.conversation_id !== conversationId));
+    void Promise.all([
+      markConversationAsRead(conversationId).catch(() => undefined),
+      markChatNotificationsAsReadForConversation(conversationId).catch(() => undefined),
+    ]).catch(() => undefined);
     router.push(`/(app)/conversations/${conversationId}`);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       void refresh();
-    }, [refresh]),
+      void loadUnreadConversations();
+    }, [loadUnreadConversations, refresh]),
   );
 
   return (
@@ -401,6 +422,54 @@ export default function NotificationsScreen() {
 
             {error ? <Text variant="caption" className="text-[#FCA5A5] mb-3">{error}</Text> : null}
             {loading ? <SkeletonList rows={3} /> : null}
+
+            {unreadConversations.length > 0 ? (
+              <BaseCard className="mb-3">
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text variant="label" className="font-semibold text-[#111827] dark:text-white">
+                    {t('chat.unreadConversations', 'Conversas não lidas')}
+                  </Text>
+                  <Text variant="micro" className="text-[#4B5563] dark:text-fg3">
+                    {unreadConversations.length}
+                  </Text>
+                </View>
+                <View className="gap-2">
+                  {unreadConversations.map((row) => {
+                    const title = row.conversation_type === 'private'
+                      ? (row.private_partner_name ?? t('chat.privateConversation', 'Conversa privada'))
+                      : (row.group_name ?? row.match_title ?? t('chat.groupConversation', 'Grupo'));
+                    const subtitle = row.last_message_content
+                      ? `${row.last_message_sender_name ? `${row.last_message_sender_name}: ` : ''}${row.last_message_content}`
+                      : t('chat.newMessage', 'Nova mensagem');
+
+                    return (
+                      <TouchableScale
+                        key={`unread-${row.conversation_id}`}
+                        className="rounded-[12px] border px-3 py-3"
+                        style={{ borderColor: matchTheme.colors.line, backgroundColor: matchTheme.colors.bgSurfaceA }}
+                        onPress={() => openChatConversation(row.conversation_id)}
+                      >
+                        <View className="flex-row items-center justify-between gap-3">
+                          <View className="flex-1">
+                            <Text variant="caption" className="font-semibold text-[#111827] dark:text-white" numberOfLines={1}>
+                              {title}
+                            </Text>
+                            <Text variant="micro" className="text-[#4B5563] dark:text-fg3 mt-0.5" numberOfLines={1}>
+                              {subtitle}
+                            </Text>
+                          </View>
+                          <View style={{ backgroundColor: '#22B76C', borderRadius: 10, minWidth: 20, height: 20, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 }}>
+                            <Text variant="micro" style={{ color: '#05070B', fontWeight: '700', fontSize: 10 }}>
+                              {Math.max(1, Number(row.unread_count ?? 0))}
+                            </Text>
+                          </View>
+                        </View>
+                      </TouchableScale>
+                    );
+                  })}
+                </View>
+              </BaseCard>
+            ) : null}
           </View>
         )}
         ListEmptyComponent={!loading ? (
@@ -494,7 +563,9 @@ export default function NotificationsScreen() {
                           <Text variant="caption" className="text-[#111827] dark:text-white font-semibold">{titleText}</Text>
                           {conversationType === 'private' ? (
                             <View style={{ backgroundColor: 'rgba(90,177,255,0.18)', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
-                              <Text variant="micro" style={{ color: '#7AC0FF', fontWeight: '700', fontSize: 10 }}>Privada</Text>
+                              <Text variant="micro" style={{ color: '#7AC0FF', fontWeight: '700', fontSize: 10 }}>
+                                {t('chat.privateConversation', 'Conversa privada')}
+                              </Text>
                             </View>
                           ) : null}
                           {chatCount > 1 ? (

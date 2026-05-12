@@ -15,7 +15,11 @@
     "mobile:submit": "npx eas submit --platform all --profile production",
     "mobile:release": "npx eas build --platform all --profile production --auto-submit",
     "test-config": "node scripts/test-config.js",
-    "test-signup": "node scripts/test-signup.js"
+    "test-signup": "node scripts/test-signup.js",
+    "audit:i18n:keys": "node scripts/audit-i18n-keys.js",
+    "audit:i18n:hardcoded": "node scripts/audit-hardcoded-ui.js",
+    "audit:ux:inventory": "node scripts/generate-ux-inventory.js",
+    "audit:ux": "npm run audit:ux:inventory && npm run audit:i18n:keys && npm run audit:i18n:hardcoded"
   },
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
@@ -39,11 +43,13 @@
     "expo-constants": "~18.0.13",
     "expo-dev-client": "~6.0.21",
     "expo-document-picker": "~14.0.8",
+    "expo-file-system": "~19.0.22",
     "expo-font": "~14.0.11",
     "expo-haptics": "^55.0.14",
     "expo-image-picker": "~17.0.11",
     "expo-linear-gradient": "~15.0.8",
     "expo-linking": "~8.0.11",
+    "expo-location": "~19.0.8",
     "expo-notifications": "~0.32.17",
     "expo-router": "~6.0.23",
     "expo-server": "~1.0.5",

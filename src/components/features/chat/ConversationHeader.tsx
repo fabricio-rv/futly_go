@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { getChatTokens } from '@/src/lib/chatTokens';
 import { Text } from '@/src/components/ui';
 import { Pressable } from 'react-native';
@@ -28,6 +29,7 @@ export function ConversationHeader({
   onBack,
   onOpenInfo,
 }: ConversationHeaderProps) {
+  const { t } = useTranslation('chat');
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
 
@@ -47,7 +49,7 @@ export function ConversationHeader({
           onPress={onBack}
           hitSlop={12}
           accessibilityRole="button"
-          accessibilityLabel="Voltar"
+          accessibilityLabel={t('common.back', 'Voltar')}
           className="px-1 py-1"
         >
           <ChevronLeft size={22} color={tk.icon.primary} />

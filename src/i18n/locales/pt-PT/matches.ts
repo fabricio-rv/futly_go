@@ -64,8 +64,6 @@ export const ptPTMatches = {
     state: 'Estado',
     city: 'Cidade',
     addressNotInformed: 'Morada não fornecida',
-    pricePerPerson: 'Preço por pessoa',
-    hasBreak: 'Tem intervalo',
     positionRequested: 'Posição solicitada',
     note: 'Nota',
     blockedByHost: 'Bloqueada pelo anfitrião',

@@ -109,9 +109,9 @@ export function Button({
     opacity.value = withTiming(1, { duration: 150 });
   };
 
-  const handlePress = () => {
+  const handlePress: PressableProps['onPress'] = (event) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onPress?.();
+    onPress?.(event);
   };
 
   const normalizedClassName = fullWidth ? className || '' : stripForcedWidthClasses(className);

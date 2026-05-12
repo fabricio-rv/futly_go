@@ -328,13 +328,13 @@ export function AddCourtModal({ visible, onClose, onSubmit }: AddCourtModalProps
                 <Input
                   value={address}
                   onChangeText={setAddress}
-                  placeholder="Rua, Numero e Bairro"
+                  placeholder={t('add.addressPlaceholder', 'Rua, Número e Bairro')}
                   multiline
                   numberOfLines={3}
                 />
               </FieldRow>
 
-              <FieldRow label="CEP" required error={errors.cep}>
+              <FieldRow label={t('add.cep', 'CEP')} required error={errors.cep}>
                 <Input
                   value={cep}
                   onChangeText={(value) => setCep(formatCep(value))}

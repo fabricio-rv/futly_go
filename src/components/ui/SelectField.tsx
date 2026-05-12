@@ -12,6 +12,7 @@ import {
 
 import { Text } from './Text';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 export type SelectOption<T extends string> = {
   value: T;
@@ -35,7 +36,7 @@ type SelectFieldProps<T extends string> = {
 
 export function SelectField<T extends string>({
   label,
-  placeholder = 'Selecione',
+  placeholder,
   value,
   options,
   onChange,
@@ -44,6 +45,7 @@ export function SelectField<T extends string>({
   searchable = false,
   disabled = false,
 }: SelectFieldProps<T>) {
+  const { t } = useTranslation('common');
   const theme = useAppColorScheme();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -101,7 +103,7 @@ export function SelectField<T extends string>({
             </>
           ) : (
             <Text variant="body" tone="muted" style={{ color: theme === 'light' ? '#64748B' : '#7A8699' }}>
-              {placeholder}
+              {placeholder ?? t('messages.selectOption', 'Selecione uma opção')}
             </Text>
           )}
         </View>
@@ -130,7 +132,7 @@ export function SelectField<T extends string>({
           >
             <View className="px-4 py-3 border-b" style={{ borderColor: theme === 'light' ? 'rgba(0,0,0,0.12)' : '#1F2A44' }}>
               <Text variant="title" tone="primary" style={{ color: theme === 'light' ? '#111827' : '#F5F7FA' }}>
-                {label ?? 'Selecione'}
+                {label ?? t('messages.selectOption', 'Selecione uma opção')}
               </Text>
             </View>
 
@@ -141,7 +143,7 @@ export function SelectField<T extends string>({
                   <TextInput
                     value={search}
                     onChangeText={setSearch}
-                    placeholder="Buscar..."
+                    placeholder={t('inputs.search', 'Buscar...')}
                     placeholderTextColor={theme === 'light' ? '#9CA3AF' : '#7A8699'}
                     className="flex-1 ml-2"
                     autoCapitalize="none"
@@ -203,7 +205,7 @@ export function SelectField<T extends string>({
               }}
               ListEmptyComponent={
                 <View className="px-4 py-8 items-center">
-                  <Text tone="muted">Nenhum resultado encontrado.</Text>
+                  <Text tone="muted">{t('ui.noResults', 'Nenhum resultado encontrado')}</Text>
                 </View>
               }
             />

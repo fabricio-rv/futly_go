@@ -2,7 +2,7 @@
 import { router } from 'expo-router';
 import { Camera, Clock3, MessageCircle, Plus, Search, UserPlus, Users, X } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Alert, Image, Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 
@@ -20,6 +20,7 @@ import {
   type ChatProfileSearchResult,
 } from '@/src/features/chat/services/chatService';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useToast } from '@/src/contexts/ToastContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type CreateMode = 'private' | 'group';
@@ -42,6 +43,7 @@ async function readUriAsBlob(uri: string): Promise<Blob> {
 
 export default function ConversationsListScreen() {
   const { t } = useTranslation('chat');
+  const { error: showErrorToast } = useToast();
   const { filter, setFilter, loading, error, summary, visibleActive, visibleArchived, refresh } = useChatList();
   const theme = useAppColorScheme();
   const insets = useSafeAreaInsets();
@@ -124,7 +126,7 @@ export default function ConversationsListScreen() {
       setResults(rows);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Nao foi possivel buscar usuarios.';
-      Alert.alert('Falha na busca', message);
+      showErrorToast(t('errors.searchFailedTitle', 'Falha na busca'), message);
     } finally {
       setLoadingSearch(false);
     }
@@ -140,7 +142,7 @@ export default function ConversationsListScreen() {
       router.push(`/(app)/conversations/${conversationId}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Nao foi possivel abrir conversa.';
-      Alert.alert('Falha ao criar conversa', message);
+      showErrorToast(t('errors.createConversationFailedTitle', 'Falha ao criar conversa'), message);
     } finally {
       setSubmitting(false);
     }
@@ -198,13 +200,15 @@ export default function ConversationsListScreen() {
       router.push(`/(app)/conversations/${conversationId}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Nao foi possivel criar grupo.';
-      Alert.alert('Falha ao criar grupo', message);
+      showErrorToast(t('errors.createGroupFailedTitle', 'Falha ao criar grupo'), message);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const createModalTitle = createMode === 'group' ? 'Novo grupo' : 'Nova conversa';
+  const createModalTitle = createMode === 'group'
+    ? t('create.newGroup', 'Novo grupo')
+    : t('create.newConversation', 'Nova conversa');
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isLight ? '#EEF3FA' : '#060B17' }}>
@@ -251,7 +255,7 @@ export default function ConversationsListScreen() {
                 onChangeText={setSearchQuery}
                 onClear={() => setSearchQuery('')}
                 showClearButton
-                placeholder="Buscar conversa ou usuário..."
+                placeholder={t('create.searchConversationPlaceholder', 'Buscar conversa ou usuário...')}
                 leftIcon={<Search size={16} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
                 size="sm"
                 containerClassName="border-line2 bg-[#0C111E]"
@@ -293,7 +297,7 @@ export default function ConversationsListScreen() {
           <View className="px-[18px] py-6">
             <Text variant="micro" className="text-[#4B5563] dark:text-fg3">
               {searchQuery.trim()
-                ? 'Nenhum resultado encontrado.'
+                ? t('common.ui.noResults', 'Nenhum resultado encontrado.')
                 : t('list.empty', 'Nenhuma conversa encontrada.')}
             </Text>
           </View>
@@ -344,11 +348,11 @@ export default function ConversationsListScreen() {
             >
               <Pressable className="px-4 py-3 flex-row items-center gap-3" onPress={() => openCreateModal('private')}>
                 <MessageCircle size={18} color={isLight ? '#334155' : '#A5B4C8'} />
-                <Text variant="caption" className="font-semibold text-fg1">Nova conversa</Text>
+                <Text variant="caption" className="font-semibold text-fg1">{t('create.newConversation', 'Nova conversa')}</Text>
               </Pressable>
               <Pressable className="px-4 py-3 flex-row items-center gap-3" onPress={() => openCreateModal('group')}>
                 <Users size={18} color={isLight ? '#334155' : '#A5B4C8'} />
-                <Text variant="caption" className="font-semibold text-fg1">Novo grupo</Text>
+                <Text variant="caption" className="font-semibold text-fg1">{t('create.newGroup', 'Novo grupo')}</Text>
               </Pressable>
             </Pressable>
           </View>
@@ -386,13 +390,13 @@ export default function ConversationsListScreen() {
                         <Camera size={28} color={isLight ? '#168A55' : '#86E5B4'} />
                       )}
                     </View>
-                    <Text variant="micro" className="mt-2 text-[#86E5B4] font-semibold">Adicionar foto do grupo</Text>
+                    <Text variant="micro" className="mt-2 text-[#86E5B4] font-semibold">{t('create.addGroupPhoto', 'Adicionar foto do grupo')}</Text>
                   </Pressable>
 
                   <Input
                     value={groupName}
                     onChangeText={setGroupName}
-                    placeholder="Nome do grupo"
+                    placeholder={t('create.groupNamePlaceholder', 'Nome do grupo')}
                     size="md"
                     containerClassName="border-line2 bg-[#0C111E]"
                     inputClassName="text-fg1"
@@ -401,7 +405,7 @@ export default function ConversationsListScreen() {
                   <Input
                     value={groupDescription}
                     onChangeText={setGroupDescription}
-                    placeholder="Descrição (opcional)"
+                    placeholder={t('create.groupDescriptionPlaceholder', 'Descrição (opcional)')}
                     size="md"
                     containerClassName="border-line2 bg-[#0C111E]"
                     inputClassName="text-fg1"
@@ -409,11 +413,11 @@ export default function ConversationsListScreen() {
 
                   <View>
                     <Text variant="micro" className="mb-2 text-fg3 font-semibold">
-                      Arquivar automaticamente 7 dias após o jogo?
+                      {t('create.autoArchiveQuestion', 'Arquivar automaticamente 7 dias após o jogo?')}
                     </Text>
                     <View style={{ flexDirection: 'row', gap: 8 }}>
-                      <Pill label="Sim" tone={autoArchive ? 'active' : 'default'} onPress={() => setAutoArchive(true)} />
-                      <Pill label="Não" tone={!autoArchive ? 'active' : 'default'} onPress={() => setAutoArchive(false)} />
+                      <Pill label={t('common.yes', 'Sim')} tone={autoArchive ? 'active' : 'default'} onPress={() => setAutoArchive(true)} />
+                      <Pill label={t('common.no', 'Não')} tone={!autoArchive ? 'active' : 'default'} onPress={() => setAutoArchive(false)} />
                     </View>
                   </View>
                 </View>
@@ -427,7 +431,9 @@ export default function ConversationsListScreen() {
                   setResults([]);
                 }}
                 showClearButton
-                placeholder={createMode === 'private' ? 'Buscar usuário...' : 'Adicionar membros...'}
+                placeholder={createMode === 'private'
+                  ? t('create.searchUserPlaceholder', 'Buscar usuário...')
+                  : t('create.addMembersPlaceholder', 'Adicionar membros...')}
                 size="md"
                 containerClassName="border-line2 bg-[#0C111E]"
                 inputClassName="text-fg1"
@@ -450,7 +456,7 @@ export default function ConversationsListScreen() {
 
               <View style={{ marginTop: 10, gap: 8 }}>
                 {loadingSearch ? (
-                  <Text variant="micro" className="text-fg3">Buscando...</Text>
+                  <Text variant="micro" className="text-fg3">{t('create.searching', 'Buscando...')}</Text>
                 ) : results.map((profile) => (
                   <Pressable
                     key={profile.id}
@@ -480,7 +486,9 @@ export default function ConversationsListScreen() {
                     </View>
                     {createMode === 'group' ? (
                       <Text variant="micro" className={selectedIds.has(profile.id) ? 'text-[#86E5B4]' : 'text-fg3'}>
-                        {selectedIds.has(profile.id) ? 'Selecionado' : 'Adicionar'}
+                        {selectedIds.has(profile.id)
+                          ? t('create.selected', 'Selecionado')
+                          : t('create.add', 'Adicionar')}
                       </Text>
                     ) : (
                       <UserPlus size={16} color={isLight ? '#475569' : '#A5B4C8'} />
@@ -492,7 +500,7 @@ export default function ConversationsListScreen() {
               {createMode === 'group' ? (
                 <View style={{ marginTop: 16 }}>
                   <Button
-                    label="Criar grupo"
+                    label={t('create.createGroupButton', 'Criar grupo')}
                     onPress={() => void createGroup()}
                     disabled={submitting || !groupName.trim()}
                     loading={submitting}

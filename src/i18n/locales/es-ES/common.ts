@@ -143,4 +143,14 @@ export const esESCommon = {
   languagePtPT: 'Portugués (Portugal)',
   languageEnUS: 'Inglés',
   languageEsES: 'Español'
+  ,inputs: {
+    clear: 'Limpiar campo',
+    search: 'Buscar...'
+  }
+  ,notFound: {
+    title: 'Ups',
+    message: 'Esta pantalla no existe.',
+    description: 'Verifica la direccion o vuelve al inicio de Futly Go.',
+    backHome: 'Volver al inicio'
+  }
 };

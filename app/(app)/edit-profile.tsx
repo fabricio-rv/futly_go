@@ -1,8 +1,10 @@
 ﻿import { router } from 'expo-router';
 import { Check } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, View, Alert } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useLoading } from '@/src/contexts/LoadingContext';
+import { useToast } from '@/src/contexts/ToastContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cities as getBrazilianCities, states as getBrazilianStates } from 'estados-cidades';
 
@@ -13,23 +15,15 @@ import { useProfile } from '@/src/features/profile/hooks/useProfile';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
 import { formatCep } from '@/src/features/location/cep';
-
-function formatDdd(value: string) {
-  return value.replace(/\D/g, '').slice(0, 2);
-}
-
-function formatPhone(value: string) {
-  const digits = value.replace(/\D/g, '').slice(0, 9);
-  if (digits.length <= 5) return digits;
-  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
-}
+import { formatBrazilPhoneInput, normalizeBrazilPhone } from '@/src/features/profile/phone';
 
 export default function EditProfileScreen() {
   const { t } = useTranslation('profile');
+  const { run: runBlocking } = useLoading();
+  const toast = useToast();
   const { profile, loadProfile, saveProfile, saving } = useProfile();
 
   const [fullName, setFullName] = useState('');
-  const [ddd, setDdd] = useState('');
   const [phone, setPhone] = useState('');
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
@@ -66,9 +60,7 @@ export default function EditProfileScreen() {
     if (!profile) return;
 
     setFullName(profile.full_name ?? '');
-    const phoneDigits = (profile.phone ?? '').replace(/\D/g, '');
-    setDdd(phoneDigits.slice(0, 2));
-    setPhone(formatPhone(phoneDigits.slice(2)));
+    setPhone(formatBrazilPhoneInput(profile.phone ?? ''));
     setSelectedState(profile.state ?? null);
     setSelectedCity(profile.city ?? null);
     setCep(profile.cep ?? '');
@@ -89,21 +81,23 @@ export default function EditProfileScreen() {
 
   async function handleSaveProfile() {
     try {
-      const normalizedPhone = `${ddd}${phone}`.replace(/\D/g, '');
+      const normalizedPhone = normalizeBrazilPhone(phone);
 
-      await saveProfile({
-        fullName: fullName || undefined,
-        phone: normalizedPhone || null,
-        city: selectedCity || null,
-        state: selectedState || null,
-        cep: cep.replace(/\D/g, '') || null,
-      });
+      await runBlocking(async () => {
+        await saveProfile({
+          fullName: fullName || undefined,
+          phone: normalizedPhone || null,
+          city: selectedCity || null,
+          state: selectedState || null,
+          cep: cep.replace(/\D/g, '') || null,
+        });
+      }, { message: t('common.actions.loading', 'Carregando...') });
 
-      Alert.alert(t('success.profileUpdated', 'Perfil atualizado'), t('messages.profileSaved', 'Seus dados foram salvos com sucesso.'));
+      toast.success(t('success.profileUpdated', 'Perfil atualizado'), t('messages.profileSaved', 'Seus dados foram salvos com sucesso.'));
       router.back();
     } catch (error) {
       const message = error instanceof Error ? error.message : t('errors.saveProfileFailed', 'Não foi possível salvar o perfil.');
-      Alert.alert(t('errors.saveProfileTitle', 'Falha ao salvar'), message);
+      toast.error(t('errors.saveProfileTitle', 'Falha ao salvar'), message);
     }
   }
 
@@ -141,26 +135,15 @@ export default function EditProfileScreen() {
             />
           </View>
 
-          <View className="flex-row gap-2 mb-3">
-            <View style={{ width: 86 }}>
-              <Input
-                label={t('placeholders.dddLabel', 'DDD')}
-                value={ddd}
-                onChangeText={(value) => setDdd(formatDdd(value))}
-                placeholder={t('placeholders.ddd', '11')}
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-            </View>
-            <View className="flex-1">
-              <Input
-                label={t('personal.phone', 'Telefone')}
-                value={phone}
-                onChangeText={(value) => setPhone(formatPhone(value))}
-                placeholder={t('placeholders.phone', 'Ex.: 99999-9999')}
-                keyboardType="phone-pad"
-              />
-            </View>
+          <View className="mb-3">
+            <Input
+              label={t('personal.phone', 'Telefone')}
+              value={phone}
+              onChangeText={(value) => setPhone(formatBrazilPhoneInput(value))}
+              placeholder={t('placeholders.phone', 'Ex.: (11) 99999-9999')}
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
           </View>
 
           <View className="flex-row gap-2 mb-3">

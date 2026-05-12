@@ -38,6 +38,7 @@ export const esESQuadras = {
     locationPreviewPlaceholder: 'Ej: Centro, Madrid',
     address: 'Dirección completa',
     addressPlaceholder: 'Calle, número, barrio, ciudad - Provincia, CP',
+    cep: 'CEP',
     phone: 'Teléfono',
     phonePlaceholder: '(00) 00000-0000',
     rating: 'Calificación',

@@ -143,4 +143,14 @@ export const ptPTCommon = {
   languagePtPT: 'Português (Portugal)',
   languageEnUS: 'English',
   languageEsES: 'Espanhol'
+  ,inputs: {
+    clear: 'Limpar campo',
+    search: 'Pesquisar...'
+  }
+  ,notFound: {
+    title: 'Ops',
+    message: 'Esta tela n?o existe.',
+    description: 'Verifique o endere?o ou volte ao in?cio do Futly Go.',
+    backHome: 'Voltar ao in?cio'
+  }
 };

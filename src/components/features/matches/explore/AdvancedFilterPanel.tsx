@@ -202,7 +202,7 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
                 onChangeText={handlePriceChange}
                 placeholder="50"
                 keyboardType="number-pad"
-                leftIcon={<Text variant="body" style={{ color: theme === 'light' ? '#64748B' : '#7A8699' }}>R$</Text>}
+                leftIcon={<Text variant="body" style={{ color: theme === 'light' ? '#64748B' : '#7A8699' }}>{t("filters.currencySymbol", "R$")}</Text>}
               />
             </View>
           </View>
@@ -316,11 +316,11 @@ export function AdvancedFilterPanel({ filters, onFiltersChange }: AdvancedFilter
               <Button label="+" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebHour((h) => (h + 1) % 24)} />
             </View>
             <View className="flex-row items-center justify-center gap-2 mt-3">
-              <Button label="- min" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 55) % 60)} />
-              <Button label="+ min" variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 5) % 60)} />
+              <Button label={t("filters.decreaseMinutes", "- min")} variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 55) % 60)} />
+              <Button label={t("filters.increaseMinutes", "+ min")} variant="ghost" size="sm" fullWidth={false} onPress={() => setWebMinute((m) => (m + 5) % 60)} />
             </View>
             <Button
-              label="Confirmar"
+              label={t("common.confirm", "Confirmar")}
               size="md"
               className="mt-4"
               onPress={() => {

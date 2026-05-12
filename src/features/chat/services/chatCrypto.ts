@@ -1,6 +1,6 @@
-import { pbkdf2 } from '@noble/hashes/pbkdf2';
-import { sha256 } from '@noble/hashes/sha2';
-import { gcm } from '@noble/ciphers/aes';
+import { pbkdf2 } from '@noble/hashes/pbkdf2.js';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { gcm } from '@noble/ciphers/aes.js';
 
 const CIPHER_PREFIX = 'e2ee:';
 const PBKDF2_ITERATIONS = 100_000;

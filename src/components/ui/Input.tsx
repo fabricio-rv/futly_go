@@ -8,6 +8,7 @@ import {
 
 import { Text } from './Text';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type InputSize = 'sm' | 'md' | 'lg';
 
@@ -54,6 +55,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   },
   ref,
 ) {
+  const { t } = useTranslation('common');
   const theme = useAppColorScheme();
   const [isFilled, setIsFilled] = useState(!!rest.value || !!rest.defaultValue);
   const [isFocused, setIsFocused] = useState(false);
@@ -157,7 +159,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           {showClearButton && isFilled && onClear ? (
             <Pressable
               onPress={handleClear}
-              accessibilityLabel="Clear input"
+              accessibilityLabel={t('inputs.clear', 'Limpar campo')}
               accessibilityRole="button"
               className="flex-shrink-0 p-1.5"
             >

@@ -64,8 +64,6 @@ export const esESMatches = {
     state: 'Estado',
     city: 'Ciudad',
     addressNotInformed: 'Dirección no proporcionada',
-    pricePerPerson: 'Precio por persona',
-    hasBreak: 'Tiene descanso',
     positionRequested: 'Posición solicitada',
     note: 'Nota',
     blockedByHost: 'Bloqueado por anfitrión',

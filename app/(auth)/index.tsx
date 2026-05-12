@@ -7,10 +7,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
 	AuthBackground,
 	AuthFeedbackModal,
-	AuthToast,
 	SocialAuthRow,
 } from '@/src/components/features/auth';
 import { Button, Input, Text } from '@/src/components/ui';
+import { useToast } from '@/src/contexts/ToastContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import {
 	isProfileMissingRequiredData,
@@ -27,11 +27,7 @@ export default function LoginScreen() {
 	const [remember, setRemember] = useState(true);
 	const [loading, setLoading] = useState(false);
 	const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null);
-	const [toast, setToast] = useState<{ visible: boolean; message: string; tone: 'success' | 'error' | 'info' }>({
-		visible: false,
-		message: '',
-		tone: 'info',
-	});
+	const toast = useToast();
 	const [feedback, setFeedback] = useState<{
 		visible: boolean;
 		tone: 'success' | 'error' | 'info';
@@ -50,11 +46,6 @@ export default function LoginScreen() {
 		onPrimary: () => undefined,
 	});
 
-	function showToast(message: string, tone: 'success' | 'error' | 'info' = 'info') {
-		setToast({ visible: true, message, tone });
-		setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 1800);
-	}
-
 	async function navigateAfterLogin() {
 		const needsProfileCompletion = await isProfileMissingRequiredData();
 		if (needsProfileCompletion) {
@@ -67,7 +58,7 @@ export default function LoginScreen() {
 
 	async function handleLogin() {
 		if (!email.trim() || !password.trim()) {
-			showToast(t('validation.fillRequiredFields', 'Preencha os campos obrigatórios'), 'error');
+			toast.error(t('errors.loginFailedTitle', 'Falha no login'), t('validation.fillRequiredFields', 'Preencha os campos obrigatórios'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -82,13 +73,13 @@ export default function LoginScreen() {
 		try {
 			setLoading(true);
 			await signInWithPassword(email, password);
-			showToast(t('login.loginSuccess', 'Login realizado com sucesso'), 'success');
+			toast.success(t('common.success', 'Sucesso'), t('login.loginSuccess', 'Login realizado com sucesso'));
 			setTimeout(() => {
 				void navigateAfterLogin();
 			}, 400);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : t('errors.loginGeneric', 'Não foi possível fazer login.');
-			showToast(t('errors.loginFailedTitle', 'Falha no login'), 'error');
+			toast.error(t('errors.loginFailedTitle', 'Falha no login'), message);
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -111,13 +102,13 @@ export default function LoginScreen() {
 		try {
 			setSocialLoading(provider);
 			await signInWithSocial(provider);
-			showToast(t('login.socialLoginSuccess', 'Login social realizado com sucesso'), 'success');
+			toast.success(t('common.success', 'Sucesso'), t('login.socialLoginSuccess', 'Login social realizado com sucesso'));
 			setTimeout(() => {
 				void navigateAfterLogin();
 			}, 300);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : t('errors.socialGeneric', 'Não foi possível fazer login social.');
-			showToast(t('errors.socialLoginFailedTitle', 'Falha no login social'), 'error');
+			toast.error(t('errors.socialLoginFailedTitle', 'Falha no login social'), message);
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -134,7 +125,6 @@ export default function LoginScreen() {
 	return (
 		<SafeAreaView className="flex-1 bg-ink-0">
 			<AuthBackground />
-			<AuthToast visible={toast.visible} message={toast.message} tone={toast.tone} />
 
 			<ScrollView
 				showsVerticalScrollIndicator={false}
@@ -280,5 +270,4 @@ export default function LoginScreen() {
 		</SafeAreaView>
 	);
 }
-
 

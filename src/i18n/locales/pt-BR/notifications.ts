@@ -81,6 +81,12 @@ export const ptBRNotifications = {
     cancelled: 'Solicitação cancelada',
     approvedByYou: 'Solicitação aprovada por você',
     rejectedByYou: 'Solicitação recusada por você'
+  },
+  chat: {
+    unreadConversations: 'Conversas não lidas',
+    privateConversation: 'Conversa privada',
+    groupConversation: 'Grupo',
+    newMessage: 'Nova mensagem'
   }
 };
 

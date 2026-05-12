@@ -143,4 +143,14 @@ export const enUSCommon = {
   languagePtPT: 'Portuguese (Portugal)',
   languageEnUS: 'English',
   languageEsES: 'Spanish'
+  ,inputs: {
+    clear: 'Clear input',
+    search: 'Search...'
+  }
+  ,notFound: {
+    title: 'Oops',
+    message: 'This screen does not exist.',
+    description: 'Check the address or go back to the Futly Go home.',
+    backHome: 'Back to home'
+  }
 };

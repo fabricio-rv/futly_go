@@ -5,7 +5,6 @@ import {
   Pressable,
   View,
   Modal,
-  Alert,
   useWindowDimensions,
 } from "react-native";
 
@@ -22,7 +21,9 @@ import { Button, Screen, Text } from "@/src/components/ui";
 import { BRAZIL_STATE_OPTIONS } from "@/src/features/auth/constants";
 import { fetchAddressByCep, formatCep } from "@/src/features/location/cep";
 import { useMatches } from "@/src/features/matches/hooks/useMatches";
+import { useLoading } from "@/src/contexts/LoadingContext";
 import { useAppColorScheme } from "@/src/contexts/ThemeContext";
+import { useToast } from "@/src/contexts/ToastContext";
 import { useTranslation } from "@/src/i18n/hooks/useTranslation";
 import { CreateMatchStep1 } from "@/src/components/features/matches/create/CreateMatchStep1";
 import { CreateMatchStep2 } from "@/src/components/features/matches/create/CreateMatchStep2";
@@ -106,12 +107,23 @@ function extractCityFromCourtPreview(preview: string) {
   return parts[0];
 }
 
+function normalizeCourtCep(court: { cep?: string; address?: string }) {
+  const fromCourt = String(court.cep ?? "").replace(/\D/g, "");
+  if (fromCourt.length === 8) return formatCep(fromCourt);
+  const address = String(court.address ?? "");
+  const cepMatch = address.match(/(\d{5}-?\d{3})/);
+  if (!cepMatch) return "";
+  return formatCep(cepMatch[1]);
+}
+
 export default function CreateMatchScreen() {
   const { t, currentLanguage } = useTranslation("create");
   const theme = useAppColorScheme();
   const matchTheme = useMatchTheme();
   const { width: screenWidth } = useWindowDimensions();
   const { createMatch, submitting } = useMatches();
+  const { run: runBlocking } = useLoading();
+  const toast = useToast();
   const creatingRef = useRef(false);
 
   const [mode, setMode] = useState<PitchMode>("futsal");
@@ -297,9 +309,9 @@ export default function CreateMatchScreen() {
 
     const missingFields = validateRequiredFields();
     if (missingFields.length > 0) {
-      Alert.alert(
+      toast.warning(
         t("form.createFailedTitle"),
-        `Preencha os campos obrigatórios:\n\n• ${missingFields.join("\n• ")}`,
+        `Preencha os campos obrigatorios: ${missingFields.join(", ")}`,
       );
       return;
     }
@@ -307,36 +319,40 @@ export default function CreateMatchScreen() {
     creatingRef.current = true;
 
     try {
-      await createMatch({
-        title: venueName.trim() || t("form.untitledMatch"),
-        description: description.trim(),
-        modality: mode,
-        matchDate: toIsoDate(matchDate),
-        matchTime: toIsoTime(matchTime),
-        turno: (turno || "noite") as (typeof TURNO_OPTIONS)[number]["value"],
-        durationMinutes: Number(durationMinutes) || 60,
-        pricePerPerson: Number(pricePerPerson) || 0,
-        minAge,
-        maxAge,
-        acceptedLevels,
-        allowExternalReserves: true,
-        restBreak,
-        refereeIncluded: referee,
-        contactPhone: contactPhone.trim() || null,
-        venueName: venueName.trim() || null,
-        cep: cep.trim() || null,
-        district: district.trim() || null,
-        city: city.trim() || null,
-        state: stateCode.trim() || null,
-        address: address.trim() || null,
-        selectedPositionIndexes: selectedPositionIndexesByMode[mode],
-        status,
-        facilities: [
-          { label: t("form.facilityLockerRoom"), selected: true },
-          { label: t("form.facilityShower"), selected: true },
-          { label: t("form.facilityParking"), selected: true },
-          { label: t("form.facilitySnackBar"), selected: false },
-        ],
+      await runBlocking(async () => {
+        await createMatch({
+          title: venueName.trim() || t("form.untitledMatch"),
+          description: description.trim(),
+          modality: mode,
+          matchDate: toIsoDate(matchDate),
+          matchTime: toIsoTime(matchTime),
+          turno: (turno || "noite") as (typeof TURNO_OPTIONS)[number]["value"],
+          durationMinutes: Number(durationMinutes) || 60,
+          pricePerPerson: Number(pricePerPerson) || 0,
+          minAge,
+          maxAge,
+          acceptedLevels,
+          allowExternalReserves: true,
+          restBreak,
+          refereeIncluded: referee,
+          contactPhone: contactPhone.trim() || null,
+          venueName: venueName.trim() || null,
+          cep: cep.trim() || null,
+          district: district.trim() || null,
+          city: city.trim() || null,
+          state: stateCode.trim() || null,
+          address: address.trim() || null,
+          selectedPositionIndexes: selectedPositionIndexesByMode[mode],
+          status,
+          facilities: [
+            { label: t("form.facilityLockerRoom"), selected: true },
+            { label: t("form.facilityShower"), selected: true },
+            { label: t("form.facilityParking"), selected: true },
+            { label: t("form.facilitySnackBar"), selected: false },
+          ],
+        });
+      }, {
+        message: t("common.actions.loading", "Carregando..."),
       });
 
       const successMessage =
@@ -344,24 +360,16 @@ export default function CreateMatchScreen() {
           ? t("form.draftSavedMessage")
           : t("form.matchPublishedMessage");
 
-      Alert.alert(t("form.matchCreatedTitle"), successMessage, [
-        {
-          text: t("actions.viewCreatedMatches", "Ver partidas criadas"),
-          onPress: () => router.replace("/(app)/agenda"),
-        },
-        {
-          text: t("actions.createAnother", "Criar outra"),
-          onPress: () => resetCreateForm(),
-        },
-        {
-          text: t("common.confirm", "Ir para início"),
-          onPress: () => router.replace("/(app)"),
-        },
-      ]);
+      toast.success(t("form.matchCreatedTitle"), successMessage, {
+        label: t("actions.viewCreatedMatches", "Ver partidas criadas"),
+        onPress: () => router.replace("/(app)/agenda"),
+      });
+      resetCreateForm();
+      router.replace("/(app)/agenda");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("form.createFailedMessage");
-      Alert.alert(t("form.createFailedTitle"), message);
+      toast.error(t("form.createFailedTitle"), message);
     } finally {
       creatingRef.current = false;
     }
@@ -460,6 +468,12 @@ export default function CreateMatchScreen() {
               onSelectCourt={(court) => {
                 if (!court) {
                   setSelectedCourtId(null);
+                  setVenueName("");
+                  setAddress("");
+                  setDistrict("");
+                  setCity("");
+                  setStateCode("");
+                  setCep("");
                   return;
                 }
                 setSelectedCourtId(court.id);
@@ -483,13 +497,7 @@ export default function CreateMatchScreen() {
                   || stateMatch?.[1]?.toUpperCase()
                   || extractStateFromCourtPreview(court.location_preview);
                 setStateCode(nextState || "");
-
-                const cepMatch = court.address.match(/(\d{5}-?\d{3})/);
-                if (cepMatch) {
-                  setCep(formatCep(cepMatch[1]));
-                } else {
-                  setCep("");
-                }
+                setCep(normalizeCourtCep(court));
               }}
               onCepChange={async (value) => {
                 const formatted = formatCep(value);
@@ -600,21 +608,21 @@ export default function CreateMatchScreen() {
           ) : null}
 
           {activeStep === "1" ? (
-            <Button label="Próxima" fullWidth onPress={goToNextStep} />
+            <Button label={t("common.actions.next", "Proxima")} fullWidth onPress={goToNextStep} />
           ) : null}
 
           {activeStep === "2" ? (
             <View className="flex-row gap-2">
               <View className="flex-1">
                 <Button
-                  label="Voltar"
+                  label={t("common.actions.back", "Voltar")}
                   variant="ghost"
                   fullWidth
                   onPress={goToPreviousStep}
                 />
               </View>
               <View className="flex-1">
-                <Button label="Próxima" fullWidth onPress={goToNextStep} />
+                <Button label={t("common.actions.next", "Proxima")} fullWidth onPress={goToNextStep} />
               </View>
             </View>
           ) : null}
@@ -623,7 +631,7 @@ export default function CreateMatchScreen() {
             <View className="flex-row gap-2">
               <View className="flex-1">
                 <Button
-                  label="Voltar"
+                  label={t("common.actions.back", "Voltar")}
                   variant="ghost"
                   fullWidth
                   onPress={goToPreviousStep}
@@ -838,14 +846,14 @@ export default function CreateMatchScreen() {
             </View>
             <View className="flex-row items-center justify-center gap-2 mt-3">
               <Button
-                label="- min"
+                label={t("filters.decreaseMinutes", "- min")}
                 variant="ghost"
                 size="sm"
                 fullWidth={false}
                 onPress={() => setWebMinute((m) => (m + 55) % 60)}
               />
               <Button
-                label="+ min"
+                label={t("filters.increaseMinutes", "+ min")}
                 variant="ghost"
                 size="sm"
                 fullWidth={false}

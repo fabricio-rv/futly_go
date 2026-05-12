@@ -10,9 +10,9 @@ import {
 	AuthFeedbackModal,
 	SocialAuthRow,
 	PasswordStrengthMeter,
-	AuthToast,
 } from '@/src/components/features/auth';
 import { Button, Input, SelectField, Text } from '@/src/components/ui';
+import { useToast } from '@/src/contexts/ToastContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { BRAZIL_STATE_OPTIONS } from '@/src/features/auth/constants';
 import {
@@ -22,6 +22,8 @@ import {
 	type SocialProvider,
 } from '@/src/features/auth/service';
 import { formatCep } from '@/src/features/location/cep';
+import { requestAndResolveDeviceLocation } from '@/src/features/location/deviceLocation';
+import { formatBrazilPhoneInput, normalizeBrazilPhone } from '@/src/features/profile/phone';
 
 function getPasswordStrength(password: string) {
 	if (!password) return 0;
@@ -41,25 +43,10 @@ function getStrengthLabel(level: number, t: (key: string, fallback?: string) => 
 	return t('security.passwordStrength.strong', 'Forte - pronta para uso');
 }
 
-function formatDdd(value: string) {
-	return value.replace(/\D/g, '').slice(0, 2);
-}
-
-function formatPhone(value: string) {
-	const digits = value.replace(/\D/g, '').slice(0, 9);
-
-	if (digits.length <= 5) {
-		return digits;
-	}
-
-	return `${digits.slice(0, 5)}-${digits.slice(5)}`;
-}
-
 export default function SignupScreen() {
 	const { t } = useTranslation('auth');
 	const [fullName, setFullName] = useState('');
 	const [email, setEmail] = useState('');
-	const [ddd, setDdd] = useState('');
 	const [phone, setPhone] = useState('');
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
@@ -70,12 +57,10 @@ export default function SignupScreen() {
 	const [cep, setCep] = useState('');
 	const [acceptedTerms, setAcceptedTerms] = useState(true);
 	const [loading, setLoading] = useState(false);
+	const [locationLoading, setLocationLoading] = useState(false);
+	const [locationAttempted, setLocationAttempted] = useState(false);
 	const [socialLoading, setSocialLoading] = useState<SocialProvider | null>(null);
-	const [toast, setToast] = useState<{ visible: boolean; message: string; tone: 'success' | 'error' | 'info' }>({
-		visible: false,
-		message: '',
-		tone: 'info',
-	});
+	const toast = useToast();
 	const [feedback, setFeedback] = useState<{
 		visible: boolean;
 		tone: 'success' | 'error' | 'info';
@@ -94,11 +79,6 @@ export default function SignupScreen() {
 		onPrimary: () => undefined,
 	});
 
-	function showToast(message: string, tone: 'success' | 'error' | 'info' = 'info') {
-		setToast({ visible: true, message, tone });
-		setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 1800);
-	}
-
 	async function navigateAfterSocialLogin() {
 		const needsProfileCompletion = await isProfileMissingRequiredData();
 		if (needsProfileCompletion) {
@@ -113,13 +93,13 @@ export default function SignupScreen() {
 		try {
 			setSocialLoading(provider);
 			await signInWithSocial(provider);
-			showToast('Conta social conectada com sucesso', 'success');
+			toast.success(t('common.success', 'Sucesso'), 'Conta social conectada com sucesso');
 			setTimeout(() => {
 				void navigateAfterSocialLogin();
 			}, 300);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : t('errors.socialSignupFailed', 'Não foi possível continuar com login social.');
-			showToast('Falha no login social', 'error');
+			toast.error(t('errors.socialLoginFailedTitle', 'Falha no login social'), message);
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -189,9 +169,30 @@ export default function SignupScreen() {
 		});
 	}, [selectedState, cityOptions]);
 
+	useEffect(() => {
+		if (locationAttempted) return;
+		setLocationAttempted(true);
+		setLocationLoading(true);
+		void requestAndResolveDeviceLocation()
+			.then((result) => {
+				if (!result) return;
+				if (result.state && stateOptions.some((item) => item.value === result.state)) {
+					setSelectedState(result.state);
+				}
+				if (result.city) {
+					setSelectedCity(result.city);
+				}
+				if (result.cep) {
+					setCep(result.cep);
+				}
+			})
+			.catch(() => undefined)
+			.finally(() => setLocationLoading(false));
+	}, [locationAttempted, stateOptions]);
+
 	async function handleSignup() {
 		if (!fullName.trim() || !email.trim() || !password.trim()) {
-			showToast(t('validation.fillRequiredFields', 'Preencha os campos obrigatórios'), 'error');
+			toast.warning(t('errors.incompleteDataTitle', 'Dados incompletos'), t('validation.fillRequiredFields', 'Preencha os campos obrigatórios'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -204,7 +205,7 @@ export default function SignupScreen() {
 		}
 
 		if (password.length < 6) {
-			showToast(t('validation.passwordTooShort', 'Senha muito curta'), 'error');
+			toast.warning(t('errors.invalidPassword', 'Senha invalida'), t('validation.passwordTooShort', 'Senha muito curta'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -217,7 +218,7 @@ export default function SignupScreen() {
 		}
 
 		if (confirmPassword !== password) {
-			showToast(t('errors.passwordMismatch', 'As senhas não conferem'), 'error');
+			toast.warning(t('errors.passwordMismatchTitle', 'Senhas diferentes'), t('errors.passwordMismatch', 'As senhas não conferem'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -230,7 +231,7 @@ export default function SignupScreen() {
 		}
 
 		if (!acceptedTerms) {
-			showToast('Aceite os termos para continuar', 'error');
+			toast.warning(t('errors.requiredTermsTitle', 'Termos obrigatórios'), t('errors.requiredTermsMessage', 'Aceite os termos para concluir o cadastro.'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -242,7 +243,7 @@ export default function SignupScreen() {
 			return;
 		}
 
-		const normalizedPhone = `${ddd}${phone}`.replace(/\D/g, '');
+		const normalizedPhone = normalizeBrazilPhone(phone);
 
 		try {
 			setLoading(true);
@@ -258,7 +259,7 @@ export default function SignupScreen() {
 			});
 
 			if (result.requiresEmailConfirmation) {
-				showToast('Conta criada. Confirme no e-mail', 'success');
+				toast.success(t('common.success', 'Sucesso'), 'Conta criada. Confirme no e-mail');
 				setFeedback({
 					visible: true,
 					tone: 'success',
@@ -275,11 +276,11 @@ export default function SignupScreen() {
 				return;
 			}
 
-			showToast(t('signup.signupCompleted', 'Cadastro concluído'), 'success');
+			toast.success(t('common.success', 'Sucesso'), t('signup.signupCompleted', 'Cadastro concluído'));
 			setTimeout(() => router.replace('/(app)'), 500);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : t('errors.signupFailed', 'Não foi possível concluir o cadastro.');
-			showToast('Falha no cadastro', 'error');
+			toast.error(t('errors.signupFailedTitle', 'Falha no cadastro'), message);
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -301,7 +302,6 @@ export default function SignupScreen() {
 	return (
 		<SafeAreaView className="flex-1 bg-ink-0">
 			<AuthBackground />
-			<AuthToast visible={toast.visible} message={toast.message} tone={toast.tone} />
 
 			<ScrollView
 				showsVerticalScrollIndicator={false}
@@ -354,33 +354,16 @@ export default function SignupScreen() {
 								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
 							/>
 
-							<View className="flex-row gap-[10px]">
-								<View className="flex-1">
-									<Input
-										label={t('signup.ddd', 'DDD')}
-										value={ddd}
-										onChangeText={(value) => setDdd(formatDdd(value))}
-										keyboardType="number-pad"
-										maxLength={2}
-										placeholder="51"
-										leftIcon={<Text variant="caption" className="text-fg3 font-semibold">+55</Text>}
-										containerClassName="border-line2 bg-[#0C111E]"
-										labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
-									/>
-								</View>
-								<View className="flex-1">
-									<Input
-										label={t('signup.phone', 'Telefone')}
-										value={phone}
-										onChangeText={(value) => setPhone(formatPhone(value))}
-										keyboardType="phone-pad"
-										maxLength={10}
-										placeholder="99820-1144"
-										containerClassName="border-line2 bg-[#0C111E]"
-										labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
-									/>
-								</View>
-							</View>
+							<Input
+								label={t('signup.phone', 'Telefone')}
+								value={phone}
+								onChangeText={(value) => setPhone(formatBrazilPhoneInput(value))}
+								keyboardType="phone-pad"
+								maxLength={15}
+								placeholder="(51) 99820-1144"
+								containerClassName="border-line2 bg-[#0C111E]"
+								labelClassName="uppercase tracking-[2px] text-[10px] font-bold text-fg3"
+							/>
 
 							<Input
 								label={t('signup.password', 'Senha')}
@@ -437,6 +420,9 @@ export default function SignupScreen() {
 									</View>
 									<Text variant="caption" className="mt-1 text-fg2 leading-[18px]">
 										{t('signup.locationHint', 'Preencha Estado, Cidade e CEP para indicarmos partidas proximas da sua região.')}
+									</Text>
+									<Text variant="micro" className="mt-1 text-fg4 leading-[18px]">
+										{locationLoading ? 'Buscando sua localização automaticamente...' : 'Se preferir, você pode preencher manualmente.'}
 									</Text>
 								</View>
 

@@ -38,6 +38,7 @@ export const ptPTQuadras = {
     locationPreviewPlaceholder: 'Ex: Centro, Lisboa',
     address: 'Morada completa',
     addressPlaceholder: 'Rua, número, bairro, cidade - código postal',
+    cep: 'CEP',
     phone: 'Telefone',
     phonePlaceholder: '(00) 00000-0000',
     rating: 'Avaliação',

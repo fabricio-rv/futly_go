@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef } from 'react';
-import { View, TextInput } from 'react-native';
+import { Pressable, View, TextInput } from 'react-native';
 import { Mail, Lock, Eye, EyeOff, Loader, Check } from 'lucide-react-native';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -60,7 +60,7 @@ export function LoginFormExample() {
         placeholder="your@email.com"
         value={email}
         onChangeText={validateEmail}
-        leftAdornment={<Mail size={18} strokeWidth={1.5} color="#A1A1AA" />}
+        leftIcon={<Mail size={18} strokeWidth={1.5} color="#A1A1AA" />}
         keyboardType="email-address"
         autoCapitalize="none"
         error={emailError}
@@ -72,8 +72,8 @@ export function LoginFormExample() {
         value={password}
         onChangeText={setPassword}
         secureTextEntry={!showPassword}
-        leftAdornment={<Lock size={18} strokeWidth={1.5} color="#A1A1AA" />}
-        rightAdornment={
+        leftIcon={<Lock size={18} strokeWidth={1.5} color="#A1A1AA" />}
+        rightIcon={
           <Pressable onPress={() => setShowPassword(!showPassword)}>
             {showPassword ? (
               <EyeOff size={18} strokeWidth={1.5} color="#A1A1AA" />
@@ -449,7 +449,7 @@ export function PaymentFormExample() {
         variant={success ? 'primary' : 'primary'}
         onPress={handlePayment}
         disabled={cardNumber.length < 19 || expiryDate.length < 5 || cvv.length < 3}
-        rightAdornment={
+        rightIcon={
           success ? (
             <Check size={18} color="white" />
           ) : loading ? (

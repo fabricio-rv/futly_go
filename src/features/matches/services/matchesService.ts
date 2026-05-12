@@ -469,6 +469,8 @@ export async function getMatchDetails(matchId: string): Promise<MatchDetails> {
   const slotByKey = new Map(slots.map((slot) => [slot.key, slot]));
 
   for (const participant of participants) {
+    if (participant.user_id === match.created_by) continue;
+
     const slot = slotByKey.get(participant.position_key);
     const profile = profileById.get(participant.user_id);
 

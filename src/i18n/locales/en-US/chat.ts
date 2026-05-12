@@ -47,7 +47,7 @@ export const enUSChat = {
     viewParticipants: 'View participants',
     unarchiveConversation: 'Restore conversation',
     archiveConversation: 'Archive conversation',
-    openMatchDetails: 'Open match details',
+    openMatchDetails: 'Open detalhes da partida',
     reply: 'Reply',
     copy: 'Copy',
     forward: 'Forward',
@@ -172,5 +172,37 @@ export const enUSChat = {
     groupAdmin: 'Group admin',
     shareContactTitle: 'Share contact',
     searchUser: 'Search user'
+  },
+  create: {
+    newConversation: 'New conversation',
+    newGroup: 'New group',
+    addGroupPhoto: 'Add group photo',
+    groupNamePlaceholder: 'Group name',
+    groupDescriptionPlaceholder: 'Description (optional)',
+    autoArchiveQuestion: 'Auto-archive 7 days after the match?',
+    searchConversationPlaceholder: 'Search conversation or user...',
+    searchUserPlaceholder: 'Search user...',
+    addMembersPlaceholder: 'Add members...',
+    searching: 'Searching...',
+    selected: 'Selected',
+    add: 'Add',
+    createGroupButton: 'Create group'
+  },
+  forward: {
+    title: 'Forward to',
+    empty: 'No conversations available.'
+  },
+  participants: {
+    addPlaceholder: 'Add participant...'
+  },
+  composer: {
+    recording: 'Recording...',
+    cancelRecordingA11y: 'Cancel recording',
+    holdToRecordA11y: 'Hold to record audio',
+    openEmojiA11y: 'Open emoji',
+    attachFileA11y: 'Attach file',
+    sendImageA11y: 'Send image',
+    sendAudioA11y: 'Send audio',
+    sendMessageA11y: 'Send message'
   }
 };

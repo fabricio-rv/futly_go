@@ -1,13 +1,14 @@
 ﻿import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AuthFeedbackModal, OtpBoxes, PasswordStrengthMeter, AuthToast } from '@/src/components/features/auth';
+import { AuthFeedbackModal, OtpBoxes, PasswordStrengthMeter } from '@/src/components/features/auth';
 import { MatchBottomNav } from '@/src/components/features/matches';
 import { HubTopNav } from '@/src/components/features/store';
 import { Button, Input, Text } from '@/src/components/ui';
+import { useToast } from '@/src/contexts/ToastContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import {
   sendPasswordResetCode,
@@ -47,8 +48,7 @@ export default function SecurityScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastVisible, setToastVisible] = useState(false);
+  const toast = useToast();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState<{
     tone: 'success' | 'error' | 'info';
@@ -56,15 +56,9 @@ export default function SecurityScreen() {
     message: string;
   } | null>(null);
 
-  function showToast(message: string) {
-    setToastMessage(message);
-    setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 1800);
-  }
-
   async function handleStep1() {
     if (!email.trim()) {
-      showToast(t('security.enterEmail', 'Digite seu e-mail'));
+      toast.warning(t('security.sendCodeFailedTitle', 'Falha ao enviar código'), t('security.enterEmail', 'Digite seu e-mail'));
       return;
     }
 
@@ -72,7 +66,7 @@ export default function SecurityScreen() {
     try {
       await sendPasswordResetCode(email);
       setStep(2);
-      showToast(t('security.codeSent', 'Código enviado para seu e-mail'));
+      toast.success(t('common.success', 'Sucesso'), t('security.codeSent', 'Código enviado para seu e-mail'));
     } catch (error) {
       const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.sendCodeFailed', 'Erro ao enviar código');
       setModalData({
@@ -88,7 +82,8 @@ export default function SecurityScreen() {
 
   async function handleStep2() {
     if (code.length !== VERIFICATION_CODE_LENGTH) {
-      showToast(
+      toast.warning(
+        t('security.invalidCodeTitle', 'Código invalido'),
         t(
           'security.enterCodeLength',
           'Digite os {{VERIFICATION_CODE_LENGTH}} dígitos do código',
@@ -102,7 +97,7 @@ export default function SecurityScreen() {
     try {
       await verifyPasswordResetCode(email, code);
       setStep(3);
-      showToast(t('security.codeVerified', 'Código verificado com sucesso'));
+      toast.success(t('common.success', 'Sucesso'), t('security.codeVerified', 'Código verificado com sucesso'));
     } catch (error) {
       const message = error instanceof Error ? normalizeAuthError(new Error(error.message)) : t('security.invalidCode', 'Código invalido');
       setModalData({
@@ -118,12 +113,12 @@ export default function SecurityScreen() {
 
   async function handleStep3() {
     if (password.length < 6) {
-      showToast(t('security.minPassword', 'Senha deve ter no minimo 6 caracteres'));
+      toast.warning(t('security.updatePasswordFailed', 'Falha ao alterar senha'), t('security.minPassword', 'Senha deve ter no minimo 6 caracteres'));
       return;
     }
 
     if (password !== confirmPassword) {
-      showToast(t('errors.passwordMismatch', 'As senhas não coincidem'));
+      toast.warning(t('security.updatePasswordFailed', 'Falha ao alterar senha'), t('errors.passwordMismatch', 'As senhas não coincidem'));
       return;
     }
 
@@ -247,16 +242,13 @@ export default function SecurityScreen() {
                   onChangeText={setPassword}
                   placeholder={t('security.newPasswordPlaceholder', 'Minimo 6 caracteres')}
                   secureTextEntry={!showPassword}
-                  rightAdornment={
-                    <Text
-                      variant="caption"
-                      tone="secondary"
-                      onPress={() => setShowPassword(!showPassword)}
-                      className="font-medium"
-                    >
-                      {showPassword ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
-                    </Text>
-                  }
+                  rightIcon={(
+                    <Pressable onPress={() => setShowPassword(!showPassword)}>
+                      <Text variant="caption" tone="secondary" className="font-medium">
+                        {showPassword ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
+                      </Text>
+                    </Pressable>
+                  )}
                 />
               </View>
 
@@ -271,16 +263,13 @@ export default function SecurityScreen() {
                   onChangeText={setConfirmPassword}
                   placeholder={t('security.confirmPasswordPlaceholder', 'Repita a senha')}
                   secureTextEntry={!showConfirmPassword}
-                  rightAdornment={
-                    <Text
-                      variant="caption"
-                      tone="secondary"
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="font-medium"
-                    >
-                      {showConfirmPassword ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
-                    </Text>
-                  }
+                  rightIcon={(
+                    <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                      <Text variant="caption" tone="secondary" className="font-medium">
+                        {showConfirmPassword ? t('common.hide', 'Ocultar') : t('common.show', 'Mostrar')}
+                      </Text>
+                    </Pressable>
+                  )}
                 />
               </View>
             </View>
@@ -297,7 +286,6 @@ export default function SecurityScreen() {
 
       <MatchBottomNav active="none" />
 
-      <AuthToast visible={toastVisible} message={toastMessage} />
 
       <AuthFeedbackModal
         visible={modalVisible}

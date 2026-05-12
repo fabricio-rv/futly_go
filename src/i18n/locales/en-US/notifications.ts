@@ -81,5 +81,11 @@ export const enUSNotifications = {
     cancelled: 'Request cancelled',
     approvedByYou: 'Request approved by you',
     rejectedByYou: 'Request rejected by you'
+  },
+  chat: {
+    unreadConversations: 'Unread conversations',
+    privateConversation: 'Private conversation',
+    groupConversation: 'Group',
+    newMessage: 'New message'
   }
 };

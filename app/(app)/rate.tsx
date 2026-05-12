@@ -105,7 +105,7 @@ export default function RateScreen() {
       {selectedTags.length > 0 ? (
         <View className="absolute bottom-24 left-4 right-4 rounded-[14px] border p-3 flex-row items-center" style={{ borderColor: 'rgba(34,183,108,0.35)', backgroundColor: matchTheme.colors.bgSurfaceA }}>
           <View className="h-9 w-9 rounded-[10px] items-center justify-center" style={{ backgroundColor: theme === 'light' ? 'rgba(34,183,108,0.18)' : 'rgba(34,183,108,0.14)' }}>
-            <Text variant="caption" style={{ color: matchTheme.colors.okSoft }}>OK</Text>
+            <Text variant="caption" style={{ color: matchTheme.colors.okSoft }}>{t('status.ok', 'OK')}</Text>
           </View>
           <View className="ml-3">
             <Text variant="label" className="font-semibold">{t('status.savedTitle', 'Avaliação salva')}</Text>

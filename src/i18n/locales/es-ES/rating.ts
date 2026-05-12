@@ -38,6 +38,7 @@
   },
   status: {
     savedTitle: 'Valoración guardada',
-    savedSubtitle: 'Pedro recibió {{hostStars}} estrellas'
+    savedSubtitle: 'Pedro recibió {{hostStars}} estrellas',
+    ok: 'OK'
   }
 };

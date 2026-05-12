@@ -4,6 +4,7 @@ import { Crown, Search, UserMinus, UserPlus } from 'lucide-react-native';
 
 import { Input, Text } from '@/src/components/ui';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { getChatTokens } from '@/src/lib/chatTokens';
 import type { ChatProfileSearchResult } from '@/src/features/chat/services/chatService';
 
@@ -42,6 +43,7 @@ export function ParticipantsSheet({
   onAddParticipant,
   onClose,
 }: ParticipantsSheetProps) {
+  const { t } = useTranslation('chat');
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
   const [query, setQuery] = useState('');
@@ -85,14 +87,14 @@ export function ParticipantsSheet({
                   setSearchRows([]);
                 }}
                 showClearButton
-                placeholder="Adicionar participante..."
+                placeholder={t('participants.addPlaceholder', 'Adicionar participante...')}
                 size="sm"
                 containerClassName="border-line2 bg-[#0C111E]"
                 inputClassName="text-fg1"
                 leftIcon={<Search size={14} color="rgba(255,255,255,0.45)" strokeWidth={2} />}
               />
               {loadingSearch ? (
-                <Text variant="micro" className="mt-2" style={{ color: tk.text.tertiary }}>Buscando...</Text>
+                <Text variant="micro" className="mt-2" style={{ color: tk.text.tertiary }}>{t('create.searching', 'Buscando...')}</Text>
               ) : null}
               <View className="gap-2 mt-2">
                 {searchRows.map((row) => (

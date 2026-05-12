@@ -172,5 +172,37 @@ export const ptBRChat = {
     groupAdmin: 'Admin do grupo',
     shareContactTitle: 'Compartilhar contato',
     searchUser: 'Buscar usuario'
+  },
+  create: {
+    newConversation: 'Nova conversa',
+    newGroup: 'Novo grupo',
+    addGroupPhoto: 'Adicionar foto do grupo',
+    groupNamePlaceholder: 'Nome do grupo',
+    groupDescriptionPlaceholder: 'Descricao (opcional)',
+    autoArchiveQuestion: 'Arquivar automaticamente 7 dias apos o jogo?',
+    searchConversationPlaceholder: 'Buscar conversa ou usuario...',
+    searchUserPlaceholder: 'Buscar usuario...',
+    addMembersPlaceholder: 'Adicionar membros...',
+    searching: 'Buscando...',
+    selected: 'Selecionado',
+    add: 'Adicionar',
+    createGroupButton: 'Criar grupo'
+  },
+  forward: {
+    title: 'Encaminhar para',
+    empty: 'Nenhuma conversa disponivel.'
+  },
+  participants: {
+    addPlaceholder: 'Adicionar participante...'
+  },
+  composer: {
+    recording: 'Gravando...',
+    cancelRecordingA11y: 'Cancelar gravacao',
+    holdToRecordA11y: 'Segure para gravar audio',
+    openEmojiA11y: 'Abrir emoji',
+    attachFileA11y: 'Anexar arquivo',
+    sendImageA11y: 'Enviar imagem',
+    sendAudioA11y: 'Enviar audio',
+    sendMessageA11y: 'Enviar mensagem'
   }
 };

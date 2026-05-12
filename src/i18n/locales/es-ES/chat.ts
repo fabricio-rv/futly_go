@@ -47,7 +47,7 @@ export const esESChat = {
     viewParticipants: 'Ver participantes',
     unarchiveConversation: 'Restaurar conversación',
     archiveConversation: 'Archivar conversación',
-    openMatchDetails: 'Abrir detalles del partido',
+    openMatchDetails: 'Abrir detalhes da partida',
     reply: 'Responder',
     copy: 'Copiar',
     forward: 'Reenviar',
@@ -172,5 +172,37 @@ export const esESChat = {
     groupAdmin: 'Admin del grupo',
     shareContactTitle: 'Compartir contacto',
     searchUser: 'Buscar usuario'
+  },
+  create: {
+    newConversation: 'Nueva conversaci?n',
+    newGroup: 'Nuevo grupo',
+    addGroupPhoto: 'Agregar foto del grupo',
+    groupNamePlaceholder: 'Nombre del grupo',
+    groupDescriptionPlaceholder: 'Descripci?n (opcional)',
+    autoArchiveQuestion: '?Archivar autom?ticamente 7 d?as despu?s del partido?',
+    searchConversationPlaceholder: 'Buscar conversaci?n o usuario...',
+    searchUserPlaceholder: 'Buscar usuario...',
+    addMembersPlaceholder: 'Agregar miembros...',
+    searching: 'Buscando...',
+    selected: 'Seleccionado',
+    add: 'Agregar',
+    createGroupButton: 'Crear grupo'
+  },
+  forward: {
+    title: 'Reenviar a',
+    empty: 'No hay conversaciones disponibles.'
+  },
+  participants: {
+    addPlaceholder: 'Agregar participante...'
+  },
+  composer: {
+    recording: 'Grabando...',
+    cancelRecordingA11y: 'Cancelar grabaci?n',
+    holdToRecordA11y: 'Mant?n pulsado para grabar audio',
+    openEmojiA11y: 'Abrir emoji',
+    attachFileA11y: 'Adjuntar archivo',
+    sendImageA11y: 'Enviar imagen',
+    sendAudioA11y: 'Enviar audio',
+    sendMessageA11y: 'Enviar mensaje'
   }
 };

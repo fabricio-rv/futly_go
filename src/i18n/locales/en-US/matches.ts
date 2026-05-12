@@ -64,8 +64,6 @@ export const enUSMatches = {
     state: 'State',
     city: 'City',
     addressNotInformed: 'Address not provided',
-    pricePerPerson: 'Price per person',
-    hasBreak: 'Has break',
     positionRequested: 'Position requested',
     note: 'Note',
     blockedByHost: 'Blocked by host',

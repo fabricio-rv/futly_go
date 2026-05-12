@@ -38,6 +38,7 @@ export const enUSQuadras = {
     locationPreviewPlaceholder: 'Ex: Downtown, Porto Alegre',
     address: 'Full address',
     addressPlaceholder: 'Street, number, neighborhood, city - State, zip',
+    cep: 'CEP',
     phone: 'Phone',
     phonePlaceholder: '(00) 00000-0000',
     rating: 'Rating',

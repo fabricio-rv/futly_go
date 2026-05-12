@@ -1,5 +1,5 @@
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import { Audio } from 'expo-av';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import * as Clipboard from 'expo-clipboard';
@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useIsFocused } from '@react-navigation/native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, View } from 'react-native';
+import { Image, Keyboard, KeyboardAvoidingView, Linking, Modal, Platform, Pressable, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
 
@@ -35,6 +35,7 @@ import {
 import { useChatList } from '@/src/features/chat/hooks/useChatList';
 import { formatLastSeenBrazil } from '@/src/features/chat/utils/formatters';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useToast } from '@/src/contexts/ToastContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { DEFAULT_REACTION_EMOJIS } from '@/src/lib/emoji/twemoji';
 import type { ChatMessage } from '@/src/components/features/store/data';
@@ -104,6 +105,7 @@ function buildWaveformFromMeterSamples(samples: RecordingMeterSample[], bars = 3
 
 export default function ConversationDetailScreen() {
   const { t } = useTranslation('chat');
+  const { error: showErrorToast, warning: showWarningToast } = useToast();
   const insets = useSafeAreaInsets();
   const theme = useAppColorScheme();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -348,12 +350,12 @@ export default function ConversationDetailScreen() {
       }
     } catch {
       setDraft(message);
-      Alert.alert(
+      showErrorToast(
         t('errors.sendFailedTitle', 'Falha ao enviar'),
         t('errors.sendFailedMessage', 'Nao foi possivel enviar a mensagem agora.'),
       );
     }
-  }, [canSend, draft, getMessagePreview, getReplyAuthor, isKeyboardVisible, replyTo, send, t]);
+  }, [canSend, draft, getMessagePreview, getReplyAuthor, isKeyboardVisible, replyTo, send, showErrorToast, t]);
 
   const handleSendAttachment = useCallback(async (input: {
     uri: string;
@@ -413,16 +415,19 @@ export default function ConversationDetailScreen() {
       await refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : t('errors.sendAttachmentMessage', 'Falha ao enviar anexo.');
-      Alert.alert(t('errors.sendAttachmentFailed', 'Falha ao enviar'), message);
+      showErrorToast(t('errors.sendAttachmentFailed', 'Falha ao enviar'), message);
     } finally {
       setSending(false);
     }
-  }, [conversationId, refresh, send, t]);
+  }, [conversationId, refresh, send, showErrorToast, t]);
 
   const handlePickImage = useCallback(async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(t('errors.micPermissionTitle', 'Permissão necessária'), t('errors.galleryPermissionMessage', 'Precisamos de acesso à sua galeria para enviar fotos e vídeos.'));
+      showWarningToast(
+        t('errors.micPermissionTitle', 'Permiss?o necess?ria'),
+        t('errors.galleryPermissionMessage', 'Precisamos de acesso ? sua galeria para enviar fotos e v?deos.'),
+      );
       return;
     }
 
@@ -447,7 +452,10 @@ export default function ConversationDetailScreen() {
   const handleOpenCamera = useCallback(async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert(t('errors.micPermissionTitle', 'Permissão necessária'), t('errors.cameraPermissionMessage', 'Precisamos de acesso à câmera.'));
+      showWarningToast(
+        t('errors.micPermissionTitle', 'Permiss?o necess?ria'),
+        t('errors.cameraPermissionMessage', 'Precisamos de acesso ? c?mera.'),
+      );
       return;
     }
 
@@ -486,14 +494,17 @@ export default function ConversationDetailScreen() {
       }
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
-      Alert.alert(t('common.error', 'Erro'), detail || t('errors.selectFileError', 'Não foi possível selecionar o arquivo.'));
+      showErrorToast(t('common.error', 'Erro'), detail || t('errors.selectFileError', 'N?o foi poss?vel selecionar o arquivo.'));
     }
   }, [handleSendAttachment, t]);
 
   const handleStartRecording = useCallback(async () => {
     const { granted } = await Audio.requestPermissionsAsync();
     if (!granted) {
-      Alert.alert(t('errors.micPermissionTitle', 'Permissão necessária'), t('errors.micPermissionMessage', 'Precisamos de acesso ao microfone para gravar áudios.'));
+      showWarningToast(
+        t('errors.micPermissionTitle', 'Permiss?o necess?ria'),
+        t('errors.micPermissionMessage', 'Precisamos de acesso ao microfone para gravar ?udios.'),
+      );
       return;
     }
 
@@ -548,7 +559,7 @@ export default function ConversationDetailScreen() {
       });
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
-      Alert.alert(t('common.error', 'Erro'), detail || t('errors.startRecordingError', 'Não foi possível iniciar a gravação.'));
+      showErrorToast(t('common.error', 'Erro'), detail || t('errors.startRecordingError', 'N?o foi poss?vel iniciar a grava??o.'));
     }
   }, [t]);
 
@@ -619,7 +630,7 @@ export default function ConversationDetailScreen() {
       });
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
-      Alert.alert(t('common.error', 'Erro'), detail || t('errors.audioProcessError', 'Nao foi possivel processar o audio gravado.'));
+      showErrorToast(t('common.error', 'Erro'), detail || t('errors.audioProcessError', 'Nao foi possivel processar o audio gravado.'));
       recordingLastSpokenMsRef.current = 0;
       recordingMeterSamplesRef.current = [];
     }
@@ -818,7 +829,7 @@ export default function ConversationDetailScreen() {
                       router.push({ pathname: '/(app)/conversations/[id]', params: { id: privateConversationId } });
                     } catch (error) {
                       const msg = error instanceof Error ? error.message : 'Nao foi possivel abrir contato.';
-                      Alert.alert('Falha ao abrir contato', msg);
+                      showErrorToast(t('errors.openContactFailedTitle', 'Falha ao abrir contato'), msg);
                     }
                   })();
                 }}
@@ -867,7 +878,7 @@ export default function ConversationDetailScreen() {
           onChangeText={handleDraftChange}
           onSend={handleSend}
           onAddAttachment={() => setAttachVisible((v) => !v)}
-          onOpenCamera={handleOpenCamera}
+          onPickImage={handleOpenCamera}
           onOpenEmoji={() => setEmojiVisible(true)}
           onCancelReply={() => setReplyTo(null)}
           onStartRecording={handleStartRecording}
@@ -883,7 +894,7 @@ export default function ConversationDetailScreen() {
         />
         <ChatActionSheet
           visible={!!selectedMessage}
-          title="Mensagem"
+          title={t('detail.messageTitle', 'Mensagem')}
           actions={selectedMessageActions}
           quickReactions={DEFAULT_REACTION_EMOJIS}
           anchor={selectedMessageAnchor}
@@ -920,7 +931,7 @@ export default function ConversationDetailScreen() {
         <Modal visible={!!forwardingMessage} transparent animationType="fade" onRequestClose={() => setForwardingMessage(null)}>
           <Pressable className="flex-1 bg-black/55 justify-end" onPress={() => setForwardingMessage(null)}>
             <Pressable className="rounded-t-2xl border-t px-4 py-4" style={{ backgroundColor: theme === 'light' ? '#FFFFFF' : '#111827', borderTopColor: theme === 'light' ? '#D1DCEB' : 'rgba(255,255,255,0.10)' }}>
-              <Text variant="caption" className="font-bold text-fg1 mb-3">Encaminhar para</Text>
+              <Text variant="caption" className="font-bold text-fg1 mb-3">{t('forward.title', 'Encaminhar para')}</Text>
               <View style={{ maxHeight: 360 }}>
                 <FlashList
                   data={forwardTargets}
@@ -935,7 +946,7 @@ export default function ConversationDetailScreen() {
                         setForwardingMessage(null);
                         void forwardMessage(targetId, forwardingMessage.id).catch((error) => {
                           const message = error instanceof Error ? error.message : 'Nao foi possivel encaminhar.';
-                          Alert.alert('Falha ao encaminhar', message);
+                          showErrorToast(t('errors.forwardFailedTitle', 'Falha ao encaminhar'), message);
                         });
                       }}
                     >
@@ -944,7 +955,7 @@ export default function ConversationDetailScreen() {
                     </Pressable>
                   )}
                   ListEmptyComponent={(
-                    <Text variant="micro" className="text-fg3">Nenhuma conversa disponivel.</Text>
+                    <Text variant="micro" className="text-fg3">{t('forward.empty', 'Nenhuma conversa disponível.')}</Text>
                   )}
                 />
               </View>
@@ -998,7 +1009,7 @@ export default function ConversationDetailScreen() {
               )}
               <View className="mt-3 flex-row gap-2">
                 <Pressable className="flex-1 rounded-xl border border-[#64748b] py-2 items-center" onPress={() => setPendingAttachment(null)}>
-                  <Text variant="caption">Cancelar</Text>
+                  <Text variant="caption">{t('actions.cancel', 'Cancelar')}</Text>
                 </Pressable>
                 <Pressable
                   className="flex-1 rounded-xl py-2 items-center"
@@ -1010,7 +1021,7 @@ export default function ConversationDetailScreen() {
                     void handleSendAttachment(next);
                   }}
                 >
-                  <Text variant="caption" className="text-white font-bold">Enviar</Text>
+                  <Text variant="caption" className="text-white font-bold">{t('actions.submit', 'Enviar')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -1060,11 +1071,11 @@ export default function ConversationDetailScreen() {
               <View className="flex-row items-center gap-5">
                 {(openedAttachment?.kind === 'image' || openedAttachment?.kind === 'video') ? (
                   <Pressable onPress={() => openedAttachment?.url && void Linking.openURL(openedAttachment.url)}>
-                    <Text variant="caption" className="text-[#22c55e] font-bold">Baixar</Text>
+                    <Text variant="caption" className="text-[#22c55e] font-bold">{t('detail.download', 'Baixar')}</Text>
                   </Pressable>
                 ) : null}
                 <Pressable onPress={() => setOpenedAttachment(null)} hitSlop={12}>
-                  <Text variant="caption" className="text-[#22c55e] font-bold">Fechar</Text>
+                  <Text variant="caption" className="text-[#22c55e] font-bold">{t('actions.close', 'Fechar')}</Text>
                 </Pressable>
               </View>
             </View>

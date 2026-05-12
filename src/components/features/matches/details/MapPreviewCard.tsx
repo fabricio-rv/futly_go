@@ -6,6 +6,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Text } from '@/src/components/ui';
 import { useMatchTheme } from '../shared/theme';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 
 type MapPreviewCardProps = {
   addressLine: string;
@@ -30,6 +31,7 @@ export default function MapPreviewCard({
   showAddressFooter = true,
   embeddedInCard = false,
 }: MapPreviewCardProps) {
+  const { t } = useTranslation('matches');
   const matchTheme = useMatchTheme();
   const theme = useAppColorScheme();
   const isLight = theme === 'light';
@@ -62,7 +64,7 @@ export default function MapPreviewCard({
         {isWeb && mapEmbedUrl ? (
           <Iframe
             src={mapEmbedUrl}
-            title="Mapa da partida"
+            title={t('details.mapTitle', 'Mapa da partida')}
             style={{ width: '100%', height: '100%', border: 0 }}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
@@ -149,7 +151,7 @@ export default function MapPreviewCard({
             onPress={onRoutePress}
           >
             <Text variant="body" className="font-semibold" style={{ color: matchTheme.colors.fgPrimary }}>
-              Rota
+              {t('details.route', 'Rota')}
             </Text>
           </Pressable>
         </View>

@@ -81,5 +81,11 @@ export const esESNotifications = {
     cancelled: 'Solicitud cancelada',
     approvedByYou: 'Solicitud aprobada por ti',
     rejectedByYou: 'Solicitud rechazada por ti'
+  },
+  chat: {
+    unreadConversations: 'Conversaciones no leídas',
+    privateConversation: 'Conversación privada',
+    groupConversation: 'Grupo',
+    newMessage: 'Nuevo mensaje'
   }
 };

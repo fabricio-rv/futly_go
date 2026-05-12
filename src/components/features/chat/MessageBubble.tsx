@@ -5,6 +5,7 @@ import { VideoView, useVideoPlayer } from 'expo-video';
 import { useEffect, useMemo, type ReactNode } from 'react';
 
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { getChatTokens } from '@/src/lib/chatTokens';
 import { Text } from '@/src/components/ui';
 import { Twemoji, TwemojiRichText } from '@/src/components/ui/emoji';
@@ -244,6 +245,7 @@ export function MessageBubble({
   onAttachmentDownload,
   onContactPress,
 }: MessageBubbleProps) {
+  const { t } = useTranslation('chat');
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
   const { width: screenWidth } = useWindowDimensions();
@@ -528,10 +530,10 @@ export function MessageBubble({
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <View style={{ flexDirection: 'row', gap: 18 }}>
                   <Pressable onPress={() => onAttachmentPress?.(message)}>
-                    <Text variant="caption" style={{ color: actionColor, fontWeight: '700' }}>Abrir</Text>
+                    <Text variant="caption" style={{ color: actionColor, fontWeight: '700' }}>{t('actions.open', 'Abrir')}</Text>
                   </Pressable>
                   <Pressable onPress={() => onAttachmentDownload?.(message)}>
-                    <Text variant="caption" style={{ color: actionColor, fontWeight: '700' }}>Baixar</Text>
+                    <Text variant="caption" style={{ color: actionColor, fontWeight: '700' }}>{t('detail.download', 'Baixar')}</Text>
                   </Pressable>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

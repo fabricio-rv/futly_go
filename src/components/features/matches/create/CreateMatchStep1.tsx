@@ -90,8 +90,8 @@ export function CreateMatchStep1({
   onContactPhoneChange,
 }: CreateMatchStep1Props) {
   const { t } = useTranslation("quadras");
-  const isLocked = !!selectedCourtId;
-  const lockedOpacity = 0.55;
+  const hasSelectedCourt = !!selectedCourtId;
+  const fieldOpacity = hasSelectedCourt ? 0.92 : 1;
 
   return (
     <View className="gap-[14px]">
@@ -141,18 +141,17 @@ export function CreateMatchStep1({
 
           <CourtPicker selectedCourtId={selectedCourtId} onSelect={onSelectCourt} />
 
-          <View style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+          <View style={{ opacity: fieldOpacity }}>
             <Input
               label={labels.cep}
               value={cep}
               onChangeText={onCepChange}
               keyboardType="number-pad"
               placeholder="00000-000"
-              editable={!isLocked}
             />
           </View>
 
-          {isLocked ? (
+          {hasSelectedCourt ? (
             <Text
               variant="caption"
               style={{ color: matchTheme.colors.okSoft, fontSize: 12 }}
@@ -164,28 +163,26 @@ export function CreateMatchStep1({
             </Text>
           ) : null}
 
-          <View style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+          <View style={{ opacity: fieldOpacity }}>
             <Input
               label={labels.district}
               value={district}
               onChangeText={onDistrictChange}
               placeholder={labels.districtPlaceholder}
-              editable={!isLocked}
             />
           </View>
 
-          <View style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+          <View style={{ opacity: fieldOpacity }}>
             <Input
               label={labels.venueName}
               value={venueName}
               onChangeText={onVenueNameChange}
               placeholder={labels.venueNamePlaceholder}
-              editable={!isLocked}
             />
           </View>
 
           <View className="flex-row gap-2">
-            <View className="flex-1" style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+            <View className="flex-1" style={{ opacity: fieldOpacity }}>
               <SelectField
                 label={labels.state}
                 value={stateCode}
@@ -194,27 +191,24 @@ export function CreateMatchStep1({
                 searchable
                 placeholder={labels.selectState}
                 onChange={onStateChange}
-                disabled={isLocked}
               />
             </View>
-            <View className="flex-1" style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+            <View className="flex-1" style={{ opacity: fieldOpacity }}>
               <Input
                 label={labels.city}
                 value={city}
                 onChangeText={onCityChange}
                 placeholder={labels.cityPlaceholder}
-                editable={!isLocked}
               />
             </View>
           </View>
 
-          <View style={{ opacity: isLocked ? lockedOpacity : 1 }}>
+          <View style={{ opacity: fieldOpacity }}>
             <Input
               label={labels.address}
               value={address}
               onChangeText={onAddressChange}
               placeholder={labels.addressPlaceholder}
-              editable={!isLocked}
             />
           </View>
         </View>

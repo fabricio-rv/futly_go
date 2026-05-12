@@ -8,12 +8,12 @@ import {
 	AuthBackground,
 	AuthFeedbackModal,
 	AuthStepIndicator,
-	AuthToast,
 	AuthTopNav,
 	OtpBoxes,
 	PasswordStrengthMeter,
 } from '@/src/components/features/auth';
 import { Button, Input, Text } from '@/src/components/ui';
+import { useToast } from '@/src/contexts/ToastContext';
 import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import {
 	sendPasswordResetCode,
@@ -55,11 +55,7 @@ export default function ForgotPasswordScreen() {
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
 	const [loading, setLoading] = useState(false);
-	const [toast, setToast] = useState<{ visible: boolean; message: string; tone: 'success' | 'error' | 'info' }>({
-		visible: false,
-		message: '',
-		tone: 'info',
-	});
+	const toast = useToast();
 	const [feedback, setFeedback] = useState<{
 		visible: boolean;
 		tone: 'success' | 'error' | 'info';
@@ -78,16 +74,11 @@ export default function ForgotPasswordScreen() {
 		onPrimary: () => undefined,
 	});
 
-	function showToast(message: string, tone: 'success' | 'error' | 'info' = 'info') {
-		setToast({ visible: true, message, tone });
-		setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 1800);
-	}
-
 	const passwordLevel = useMemo(() => getPasswordStrength(password), [password]);
 
 	async function handleSendCode() {
 		if (!email.trim()) {
-			showToast(t('forgotPassword.enterEmailToast', 'Informe seu e-mail'), 'error');
+			toast.warning(t('forgotPassword.emailRequired', 'E-mail obrigatório'), t('forgotPassword.enterEmailToast', 'Informe seu e-mail'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -102,11 +93,11 @@ export default function ForgotPasswordScreen() {
 		try {
 			setLoading(true);
 			await sendPasswordResetCode(email);
-			showToast(t('forgotPassword.codeSentSuccess', 'Código enviado com sucesso'), 'success');
+			toast.success(t('common.success', 'Sucesso'), t('forgotPassword.codeSentSuccess', 'Código enviado com sucesso'));
 			setStep(2);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : t('forgotPassword.sendCodeError', 'Não foi possível enviar o código.');
-			showToast(t('forgotPassword.sendCodeErrorToast', 'Erro ao enviar código'), 'error');
+			toast.error(t('forgotPassword.sendCodeErrorTitle', 'Erro ao enviar código'), message);
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -127,7 +118,7 @@ export default function ForgotPasswordScreen() {
 
 	async function handleVerifyCode() {
 		if (code.length !== VERIFICATION_CODE_LENGTH) {
-			showToast(t('forgotPassword.incompleteCode', 'Código incompleto'), 'error');
+			toast.warning(t('forgotPassword.incompleteCodeTitle', 'Código incompleto'), t('forgotPassword.incompleteCode', 'Código incompleto'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -142,11 +133,11 @@ export default function ForgotPasswordScreen() {
 		try {
 			setLoading(true);
 			await verifyPasswordResetCode(email, code);
-			showToast(t('forgotPassword.codeValidated', 'Código validado'), 'success');
+			toast.success(t('common.success', 'Sucesso'), t('forgotPassword.codeValidated', 'Código validado'));
 			setStep(3);
 		} catch (error) {
 			const message = error instanceof Error ? error.message : t('forgotPassword.validateCodeError', 'Não foi possível validar o código.');
-			showToast(t('forgotPassword.invalidCode', 'Código inválido'), 'error');
+			toast.error(t('forgotPassword.invalidCodeTitle', 'Código inválido'), message);
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -167,7 +158,7 @@ export default function ForgotPasswordScreen() {
 
 	async function handleSavePassword() {
 		if (password.length < 6) {
-			showToast(t('forgotPassword.passwordTooShort', 'Senha muito curta'), 'error');
+			toast.warning(t('forgotPassword.invalidPassword', 'Senha inválida'), t('forgotPassword.passwordTooShort', 'Senha muito curta'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -180,7 +171,7 @@ export default function ForgotPasswordScreen() {
 		}
 
 		if (confirmPassword !== password) {
-			showToast(t('forgotPassword.passwordMismatchToast', 'As senhas não conferem'), 'error');
+			toast.warning(t('forgotPassword.passwordMismatchTitle', 'Senhas diferentes'), t('forgotPassword.passwordMismatchToast', 'As senhas não conferem'));
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -196,7 +187,7 @@ export default function ForgotPasswordScreen() {
 			setLoading(true);
 			await updatePassword(password);
 			await signOut();
-			showToast(t('forgotPassword.passwordUpdated', 'Senha atualizada'), 'success');
+			toast.success(t('common.success', 'Sucesso'), t('forgotPassword.passwordUpdated', 'Senha atualizada'));
 			setFeedback({
 				visible: true,
 				tone: 'success',
@@ -215,7 +206,7 @@ export default function ForgotPasswordScreen() {
 			});
 		} catch (error) {
 			const message = error instanceof Error ? error.message : t('forgotPassword.updatePasswordError', 'Não foi possível atualizar a senha.');
-			showToast(t('forgotPassword.updatePasswordErrorToast', 'Erro ao atualizar senha'), 'error');
+			toast.error(t('forgotPassword.updatePasswordErrorTitle', 'Erro ao atualizar senha'), message);
 			setFeedback({
 				visible: true,
 				tone: 'error',
@@ -237,7 +228,6 @@ export default function ForgotPasswordScreen() {
 	return (
 		<SafeAreaView className="flex-1 bg-ink-0">
 			<AuthBackground />
-			<AuthToast visible={toast.visible} message={toast.message} tone={toast.tone} />
 
 			<ScrollView
 				showsVerticalScrollIndicator={false}

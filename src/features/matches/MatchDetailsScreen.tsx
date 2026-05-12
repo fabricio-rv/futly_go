@@ -3,9 +3,10 @@ import { useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Alert,
+  Modal,
   Pressable,
   ScrollView,
+  TextInput,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -29,9 +30,18 @@ import { useMatches } from "@/src/features/matches/hooks/useMatches";
 import type { MatchDetails } from "@/src/features/matches/services/matchesService";
 import { supabase } from "@/src/lib/supabase";
 import { useTranslation } from "@/src/i18n/hooks/useTranslation";
+import { useToast } from "@/src/contexts/ToastContext";
+import {
+  createPrivateConversation,
+  fetchChatList,
+  searchChatProfiles,
+  sendMessage,
+  type ChatProfileSearchResult,
+} from "@/src/features/chat/services/chatService";
 
 export function MatchDetailsScreen({ matchId }: { matchId: string }) {
   const { t } = useTranslation("matches");
+  const { success: showSuccessToast, error: showErrorToast } = useToast();
   const matchTheme = fixedDarkMatchTheme;
   const { width: screenWidth } = useWindowDimensions();
   const isLight = false;
@@ -53,6 +63,13 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [shareTargets, setShareTargets] = useState<
+    Array<{ id: string; title: string; subtitle: string }>
+  >([]);
+  const [shareQuery, setShareQuery] = useState("");
+  const [shareUsers, setShareUsers] = useState<ChatProfileSearchResult[]>([]);
+  const [sharing, setSharing] = useState(false);
 
   const translateStatusLabel = (label: string) => {
     if (label.includes("Criada por") || label.includes("Created by"))
@@ -118,9 +135,9 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.loadingMatch");
-      Alert.alert(t("common.error"), message);
+      showErrorToast(t("common.error"), message);
     }
-  }, [getMatchDetails, matchId, t]);
+  }, [getMatchDetails, matchId, showErrorToast, t]);
 
   useEffect(() => {
     loadDetails().catch(() => undefined);
@@ -341,11 +358,11 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
         positionLabel: selectedSlot.label,
       });
       await loadDetails();
-      Alert.alert(t("players.waiting"), t("actions.requestToJoin"));
+      showSuccessToast(t("players.waiting"), t("actions.requestToJoin"));
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
-      Alert.alert(t("common.error"), message);
+      showErrorToast(t("common.error"), message);
     }
   }
 
@@ -355,7 +372,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     try {
       await leaveMatch(details.match.id);
       await loadDetails();
-      Alert.alert(
+      showSuccessToast(
         t("actions.success"),
         details.myParticipant
           ? t("success.leftMatch")
@@ -364,7 +381,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
-      Alert.alert(t("common.error"), message);
+      showErrorToast(t("common.error"), message);
     }
   }
 
@@ -375,14 +392,14 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
     try {
       await processParticipationRequest(requestId, action);
       await loadDetails();
-      Alert.alert(
+      showSuccessToast(
         t("actions.success"),
         action === "accept" ? t("players.accepted") : t("players.declined"),
       );
     } catch (error) {
       const message =
         error instanceof Error ? error.message : t("common.error");
-      Alert.alert(t("common.error"), message);
+      showErrorToast(t("common.error"), message);
     }
   }
 
@@ -393,21 +410,133 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
         latitude: mapCoordinates?.latitude ?? undefined,
         longitude: mapCoordinates?.longitude ?? undefined,
         address: locationQuery,
-        title: details?.match.venue_name ?? "Local da partida",
-        dialogTitle: "Abrir com",
-        dialogMessage: "Escolha o app de mapa",
-        cancelText: "Cancelar",
+        title: details?.match.venue_name ?? t("details.routeTitle", "Local da partida"),
+        dialogTitle: t("details.openWith", "Abrir com"),
+        dialogMessage: t("details.chooseMapApp", "Escolha o app de mapa"),
+        cancelText: t("common.close", "Fechar"),
         appsWhiteList: ["apple-maps", "google-maps", "waze"],
         alwaysIncludeGoogle: true,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      Alert.alert(
+      showErrorToast(
         t("common.error"),
-        `NÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel abrir rota: ${message}`,
+        t("details.routeOpenError", "Nao foi possivel abrir rota: {{message}}", { message }),
       );
     }
   }
+
+  const buildShareMessage = useCallback(() => {
+    if (!details) return "";
+    const dateLabel = details.match.match_date
+      ? details.match.match_date.split("-").reverse().join("/")
+      : t("details.dateNotInformed", "Data nao informada");
+    const timeLabel = details.match.match_time?.slice(0, 5) || t("details.timeNotInformed", "Horario nao informado");
+    const venue = details.match.venue_name || details.match.address || details.card.location;
+    const internalPath = "/(app)/" + details.match.id;
+    return t(
+      "details.shareMessageTemplate",
+      "Partida: {{title}}\nLocal: {{venue}}\nData: {{date}} as {{time}}\nID: {{id}}\nAbrir no app: {{path}}",
+      { title: details.match.title, venue, date: dateLabel, time: timeLabel, id: details.match.id, path: internalPath },
+    );
+  }, [details, t]);
+
+  const ensureShareTargets = useCallback(async () => {
+    const rows = await fetchChatList();
+    setShareTargets(
+      rows.map((row) => ({
+        id: row.conversation_id,
+        title:
+          row.conversation_type === "private"
+            ? row.private_partner_name ?? t("details.privateConversation", "Conversa privada")
+            : row.group_name ?? row.match_title ?? t("details.groupConversation", "Grupo"),
+        subtitle: row.conversation_type === "private"
+          ? t("details.userTarget", "Usuario")
+          : t("details.groupTarget", "Grupo"),
+      })),
+    );
+  }, [t]);
+
+  const handleOpenShare = useCallback(async () => {
+    try {
+      await ensureShareTargets();
+      setShareModalVisible(true);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Não foi possível abrir destinos de compartilhamento.";
+      showErrorToast(t("details.shareFailedTitle", "Falha ao compartilhar"), message);
+    }
+  }, [ensureShareTargets, showErrorToast, t]);
+
+  const handleShareToConversation = useCallback(
+    async (conversationId: string) => {
+      if (!details) return;
+      try {
+        setSharing(true);
+        await sendMessage(conversationId, buildShareMessage(), {
+          metadata: {
+            shared_match_id: details.match.id,
+            shared_match_title: details.match.title,
+            shared_match_date: details.match.match_date,
+            shared_match_time: details.match.match_time,
+            shared_match_route: `/(app)/${details.match.id}`,
+          },
+        });
+        setShareModalVisible(false);
+        router.push(`/(app)/conversations/${conversationId}`);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Não foi possível enviar a partida para esta conversa.";
+        showErrorToast(t("details.shareFailedTitle", "Falha ao compartilhar"), message);
+      } finally {
+        setSharing(false);
+      }
+    },
+    [buildShareMessage, details, router, showErrorToast, t],
+  );
+
+  const handleSearchShareUsers = useCallback(async (value: string) => {
+    setShareQuery(value);
+    const normalized = value.trim();
+    if (normalized.length < 2) {
+      setShareUsers([]);
+      return;
+    }
+    try {
+      const rows = await searchChatProfiles(normalized);
+      setShareUsers(rows);
+    } catch {
+      setShareUsers([]);
+    }
+  }, []);
+
+  const handleShareToUser = useCallback(
+    async (userId: string) => {
+      if (!details) return;
+      try {
+        setSharing(true);
+        const conversationId = await createPrivateConversation(userId);
+        await sendMessage(conversationId, buildShareMessage(), {
+          metadata: {
+            shared_match_id: details.match.id,
+            shared_match_title: details.match.title,
+            shared_match_date: details.match.match_date,
+            shared_match_time: details.match.match_time,
+            shared_match_route: `/(app)/${details.match.id}`,
+          },
+        });
+        setShareModalVisible(false);
+        router.push(`/(app)/conversations/${conversationId}`);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Conversa indisponível para este usuário.";
+        showErrorToast(t("details.shareFailedTitle", "Falha ao compartilhar"), message);
+      } finally {
+        setSharing(false);
+      }
+    },
+    [buildShareMessage, details, router, showErrorToast, t],
+  );
 
   if (!details) {
     return (
@@ -494,6 +623,9 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           subtitle={`PARTIDA #${match.id.slice(0, 8).toUpperCase()}`}
           rightSlot={
             <Pressable
+              onPress={() => {
+                void handleOpenShare();
+              }}
               hitSlop={12}
               className="w-10 h-10 items-center justify-center"
             >
@@ -1095,7 +1227,7 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
                         <Pressable
                           className="rounded-[10px] border border-line px-3 py-2"
                           onPress={() =>
-                            Alert.alert(
+                            showSuccessToast(
                               t(
                                 "details.requesterProfile",
                                 "Requester Profile",
@@ -1146,6 +1278,96 @@ export function MatchDetailsScreen({ matchId }: { matchId: string }) {
           ) : null}
         </View>
       </ScrollView>
+      <Modal
+        visible={shareModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShareModalVisible(false)}
+      >
+        <Pressable
+          className="flex-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" }}
+          onPress={() => setShareModalVisible(false)}
+        >
+          <Pressable
+            style={{
+              maxHeight: "78%",
+              borderTopLeftRadius: 18,
+              borderTopRightRadius: 18,
+              paddingHorizontal: 16,
+              paddingTop: 14,
+              paddingBottom: 18,
+              backgroundColor: matchTheme.colors.bgSurfaceA,
+              borderTopWidth: 1,
+              borderColor: matchTheme.colors.line,
+            }}
+          >
+            <Text variant="caption" className="font-bold" style={{ color: matchTheme.colors.fgPrimary }}>
+              {t("details.shareInChatTitle", "Compartilhar partida no chat")}
+            </Text>
+            <TextInput
+              value={shareQuery}
+              onChangeText={(value) => {
+                void handleSearchShareUsers(value);
+              }}
+              placeholder={t("details.shareSearchUserPlaceholder", "Buscar usuario para compartilhar")}
+              placeholderTextColor={matchTheme.colors.fgMuted}
+              style={{
+                marginTop: 10,
+                borderWidth: 1,
+                borderColor: matchTheme.colors.line,
+                borderRadius: 12,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+                color: matchTheme.colors.fgPrimary,
+                backgroundColor: matchTheme.colors.bgSurfaceB,
+              }}
+            />
+            <ScrollView showsVerticalScrollIndicator={false} style={{ marginTop: 10 }}>
+              {shareUsers.map((user, index) => (
+                <Pressable
+                  key={`user-${user.id}`}
+                  onPress={() => {
+                    void handleShareToUser(user.id);
+                  }}
+                  disabled={sharing}
+                  style={{
+                    paddingVertical: 11,
+                    borderTopWidth: index === 0 ? 0 : 1,
+                    borderTopColor: matchTheme.colors.line,
+                  }}
+                >
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {user.full_name}
+                  </Text>
+                  <Text variant="micro" style={{ color: matchTheme.colors.fgMuted, marginTop: 2 }}>{t("details.userTarget", "Usuario")}</Text>
+                </Pressable>
+              ))}
+              {shareTargets.map((target) => (
+                <Pressable
+                  key={target.id}
+                  onPress={() => {
+                    void handleShareToConversation(target.id);
+                  }}
+                  disabled={sharing}
+                  style={{
+                    paddingVertical: 11,
+                    borderTopWidth: 1,
+                    borderTopColor: matchTheme.colors.line,
+                  }}
+                >
+                  <Text variant="caption" style={{ color: matchTheme.colors.fgPrimary }}>
+                    {target.title}
+                  </Text>
+                  <Text variant="micro" style={{ color: matchTheme.colors.fgMuted, marginTop: 2 }}>
+                    {target.subtitle}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }

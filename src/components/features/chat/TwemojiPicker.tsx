@@ -4,6 +4,7 @@ import { X } from 'lucide-react-native';
 
 import { Text } from '@/src/components/ui';
 import { useAppColorScheme } from '@/src/contexts/ThemeContext';
+import { useTranslation } from '@/src/i18n/hooks/useTranslation';
 import { getChatTokens } from '@/src/lib/chatTokens';
 import { TWEMOJI_CATEGORIES } from '@/src/lib/emoji/twemoji';
 import { Twemoji } from '@/src/components/ui/emoji';
@@ -30,14 +31,16 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 export function TwemojiPicker({
   visible,
-  title = 'Escolha um emoji',
+  title,
   anchor,
   compact = false,
   onSelect,
   onClose,
 }: TwemojiPickerProps) {
+  const { t } = useTranslation('chat');
   const theme = useAppColorScheme();
   const tk = getChatTokens(theme);
+  const resolvedTitle = title ?? t('detail.chooseEmoji', 'Escolha um emoji');
   const { width, height } = useWindowDimensions();
   const [categoryId, setCategoryId] = useState(TWEMOJI_CATEGORIES[0]?.id ?? 'people');
   const category = useMemo(
@@ -97,7 +100,7 @@ export function TwemojiPicker({
         >
           <View className="flex-row items-center justify-between px-1 mb-2">
             <Text variant="caption" style={{ color: tk.text.primary, fontSize: isPopover ? 13 : 15 }} className="font-bold">
-              {title}
+              {resolvedTitle}
             </Text>
             <Pressable
               accessibilityRole="button"

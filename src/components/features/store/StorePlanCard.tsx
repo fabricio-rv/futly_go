@@ -129,11 +129,14 @@ export function StorePlanCard({ plan }: StorePlanCardProps) {
 
 			<Button
 				label={plan.ctaLabel}
-				variant={plan.ctaVariant === 'ghost' ? 'ghost' : plan.ctaVariant}
+				variant={
+					plan.ctaVariant === 'ghost'
+						? 'ghost'
+						: 'primary'
+				}
 				size="md"
 				labelClassName="font-bold"
 			/>
 		</View>
 	);
 }
-
